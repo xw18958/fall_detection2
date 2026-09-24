@@ -1,4 +1,5 @@
 data/
+recordings/
 .build/
 __pycache__/
 *.py[cod]
