@@ -47,6 +47,7 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
     private var latestSample: MotionSample?
     private var samplingTimestamps: [TimeInterval] = []
     private var sampleCount = 0
+    private var pushCallbackCount = 0
     private var samplingRate = 0.0
     private var isCollecting = false
     private var airPodsState: AirPodsState = .checking
@@ -95,6 +96,9 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
         guard canStart else { return }
         motionManager.startDeviceMotionUpdates(to: motionQueue) { [weak self] motion, error in
             guard let self else { return }
+            self.stateQueue.sync {
+                self.pushCallbackCount += 1
+            }
             if let error {
                 self.stateQueue.async {
                     print("!!! CORE MOTION CALLBACK ERROR: \(error.localizedDescription) !!!")
@@ -121,6 +125,7 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
         stateQueue.asyncAfter(deadline: .now() + .seconds(1)) { [weak self] in
             self?.printCoreMotionDiagnostics("CoreMotion diagnostics after start:")
         }
+        scheduleDeviceMotionPolls()
         print("Collection started.")
     }
 
@@ -209,6 +214,29 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
         """)
     }
 
+    private func scheduleDeviceMotionPolls() {
+        for second in 1...10 {
+            stateQueue.asyncAfter(deadline: .now() + .seconds(second)) { [weak self] in
+                self?.printPolledDeviceMotion()
+            }
+        }
+    }
+
+    private func printPolledDeviceMotion() {
+        guard let motion = motionManager.deviceMotion else {
+            print("Pull diagnostic: deviceMotion = nil")
+            return
+        }
+
+        print("""
+        Pull diagnostic:
+        timestamp = \(String(format: "%.6f", motion.timestamp))
+        userAcceleration = (\(String(format: "%.6f", motion.userAcceleration.x)), \(String(format: "%.6f", motion.userAcceleration.y)), \(String(format: "%.6f", motion.userAcceleration.z)))
+        gravity = (\(String(format: "%.6f", motion.gravity.x)), \(String(format: "%.6f", motion.gravity.y)), \(String(format: "%.6f", motion.gravity.z)))
+        rotationRate = (\(String(format: "%.6f", motion.rotationRate.x)), \(String(format: "%.6f", motion.rotationRate.y)), \(String(format: "%.6f", motion.rotationRate.z)))
+        """)
+    }
+
     private func connectWebSocket() {
         serverState = .connecting
         let task = session.webSocketTask(with: serverURL)
@@ -281,6 +309,7 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
             "AirPods: \(airPodsState.rawValue) | Sampling rate: \(String(format: "%.1f", samplingRate)) Hz | " +
             "Samples collected: \(sampleCount) | Server: \(serverState.rawValue)"
         )
+        print("Push callback count: \(pushCallbackCount)")
         if let sample = latestSample {
             print(
                 "Latest: timestamp=\(String(format: "%.6f", sample.timestamp)) | " +
