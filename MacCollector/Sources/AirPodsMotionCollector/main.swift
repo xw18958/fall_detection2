@@ -64,6 +64,7 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
     func run() {
         stateQueue.async { [weak self] in
             self?.motionManager.startConnectionStatusUpdates()
+            self?.printCoreMotionDiagnostics("CoreMotion diagnostics:")
             self?.startTimers()
             self?.printStatus()
         }
@@ -71,6 +72,7 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
 
     func start() {
         let canStart = stateQueue.sync { () -> Bool in
+            printCoreMotionDiagnostics("CoreMotion diagnostics at start:")
             guard !isCollecting else {
                 print("Collection is already running.")
                 return false
@@ -95,7 +97,7 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
             guard let self else { return }
             if let error {
                 self.stateQueue.async {
-                    print("CoreMotion error: \(error.localizedDescription)")
+                    print("!!! CORE MOTION CALLBACK ERROR: \(error.localizedDescription) !!!")
                     self.airPodsState = .notConnected
                 }
                 return
@@ -115,6 +117,9 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
             self.stateQueue.async {
                 self.record(sample)
             }
+        }
+        stateQueue.asyncAfter(deadline: .now() + .seconds(1)) { [weak self] in
+            self?.printCoreMotionDiagnostics("CoreMotion diagnostics after start:")
         }
         print("Collection started.")
     }
@@ -178,6 +183,30 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
         }
         statusTimer.resume()
         self.statusTimer = statusTimer
+    }
+
+    private func printCoreMotionDiagnostics(_ header: String) {
+        let authorization: String
+        switch CMHeadphoneMotionManager.authorizationStatus() {
+        case .notDetermined:
+            authorization = "notDetermined"
+        case .restricted:
+            authorization = "restricted"
+        case .denied:
+            authorization = "denied"
+        case .authorized:
+            authorization = "authorized"
+        @unknown default:
+            authorization = "unknown"
+        }
+
+        print("""
+        \(header)
+        Authorization: \(authorization)
+        Device motion available: \(motionManager.isDeviceMotionAvailable)
+        Device motion active: \(motionManager.isDeviceMotionActive)
+        Connection status active: \(motionManager.isConnectionStatusActive)
+        """)
     }
 
     private func connectWebSocket() {
