@@ -49,7 +49,9 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
     private var sampleCount = 0
     private var pushCallbackCount = 0
     private var samplingRate = 0.0
-    private var isCollecting = false
+    private var userWantsCollection = false
+    private var motionStreamActive = false
+    private var pendingReconnectWorkItem: DispatchWorkItem?
     private var airPodsState: AirPodsState = .checking
     private var serverState: ServerState = .disconnected
 
@@ -72,28 +74,32 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
     }
 
     func start() {
-        let canStart = stateQueue.sync { () -> Bool in
+        stateQueue.sync {
             printCoreMotionDiagnostics("CoreMotion diagnostics at start:")
-            guard !isCollecting else {
+            guard !userWantsCollection else {
                 print("Collection is already running.")
-                return false
+                return
             }
-            // This establishes whether the hardware can provide motion samples. The
-            // delegate and the first received sample establish the displayed connection state.
-            guard motionManager.isDeviceMotionAvailable else {
-                airPodsState = .notConnected
-                print("AirPods: Not Connected (headphone motion is unavailable).")
-                return false
-            }
-            airPodsState = .checking
-            isCollecting = true
+            userWantsCollection = true
             if socketTask == nil {
                 connectWebSocket()
             }
-            return true
+            guard motionManager.isDeviceMotionAvailable else {
+                airPodsState = .notConnected
+                print("AirPods: Not Connected (headphone motion is unavailable).")
+                return
+            }
+            airPodsState = .checking
+            startMotionStreamIfNeeded()
         }
+    }
 
-        guard canStart else { return }
+    private func startMotionStreamIfNeeded() {
+        guard userWantsCollection,
+              !motionStreamActive,
+              motionManager.isDeviceMotionAvailable else { return }
+
+        motionStreamActive = true
         motionManager.startDeviceMotionUpdates(to: motionQueue) { [weak self] motion, error in
             guard let self else { return }
             self.stateQueue.sync {
@@ -130,20 +136,24 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
     }
 
     func stop() {
-        let wasCollecting = stateQueue.sync { () -> Bool in
-            guard isCollecting else { return false }
-            isCollecting = false
+        let didStop = stateQueue.sync { () -> Bool in
+            guard userWantsCollection || motionStreamActive || pendingReconnectWorkItem != nil else {
+                return false
+            }
+            userWantsCollection = false
+            cancelPendingReconnectWork()
+            if motionStreamActive {
+                motionManager.stopDeviceMotionUpdates()
+                motionStreamActive = false
+            }
+            flushBatch()
             return true
         }
-        guard wasCollecting else {
+        guard didStop else {
             print("Collection is already stopped.")
             return
         }
 
-        motionManager.stopDeviceMotionUpdates()
-        stateQueue.async { [weak self] in
-            self?.flushBatch()
-        }
         print("Collection stopped.")
     }
 
@@ -222,6 +232,29 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
         }
     }
 
+    private func cancelPendingReconnectWork() {
+        pendingReconnectWorkItem?.cancel()
+        pendingReconnectWorkItem = nil
+    }
+
+    private func scheduleReconnectIfNeeded() {
+        guard userWantsCollection,
+              !motionStreamActive,
+              pendingReconnectWorkItem == nil else { return }
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.pendingReconnectWorkItem = nil
+            guard self.userWantsCollection,
+                  !self.motionStreamActive,
+                  self.motionManager.isDeviceMotionAvailable else { return }
+            print("AirPods reconnected — restarting motion stream...")
+            self.startMotionStreamIfNeeded()
+        }
+        pendingReconnectWorkItem = workItem
+        stateQueue.asyncAfter(deadline: .now() + .milliseconds(750), execute: workItem)
+    }
+
     private func printPolledDeviceMotion() {
         guard let motion = motionManager.deviceMotion else {
             print("Pull diagnostic: deviceMotion = nil")
@@ -264,7 +297,7 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
     }
 
     private func record(_ sample: MotionSample) {
-        guard isCollecting else { return }
+        guard userWantsCollection, motionStreamActive else { return }
         airPodsState = .connected
         pendingSamples.append(sample)
         latestSample = sample
@@ -322,12 +355,20 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
     func headphoneMotionManagerDidConnect(_ manager: CMHeadphoneMotionManager) {
         stateQueue.async { [weak self] in
             self?.airPodsState = .connected
+            self?.scheduleReconnectIfNeeded()
         }
     }
 
     func headphoneMotionManagerDidDisconnect(_ manager: CMHeadphoneMotionManager) {
         stateQueue.async { [weak self] in
-            self?.airPodsState = .notConnected
+            guard let self else { return }
+            print("AirPods disconnected — waiting for reconnect...")
+            self.airPodsState = .notConnected
+            self.cancelPendingReconnectWork()
+            if self.motionStreamActive {
+                self.motionManager.stopDeviceMotionUpdates()
+            }
+            self.motionStreamActive = false
         }
     }
 
