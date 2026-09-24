@@ -556,6 +556,19 @@ private final class MotionCollector: NSObject, URLSessionWebSocketDelegate, CMHe
             line += " | Network-buffer drops: \(droppedNetworkSamples)"
         }
         print(line)
+        if airPodsState == .connected,
+           let latestSample,
+           let lastSampleUptime,
+           Self.uptime() - lastSampleUptime < 2.0 {
+            print(
+                "6-axis | Accel=(\(String(format: "%.4f", latestSample.ax)), " +
+                "\(String(format: "%.4f", latestSample.ay)), " +
+                "\(String(format: "%.4f", latestSample.az))) | " +
+                "Gyro=(\(String(format: "%.4f", latestSample.gx)), " +
+                "\(String(format: "%.4f", latestSample.gy)), " +
+                "\(String(format: "%.4f", latestSample.gz)))"
+            )
+        }
     }
 
     func headphoneMotionManagerDidConnect(_ manager: CMHeadphoneMotionManager) {
