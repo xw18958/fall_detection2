@@ -675,7 +675,7 @@ guard let url = serverURL(from: arguments),
     exit(EXIT_FAILURE)
 }
 
-let collector: MotionCollector
+private let collector: MotionCollector
 do {
     collector = try MotionCollector(serverURL: url)
 } catch {
