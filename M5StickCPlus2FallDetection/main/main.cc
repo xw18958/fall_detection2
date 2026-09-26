@@ -64,9 +64,10 @@ constexpr float kSigma[kChannels] = {
     0.1828159988f, 0.2244342566f, 0.1733540148f,
 };
 
-// This was selected for file-level top-k scoring during training. For this
-// hardware smoke test it is only a provisional live alert threshold.
-constexpr float kPrototypeFallThreshold = 0.9806883345f;
+// Prototype live threshold chosen from real-device testing of the fine-tuned C16 model.
+constexpr float kPrototypeFallThreshold = 0.88f;
+constexpr int64_t kFallAlertCooldownUs = 3000000;
+constexpr int kFallBeepMs = 100;
 
 // MPU6886 configured to ±8 g and ±2000 deg/s.
 constexpr float kAccelGPerLsb = 8.0f / 32768.0f;
@@ -135,7 +136,7 @@ bool InitBuzzer() {
 }
 
 void Beep(int milliseconds) {
-  // Passive buzzer: ~2 kHz square wave. Called only after a positive decision.
+  // Passive buzzer: ~2 kHz square wave.
   const int half_period_us = 250;
   const int cycles = (milliseconds * 1000) / (half_period_us * 2);
   for (int i = 0; i < cycles; ++i) {
@@ -418,9 +419,14 @@ void RunInference() {
            static_cast<long long>(elapsed_us), logits[0], logits[1], probs[0],
            probs[1], static_cast<unsigned long long>(g_sample_count));
 
+  static int64_t last_beep_us = -kFallAlertCooldownUs;
   if (fall_triggered) {
     ESP_LOGW(kTag, "*** PROTOTYPE FALL TRIGGER %.4f ***", probs[1]);
-    Beep(150);
+    const int64_t now_us = esp_timer_get_time();
+    if (now_us - last_beep_us >= kFallAlertCooldownUs) {
+      last_beep_us = now_us;
+      Beep(kFallBeepMs);
+    }
   }
 }
 
