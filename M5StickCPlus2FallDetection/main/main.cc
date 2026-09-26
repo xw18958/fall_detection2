@@ -409,7 +409,8 @@ void RunInference() {
   Softmax2(logits, probs);
 
   const bool fall_triggered = probs[1] >= kPrototypeFallThreshold;
-  fall_display::ShowResult(probs[1], fall_triggered);
+  fall_display::ShowResult(probs[1], fall_triggered,
+                           static_cast<int>((elapsed_us + 500) / 1000));
 
   // Assumption inherited from the original binary classifier: index 1 = fall.
   ESP_LOGI(kTag,
