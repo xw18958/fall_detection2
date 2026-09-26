@@ -1,4 +1,60 @@
-# AirPods Pro motion collector
+# Fall Detection
+
+This repository contains the fall-detection data-collection, model, and embedded-device prototypes.
+
+## M5StickC PLUS2 embedded fall detector
+
+`M5StickCPlus2FallDetection/` runs the pruned/fine-tuned TCN locally on an M5Stack M5StickC PLUS2 using the MPU6886 six-axis IMU and TensorFlow Lite Micro.
+
+Current device behavior includes:
+
+- 20 Hz six-axis IMU sampling
+- 3.0 s / 60-sample model window
+- inference every 0.75 s
+- on-device `NORMAL` / `FALL` display
+- fall probability with one decimal place
+- one short fall-alert beep
+- 3.0 s beep cooldown with matching screen countdown
+- current live fall threshold: `0.88`
+- **wireless A/B OTA software updates with rollback**
+
+### Wireless software update
+
+The OTA-capable firmware and A/B partition table must first be installed once using USB-C. After that, future firmware and embedded-model updates can normally be installed wirelessly.
+
+Build the new image:
+
+```bash
+cd M5StickCPlus2FallDetection
+pio run
+```
+
+The OTA file is:
+
+```text
+.pio/build/m5stickc-plus2/firmware.bin
+```
+
+Connect a Mac or phone to the device's update Wi-Fi:
+
+```text
+SSID:     FallDetector-OTA
+Password: fallupdate
+```
+
+Then open:
+
+```text
+http://192.168.4.1/
+```
+
+and upload `firmware.bin`.
+
+The TFLite model is embedded in the firmware image, so OTA can update the **software and model together**, including a different compatible model architecture. The complete firmware image must fit one OTA slot and the new model must still satisfy the ESP32's PSRAM/RAM and inference-time limits.
+
+See [`M5StickCPlus2FallDetection/README.md`](M5StickCPlus2FallDetection/README.md) for the complete build, first-flash, OTA, rollback, model, and troubleshooting instructions.
+
+## AirPods Pro motion collector
 
 Minimal macOS + Python pipeline for collecting AirPods motion data and streaming it to the USyd server.
 
