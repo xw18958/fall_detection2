@@ -6,8 +6,10 @@
 
 #include "tensorflow/compiler/mlir/lite/core/c/builtin_op_data.h"
 #include "tensorflow/lite/c/common.h"
+#include "tensorflow/lite/kernels/kernel_util.h"
 #include "tensorflow/lite/micro/kernels/kernel_util.h"
 #include "tensorflow/lite/micro/micro_log.h"
+#include "tensorflow/lite/micro/micro_utils.h"
 
 namespace fall_tflm {
 namespace {
@@ -93,13 +95,13 @@ TfLiteStatus GeluEval(TfLiteContext* context, TfLiteNode* node) {
       const float y = GeluFloat(x, data->approximate);
       int32_t q = static_cast<int32_t>(std::lround(y / data->output_scale)) +
                   data->output_zero_point;
-      q = std::max(-128, std::min(127, q));
+      q = std::max<int32_t>(-128, std::min<int32_t>(127, q));
       dst[i] = static_cast<int8_t>(q);
     }
     return kTfLiteOk;
   }
 
-  tflite::MicroPrintf("GELU: unsupported type %d", input->type);
+  MicroPrintf("GELU: unsupported type %d", input->type);
   return kTfLiteError;
 }
 
