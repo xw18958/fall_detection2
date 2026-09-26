@@ -3,3 +3,6 @@ recordings/
 .build/
 __pycache__/
 *.py[cod]
+DerivedData/
+*.xcuserstate
+xcuserdata/
