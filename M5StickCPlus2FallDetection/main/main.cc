@@ -17,6 +17,7 @@
 #include "freertos/task.h"
 
 #include "fall_op_resolver.h"
+#include "simple_display.h"
 #include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
@@ -407,13 +408,16 @@ void RunInference() {
   float probs[2] = {};
   Softmax2(logits, probs);
 
+  const bool fall_triggered = probs[1] >= kPrototypeFallThreshold;
+  fall_display::ShowResult(probs[1], fall_triggered);
+
   // Assumption inherited from the original binary classifier: index 1 = fall.
   ESP_LOGI(kTag,
            "infer=%lld us | logits=[%.4f %.4f] | normal=%.4f fall=%.4f | sample=%llu",
            static_cast<long long>(elapsed_us), logits[0], logits[1], probs[0],
            probs[1], static_cast<unsigned long long>(g_sample_count));
 
-  if (probs[1] >= kPrototypeFallThreshold) {
+  if (fall_triggered) {
     ESP_LOGW(kTag, "*** PROTOTYPE FALL TRIGGER %.4f ***", probs[1]);
     Beep(150);
   }
@@ -428,6 +432,9 @@ extern "C" void app_main(void) {
   if (!InitPowerHold()) {
     ESP_LOGE(kTag, "Failed to drive HOLD (GPIO4) high");
     return;
+  }
+  if (!fall_display::Init()) {
+    ESP_LOGW(kTag, "Display initialization failed; continuing without screen UI");
   }
   InitBuzzer();
   if (!InitI2C() || !InitMpu6886()) {
