@@ -18,6 +18,7 @@
 
 #include "fall_op_resolver.h"
 #include "simple_display.h"
+#include "wifi_ota.h"
 #include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
@@ -450,6 +451,7 @@ extern "C" void app_main(void) {
 
   if (!InitPowerHold()) {
     ESP_LOGE(kTag, "Failed to drive HOLD (GPIO4) high");
+    fall_ota::RollbackPendingImageAndReboot();
     return;
   }
   if (!fall_display::Init()) {
@@ -458,19 +460,45 @@ extern "C" void app_main(void) {
   InitBuzzer();
   if (!InitI2C() || !InitMpu6886()) {
     ESP_LOGE(kTag, "IMU initialization failed");
+    fall_ota::RollbackPendingImageAndReboot();
     return;
   }
   if (!InitModel()) {
     ESP_LOGE(kTag, "Model initialization failed");
+    fall_ota::RollbackPendingImageAndReboot();
     return;
   }
 
+  // Keep a local WPA2 access point available so future firmware + embedded-model
+  // images can be installed without USB. OTA startup is part of the health check
+  // for a newly flashed image: if it fails, a pending OTA image is rolled back.
+  if (!fall_ota::Start()) {
+    ESP_LOGE(kTag, "Wireless OTA initialization failed");
+    fall_ota::RollbackPendingImageAndReboot();
+    return;
+  }
+  if (!fall_ota::MarkRunningImageValid()) {
+    ESP_LOGE(kTag, "Could not confirm the running OTA image");
+    fall_ota::RollbackPendingImageAndReboot();
+    return;
+  }
+
+  ESP_LOGI(kTag, "Wireless update: SSID=FallDetector-OTA password=fallupdate");
+  ESP_LOGI(kTag, "Open http://192.168.4.1/ to upload firmware.bin");
   ESP_LOGI(kTag, "Ready. Collecting MPU6886 at 20 Hz...");
   ESP_LOGI(kTag, "CSV: ms,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps");
 
   int64_t next_sample_us = esp_timer_get_time();
   bool first_inference = true;
   while (true) {
+    // Pause sensor/inference work only while flash is actively being written.
+    // If an upload fails, the OTA handler clears this flag and inference resumes.
+    if (fall_ota::InProgress()) {
+      next_sample_us = esp_timer_get_time();
+      vTaskDelay(pdMS_TO_TICKS(20));
+      continue;
+    }
+
     next_sample_us += kSamplePeriodUs;
     RawImu imu{};
     if (ReadImu(&imu)) {
