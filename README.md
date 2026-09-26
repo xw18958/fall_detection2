@@ -2,6 +2,12 @@
 
 Minimal macOS + Python pipeline for collecting AirPods motion data and streaming it to the USyd server.
 
+## iPhone prototype
+
+`iPhoneFallDetection/` contains a 25 Hz iPhone-only inference prototype. AirPods Pro 2 provides the six-axis motion stream; the iPhone handles the rolling 75 x 6 window and a dual-stream TCN-like model with separate accelerometer/gyroscope branches, residual dilated TCN blocks, attention pooling, modality gating/fusion, and a two-class output head. The prototype weights are deterministic random initialization for pipeline testing only.
+
+Open `iPhoneFallDetection/iPhoneFallDetection.xcodeproj` in Xcode. See `iPhoneFallDetection/README.md` for setup and CSV replay instructions.
+
 ## Current behavior
 
 The Mac collector now starts automatically:
