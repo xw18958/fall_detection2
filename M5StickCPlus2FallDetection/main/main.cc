@@ -410,24 +410,36 @@ void RunInference() {
   Softmax2(logits, probs);
 
   const bool fall_triggered = probs[1] >= kPrototypeFallThreshold;
+  static int64_t last_beep_us = -kFallAlertCooldownUs;
+  int64_t now_us = esp_timer_get_time();
+  bool beep_now = false;
+
+  if (fall_triggered && now_us - last_beep_us >= kFallAlertCooldownUs) {
+    ESP_LOGW(kTag, "*** PROTOTYPE FALL TRIGGER %.4f ***", probs[1]);
+    Beep(kFallBeepMs);
+    last_beep_us = esp_timer_get_time();
+    now_us = last_beep_us;
+    beep_now = true;
+  } else if (fall_triggered) {
+    ESP_LOGW(kTag, "*** PROTOTYPE FALL TRIGGER %.4f (beep cooldown) ***", probs[1]);
+  }
+
+  int64_t cooldown_remaining_us = 0;
+  if (last_beep_us >= 0) {
+    cooldown_remaining_us = std::max<int64_t>(
+        0, kFallAlertCooldownUs - (now_us - last_beep_us));
+  }
+
   fall_display::ShowResult(probs[1], fall_triggered,
-                           static_cast<int>((elapsed_us + 500) / 1000));
+                           static_cast<int>((elapsed_us + 500) / 1000),
+                           cooldown_remaining_us);
 
   // Assumption inherited from the original binary classifier: index 1 = fall.
   ESP_LOGI(kTag,
-           "infer=%lld us | logits=[%.4f %.4f] | normal=%.4f fall=%.4f | sample=%llu",
+           "infer=%lld us | logits=[%.4f %.4f] | normal=%.4f fall=%.4f | sample=%llu%s",
            static_cast<long long>(elapsed_us), logits[0], logits[1], probs[0],
-           probs[1], static_cast<unsigned long long>(g_sample_count));
-
-  static int64_t last_beep_us = -kFallAlertCooldownUs;
-  if (fall_triggered) {
-    ESP_LOGW(kTag, "*** PROTOTYPE FALL TRIGGER %.4f ***", probs[1]);
-    const int64_t now_us = esp_timer_get_time();
-    if (now_us - last_beep_us >= kFallAlertCooldownUs) {
-      last_beep_us = now_us;
-      Beep(kFallBeepMs);
-    }
-  }
+           probs[1], static_cast<unsigned long long>(g_sample_count),
+           beep_now ? " | beep" : "");
 }
 
 }  // namespace
