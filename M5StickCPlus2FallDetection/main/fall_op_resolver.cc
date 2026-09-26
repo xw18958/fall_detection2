@@ -35,6 +35,9 @@ FallOpResolver::FallOpResolver() : gelu_registration_(RegisterGelu()) {
   Check(base_.AddSub(), "SUB");
   Check(base_.AddSqrt(), "SQRT");
   Check(base_.AddDiv(), "DIV");
+  Check(base_.AddNeg(), "NEG");
+  Check(base_.AddSquaredDifference(), "SQUARED_DIFFERENCE");
+  Check(base_.AddRsqrt(), "RSQRT");
   Check(base_.AddFullyConnected(), "FULLY_CONNECTED");
   Check(base_.AddQuantize(), "QUANTIZE");
   Check(base_.AddDequantize(), "DEQUANTIZE");
