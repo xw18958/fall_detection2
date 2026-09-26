@@ -73,7 +73,7 @@ constexpr float kGyroDpsPerLsb = 2000.0f / 32768.0f;
 constexpr float kGravityMps2 = 9.80665f;
 constexpr float kDegToRad = 0.01745329251994329577f;
 
-// Embedded by ESP-IDF's EMBED_FILES mechanism.
+// Embedded by PlatformIO's board_build.embed_files mechanism.
 extern const uint8_t model_tflite_start[] asm("_binary_model_tflite_start");
 extern const uint8_t model_tflite_end[] asm("_binary_model_tflite_end");
 
@@ -355,7 +355,7 @@ bool FillModelInput() {
         const float x = g_ring[src_t][c];
         int32_t q = static_cast<int32_t>(std::lround(x / g_input->params.scale)) +
                     g_input->params.zero_point;
-        q = std::max(-128, std::min(127, q));
+        q = std::max<int32_t>(-128, std::min<int32_t>(127, q));
         dst[t * kChannels + c] = static_cast<int8_t>(q);
       }
     }
