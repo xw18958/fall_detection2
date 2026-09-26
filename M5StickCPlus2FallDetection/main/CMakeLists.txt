@@ -5,5 +5,4 @@ idf_component_register(
         "fall_op_resolver.cc"
     INCLUDE_DIRS "."
     PRIV_REQUIRES driver esp_timer
-    EMBED_FILES "model.tflite"
 )
