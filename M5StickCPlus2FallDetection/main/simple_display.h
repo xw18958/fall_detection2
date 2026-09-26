@@ -6,6 +6,7 @@
 
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -27,6 +28,7 @@ constexpr int kXOffset = 52;
 constexpr int kYOffset = 40;
 constexpr int kBarY = 218;
 constexpr int kBarHeight = 16;
+constexpr int64_t kCooldownUs = 3000000;
 
 constexpr uint16_t kBlack = 0x0000;
 constexpr uint16_t kGreen = 0x07E0;
@@ -38,6 +40,7 @@ constexpr uint16_t kYellow = 0xFFE0;
 static spi_device_handle_t g_spi = nullptr;
 static bool g_ready = false;
 static int g_last_state = -1;
+static int64_t g_cooldown_until_us = 0;
 
 inline bool Tx(bool data_mode, const uint8_t* bytes, size_t len) {
   if (g_spi == nullptr || bytes == nullptr || len == 0) return false;
@@ -232,6 +235,7 @@ inline bool Init() {
   DrawText(CenterX("BOOTING", 2), 105, "BOOTING", 2, kCyan);
   DrawText(CenterX("WAIT 3S", 1), 142, "WAIT 3S", 1, kYellow);
   g_last_state = -1;
+  g_cooldown_until_us = 0;
   return true;
 }
 
@@ -248,13 +252,32 @@ inline void ShowResult(float fall_probability, bool fall_triggered, int inferenc
     g_last_state = state;
   }
 
-  char line[20];
+  const int64_t now_us = esp_timer_get_time();
+  if (fall_triggered && now_us >= g_cooldown_until_us) {
+    g_cooldown_until_us = now_us + kCooldownUs;
+  }
+  const int64_t cooldown_remaining_us =
+      std::max<int64_t>(0, g_cooldown_until_us - now_us);
+
+  char line[24];
   FillRect(0, 135, kWidth, 70, kBlack);
-  const int pct = static_cast<int>(fall_probability * 100.0f + 0.5f);
-  snprintf(line, sizeof(line), "FALL %d%%", pct);
+
+  const int pct_tenths =
+      static_cast<int>(fall_probability * 1000.0f + 0.5f);
+  snprintf(line, sizeof(line), "FALL %d.%d%%",
+           pct_tenths / 10, pct_tenths % 10);
   DrawText(CenterX(line, 2), 140, line, 2, kWhite);
+
   snprintf(line, sizeof(line), "%d MS", inference_ms);
   DrawText(CenterX(line, 2), 172, line, 2, kCyan);
+
+  if (cooldown_remaining_us > 0) {
+    const int cooldown_tenths =
+        static_cast<int>((cooldown_remaining_us + 99999) / 100000);
+    snprintf(line, sizeof(line), "COOLDOWN %d.%dS",
+             cooldown_tenths / 10, cooldown_tenths % 10);
+    DrawText(CenterX(line, 1), 198, line, 1, kYellow);
+  }
 
   FillRect(0, kBarY, kWidth, kBarHeight, kBlack);
   const int bar_width = static_cast<int>(fall_probability * kWidth + 0.5f);
