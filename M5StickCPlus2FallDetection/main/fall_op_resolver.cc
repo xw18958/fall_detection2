@@ -17,7 +17,7 @@ TfLiteStatus ParseGelu(const tflite::Operator* op,
 
 void Check(TfLiteStatus status, const char* name) {
   if (status != kTfLiteOk) {
-    tflite::MicroPrintf("Failed to register TFLM op: %s", name);
+    MicroPrintf("Failed to register TFLM op: %s", name);
   }
 }
 
