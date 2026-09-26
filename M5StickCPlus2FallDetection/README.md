@@ -1,8 +1,15 @@
 # M5StickC PLUS2 fall detection with the supplied TCN model
 
-This folder is an ESP-IDF firmware prototype for running the **actual trained fall-detection model supplied in `model_convert(1).zip`** on an M5Stack M5StickC PLUS2.
+This folder runs the **actual trained fall-detection model from `model_convert(1).zip`** on an M5Stack M5StickC PLUS2.
 
-It does not retrain or replace the model. The firmware reads the built-in MPU6886, builds the model input window, runs TensorFlow Lite Micro locally on the ESP32, and reports Normal/Fall output probabilities over Serial. A buzzer trigger is included as a provisional demo action.
+The current pipeline is:
+
+```text
+MPU6886 -> 20 Hz -> [ax, ay, az, gx, gy, gz] -> 60 x 6 window
+        -> saved normalization -> TensorFlow Lite Micro -> Normal/Fall logits
+```
+
+The goal of this stage is to prove that the trained model can execute locally on the device. Model OTA will be added only after the USB-flashed inference path is working.
 
 ## Model interface
 
@@ -16,88 +23,96 @@ The uploaded conversion manifest is treated as the source of truth:
 - stride: `15` samples = `0.75 s`
 - classes: `2`
 
-Although the checkpoint filename contains `30hz`, the exported model interface uses `20 Hz`.
+Although the checkpoint filename contains `30hz`, this exported model interface uses `20 Hz`.
 
 ## Model artifact used
 
-The firmware uses the supplied:
+The firmware uses:
 
-`tf_saved_model/model_float32_integer_quant.tflite`
+```text
+tf_saved_model/model_float32_integer_quant.tflite
+```
 
-This keeps float input/output with quantized internal weights/operations and is about 705 KB.
+This keeps float input/output while quantizing internal model data/operations and is about 705 KB.
 
-The nominal full-INT8 I/O artifact is not used for this first hardware smoke test because the supplied conversion report shows its output saturating to `[-128, -128]` on the included smoke-test sample, whereas the PyTorch reference logits are different.
+The nominal full-INT8 I/O model is not used for the first hardware test because the supplied conversion report shows saturated output on its included smoke-test sample.
 
-## Prepare the model file
+## Prepare the model once
 
-The repository keeps the firmware source here. Before the first build, extract the supplied model from your original `model_convert(1).zip` with:
+`main/model.tflite` is intentionally gitignored. Create it from your original model package:
 
 ```bash
-cd M5StickCPlus2FallDetection
+cd ~/Documents/fall_detection2/M5StickCPlus2FallDetection
 python3 tools/prepare_model.py /path/to/model_convert\(1\).zip
 ```
 
-This creates:
+The helper verifies both the expected size and SHA256 before writing the model.
+
+## PlatformIO configuration
+
+This project is now configured for PlatformIO with the ESP-IDF framework.
+
+`platformio.ini` pins:
 
 ```text
-main/model.tflite
+platform = espressif32@6.13.0
+framework = espidf
+board = m5stick-c
 ```
 
-The script verifies the exact expected model size and SHA256 before writing it.
+PlatformIO does not expose a separate M5StickC PLUS2 ESP-IDF board definition. M5Stack's own PLUS2 PlatformIO setup also uses `m5stick-c` as the base board, so this project overrides the PLUS2-specific resources:
 
-## GELU support
-
-The converted TCN contains GELU operations. This project includes a small TensorFlow Lite Micro GELU implementation for float32/int8 and a resolver wrapper, so the supplied trained architecture can be attempted without replacing GELU with another activation.
-
-## Live sensor preprocessing
-
-The MPU6886 is configured to:
-
-- accelerometer: ±8 g
-- gyroscope: ±2000 deg/s
-
-The firmware converts:
-
-- acceleration: `g -> m/s²`
-- angular velocity: `deg/s -> rad/s`
-
-Then it applies the exact saved normalization:
-
-`x_norm = (x - mean) / (sigma + 1e-6)`
-
-This is sufficient for the current goal: proving the model can execute from live M5StickC PLUS2 IMU data. It does not yet prove cross-device/domain accuracy.
+- 8 MB flash
+- 2 MB PSRAM through `sdkconfig.defaults`
+- a large single-app partition for the current embedded-model prototype
 
 ## Build
 
-Use ESP-IDF 5.1 or newer.
-
-From the repository root:
+From the project folder:
 
 ```bash
-cd M5StickCPlus2FallDetection
-idf.py set-target esp32
-idf.py build
+pio run
 ```
+
+The first run can take a while because PlatformIO downloads the pinned ESP32 platform, ESP-IDF toolchain, and Espressif TensorFlow Lite Micro component.
 
 ## Flash
 
-Connect the M5StickC PLUS2 by USB-C and find the serial port:
+Connect the M5StickC PLUS2 with USB-C and check the detected serial device:
 
 ```bash
-ls /dev/cu.*
+pio device list
 ```
 
-Then flash and monitor, for example:
+Then flash:
 
 ```bash
-idf.py -p /dev/cu.usbserial-XXXX flash monitor
+pio run -t upload
 ```
 
-Exit the monitor with `Ctrl+]`.
+If automatic port selection fails:
+
+```bash
+pio run -t upload --upload-port /dev/cu.usbserial-XXXX
+```
+
+## Monitor
+
+```bash
+pio device monitor
+```
+
+Or explicitly:
+
+```bash
+pio device monitor --port /dev/cu.usbserial-XXXX --baud 115200
+```
+
+Exit with `Ctrl+C`.
 
 ## Expected startup
 
-You should see messages similar to:
+Look for output similar to:
 
 ```text
 MPU6886 WHO_AM_I = 0x..
@@ -115,16 +130,52 @@ After the first 3 seconds, inference should run every 0.75 seconds:
 infer=... us | logits=[... ...] | normal=... fall=... | sample=...
 ```
 
+## Live preprocessing
+
+The MPU6886 is configured to:
+
+- accelerometer: ±8 g
+- gyroscope: ±2000 deg/s
+
+The firmware converts:
+
+- acceleration: `g -> m/s^2`
+- angular velocity: `deg/s -> rad/s`
+
+Then it applies the saved model normalization:
+
+```text
+x_norm = (x - mean) / (sigma + 1e-6)
+```
+
+This is the best current alignment to the training input. It does not yet prove cross-device accuracy.
+
+## GELU support
+
+The converted TCN contains GELU operations. The project includes a TensorFlow Lite Micro GELU kernel and a custom op resolver so the trained architecture can be attempted without replacing GELU with ReLU or another activation.
+
 ## Current prototype trigger
 
-Class index 1 is treated as `fall`. The firmware applies softmax to the two logits and currently beeps if:
+Class index 1 is treated as `fall`. The firmware applies softmax to the two logits and currently beeps when:
 
-`p(fall) >= 0.9806883345`
+```text
+p(fall) >= 0.9806883345
+```
 
-That threshold came from the training checkpoint's file-level scoring and is only provisional for this hardware smoke test.
+That threshold is provisional for this hardware smoke test.
 
 ## If it fails
 
-Send the complete serial output, especially the first TensorFlow Lite Micro error immediately before `AllocateTensors failed` or `Invoke() failed`.
+Send the full output of:
 
-The goal of this stage is simply: **live MPU6886 -> preprocessing -> the supplied trained TCN -> on-device inference**.
+```bash
+pio run
+```
+
+or, if the build succeeds but the device fails at runtime:
+
+```bash
+pio device monitor
+```
+
+The most useful runtime message is the first TensorFlow Lite Micro error immediately before `AllocateTensors failed` or `Invoke() failed`.
