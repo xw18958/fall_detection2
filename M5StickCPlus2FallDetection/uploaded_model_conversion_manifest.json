@@ -1,0 +1,150 @@
+{
+  "architecture": "TCNAttnClassifier",
+  "artifact_sizes": {
+    "/home/xiao/fall_detection/model_convert/model_api.h": 690,
+    "/home/xiao/fall_detection/model_convert/model_data.c": 4467460,
+    "/home/xiao/fall_detection/model_convert/model_float32.onnx": 2693169,
+    "/home/xiao/fall_detection/model_convert/model_quant_int8.tflite": 705328
+  },
+  "base_checkpoint": "models/lstm_fall_detector1.pt",
+  "best_epoch": 2,
+  "best_stage": "all",
+  "checkpoint_path": "/home/xiao/fall_detection/models/lstm_fall_detector1_30hz_ft_3s.pt",
+  "conversion_finished_utc": "2026-04-20T08:02:09Z",
+  "conversion_started_utc": "2026-04-20T08:02:07Z",
+  "dropout": 0.2,
+  "file_score_mode": "topk_mean",
+  "file_threshold": 0.9806883345113525,
+  "fs_out": 20.0,
+  "hidden_dim": 128,
+  "input_shape": [
+    1,
+    60,
+    6
+  ],
+  "mu": [
+    1.6522459983825684,
+    -1.643275260925293,
+    0.7402734160423279,
+    -0.001773158204741776,
+    -0.0025698263198137283,
+    -0.001795126823708415
+  ],
+  "num_blocks": 4,
+  "num_classes": 2,
+  "onnx2tf_output_dir": "/home/xiao/fall_detection/model_convert/tf_saved_model",
+  "onnx_check": {
+    "inputs": [
+      {
+        "dims": [
+          1,
+          60,
+          6
+        ],
+        "name": "input"
+      }
+    ],
+    "ir_version": 6,
+    "outputs": [
+      {
+        "dims": [
+          1,
+          2
+        ],
+        "name": "logits"
+      }
+    ]
+  },
+  "onnx_path": "/home/xiao/fall_detection/model_convert/model_float32.onnx",
+  "onnx_version": "1.20.1",
+  "onnxruntime_comparison": {
+    "available": true,
+    "input_name": "input",
+    "max_abs_diff": 2.1457672119140625e-06,
+    "mean_abs_diff": 1.7881393432617188e-06
+  },
+  "output_shape": [
+    1,
+    2
+  ],
+  "representative_data_path": "/home/xiao/fall_detection/model_convert/representative_windows.npy",
+  "representative_data_source": "real_preproc_cache:/home/xiao/fall_detection/datasets/.preproc_cache:100_windows",
+  "sample_io_path": "/home/xiao/fall_detection/model_convert/sample_io_pytorch.npz",
+  "selection_metric": "val_segment_mcc_then_specificity",
+  "sigma": [
+    5.0859293937683105,
+    7.0654754638671875,
+    4.490121841430664,
+    0.18281599879264832,
+    0.2244342565536499,
+    0.17335401475429535
+  ],
+  "state_dict_prefixes_verified": [
+    "head.",
+    "pool.",
+    "stem.",
+    "tcn."
+  ],
+  "stride": 15,
+  "tensorflow_version": "2.19.1",
+  "tflite_conversion": {
+    "mode": "onnx2tf_full_integer_quant_int8",
+    "size_bytes": 705328,
+    "source_tflite": "/home/xiao/fall_detection/model_convert/tf_saved_model/model_float32_full_integer_quant.tflite"
+  },
+  "tflite_smoke": {
+    "input_details": [
+      {
+        "dtype": "<class 'numpy.int8'>",
+        "index": "118",
+        "name": "input_quantized_input",
+        "quantization": "(0.0078125, 0)",
+        "quantization_parameters": "{'scales': array([0.0078125], dtype=float32), 'zero_points': array([0], dtype=int32), 'quantized_dimension': 0}",
+        "shape": [
+          1,
+          60,
+          6
+        ],
+        "shape_signature": [
+          1,
+          60,
+          6
+        ],
+        "sparsity_parameters": "{}"
+      }
+    ],
+    "output_dequant": [
+      [
+        -1.0,
+        -1.0
+      ]
+    ],
+    "output_details": [
+      {
+        "dtype": "<class 'numpy.int8'>",
+        "index": "119",
+        "name": "logits_quantized_output",
+        "quantization": "(0.0078125, 0)",
+        "quantization_parameters": "{'scales': array([0.0078125], dtype=float32), 'zero_points': array([0], dtype=int32), 'quantized_dimension': 0}",
+        "shape": [
+          1,
+          2
+        ],
+        "shape_signature": [
+          1,
+          2
+        ],
+        "sparsity_parameters": "{}"
+      }
+    ],
+    "output_raw": [
+      [
+        -128,
+        -128
+      ]
+    ]
+  },
+  "topk_fraction": 0.2,
+  "torch_version": "2.6.0+cu124",
+  "win_len": 60
+}
