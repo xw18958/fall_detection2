@@ -1,0 +1,17 @@
+{
+  "id": "xw18958/fall-detection-30hz-training",
+  "title": "Fall Detection 30Hz Training",
+  "code_file": "train.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "dataset_sources": [
+    "xw18958/30hz-fall-detection-imu-clean"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
