@@ -22,6 +22,8 @@ Current device behavior includes:
 
 The OTA-capable firmware and A/B partition table must first be installed once using USB-C. After that, future firmware and embedded-model updates can normally be installed wirelessly.
 
+The firmware also performs one boot-time Internet update check over HTTPS when configured with local Wi-Fi credentials. Public version metadata lives at `M5StickCPlus2FallDetection/ota/latest.txt`; release firmware binaries must be published separately after review. See the firmware README for credentials, versioning, and publishing steps. The local `FallDetector-OTA` page remains available for recovery.
+
 Build the new image:
 
 ```bash

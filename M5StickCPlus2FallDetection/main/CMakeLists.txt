@@ -4,14 +4,19 @@ idf_component_register(
         "gelu_kernel.cc"
         "fall_op_resolver.cc"
         "wifi_ota.cc"
+        "internet_ota.cc"
     INCLUDE_DIRS "."
     PRIV_REQUIRES
         driver
         esp_timer
         app_update
+        esp_http_client
+        esp_https_ota
+        mbedtls
         esp_event
         esp_http_server
         esp_netif
+        lwip
         esp_wifi
         nvs_flash
 )

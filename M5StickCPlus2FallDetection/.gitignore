@@ -4,3 +4,4 @@ sdkconfig
 sdkconfig.old
 managed_components/
 main/model.tflite
+main/wifi_secrets.h

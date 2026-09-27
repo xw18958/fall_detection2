@@ -274,8 +274,9 @@ bool Start() {
     return false;
   }
 
-  if (esp_netif_create_default_wifi_ap() == nullptr) {
-    ESP_LOGE(kTag, "Could not create Wi-Fi AP network interface");
+  if (esp_netif_create_default_wifi_ap() == nullptr ||
+      esp_netif_create_default_wifi_sta() == nullptr) {
+    ESP_LOGE(kTag, "Could not create Wi-Fi AP/STA network interfaces");
     return false;
   }
 
@@ -295,7 +296,7 @@ bool Start() {
   wifi_config.ap.max_connection = 2;
   wifi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
 
-  if (esp_wifi_set_mode(WIFI_MODE_AP) != ESP_OK ||
+  if (esp_wifi_set_mode(WIFI_MODE_APSTA) != ESP_OK ||
       esp_wifi_set_config(WIFI_IF_AP, &wifi_config) != ESP_OK ||
       esp_wifi_start() != ESP_OK) {
     ESP_LOGE(kTag, "Failed to start Wi-Fi OTA access point");
@@ -310,7 +311,6 @@ bool Start() {
   g_started = true;
   ESP_LOGI(kTag, "Wireless software update ready");
   ESP_LOGI(kTag, "Wi-Fi SSID: %s", kSsid);
-  ESP_LOGI(kTag, "Wi-Fi password: %s", kPassword);
   ESP_LOGI(kTag, "Update page: http://%s/", kIpAddress);
   return true;
 }

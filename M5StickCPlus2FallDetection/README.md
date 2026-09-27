@@ -15,7 +15,28 @@ MPU6886
   -> screen + buzzer
 ```
 
-The firmware now also supports **wireless A/B OTA software updates**. The TFLite model is embedded in the firmware image, so a wireless update can replace the application code and the model together.
+The firmware supports local browser recovery OTA and one HTTPS Internet update check at boot. The TFLite model is embedded in the firmware image, so an update replaces application code and model together.
+
+## Internet OTA prototype
+
+Current firmware version is **1.0.0** (`kFirmwareVersion` in `main/internet_ota.cc`). At boot, after sensor/model initialization and the existing OTA self-test confirmation, firmware starts a 12-second Wi-Fi station connection while keeping the `FallDetector-OTA` recovery access point active. It synchronizes the clock with SNTP for certificate date checks, then GETs `latest.txt` over HTTPS with ESP-IDF's certificate bundle, compares three numeric version components, and downloads the release asset only when the published version is newer. `esp_https_ota` writes and validates the inactive A/B slot; success reboots. Wi-Fi, clock, version-file, TLS, or download failures are logged and the detector continues on the installed firmware. The Internet check runs once per boot.
+
+Credentials are local build inputs. Before building, copy `main/wifi_secrets.example.h` to `main/wifi_secrets.h`, then replace both placeholder values with your Wi-Fi SSID and password. The resulting header is gitignored and is not included in a clean checkout. A missing header produces a compile error with these setup instructions. Do not put credentials in source control or logs.
+
+Update source settings are constants near the top of `main/internet_ota.cc`:
+
+```cpp
+kLatestVersionUrl = "https://raw.githubusercontent.com/xw18958/fall_detection2/main/M5StickCPlus2FallDetection/ota/latest.txt"
+kFirmwareUrl = "https://github.com/xw18958/fall_detection2/releases/latest/download/firmware.bin"
+```
+
+`ota/latest.txt` must contain one strict `major.minor.patch` numeric version (optional surrounding whitespace/newline), for example `1.0.0`. Malformed files are rejected. Comparison is numeric by component (`1.10.0` is newer than `1.9.0`); equal and lower versions do nothing. The parser gives `1.0.0` vs `1.0.0` no update, `1.0.0` vs `1.0.1` update, `1.9.0` vs `1.10.0` update, `2.0.0` vs `1.99.99` no update, and rejects malformed versions.
+
+To publish: build with `pio run`, set `ota/latest.txt` to the new firmware version, create a GitHub Release with that exact version as its tag, and attach `.pio/build/m5stickc-plus2/firmware.bin` as the asset named `firmware.bin`. Only publish the version file after the matching release asset is available. Firmware contains the embedded TFLite model. The firmware binary is intentionally not committed or uploaded by this repository change; publish it as a release asset only after reviewing and approving that specific binary. Set the two URL constants if using another host or release URL. Keep HTTPS certificate verification enabled.
+
+The local `FallDetector-OTA` AP and `http://192.168.4.1/` remain available as recovery OTA in AP+STA mode. If Internet is unavailable, the finite connection/request timeouts let normal fall detection continue. Startup validation and A/B rollback remain in place: a newly booted image is marked valid only after the existing detector and recovery-OTA initialization succeeds; failures before that point request rollback. This prototype uses public static hosting and has no signed release manifest, anti-rollback policy, device identity, staged rollout, or private fleet authorization. HTTPS validates the server connection, but a compromised hosting account could publish malicious firmware. SNTP time synchronization is also unauthenticated.
+
+For a physical check, build and USB-flash this version once after creating `wifi_secrets.h`. First publish `1.0.0` and confirm serial logs show a version match and normal detection while the recovery AP still appears. Then build firmware with `kFirmwareVersion` set to `1.0.1`, create a GitHub Release tagged `1.0.1` with its `firmware.bin`, and update `ota/latest.txt` to `1.0.1`. Reboot the device and confirm logs show the HTTPS update and reboot, the new version boots, detection starts, and the AP remains available. Repeat with Wi-Fi disabled to confirm detection proceeds after the timeout. Internet OTA has not been physically verified by this source change.
 
 ## Current model interface
 
@@ -216,8 +237,7 @@ PSRAM initialized=1
 input shape=[1,60,6] type=float32
 output shape=[1,2] type=float32
 Wireless software update ready
-Wi-Fi SSID: FallDetector-OTA
-Wi-Fi password: fallupdate
+Recovery access point ready (password is not printed)
 Update page: http://192.168.4.1/
 Ready. Collecting MPU6886 at 20 Hz...
 ```

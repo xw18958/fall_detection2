@@ -19,6 +19,7 @@
 #include "fall_op_resolver.h"
 #include "simple_display.h"
 #include "wifi_ota.h"
+#include "internet_ota.h"
 #include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
@@ -483,8 +484,11 @@ extern "C" void app_main(void) {
     return;
   }
 
-  ESP_LOGI(kTag, "Wireless update: SSID=FallDetector-OTA password=fallupdate");
-  ESP_LOGI(kTag, "Open http://192.168.4.1/ to upload firmware.bin");
+  // Keep the recovery AP active while making one bounded Internet OTA check.
+  // Network failures are non-fatal and return to the detector loop.
+  fall_internet_ota::CheckAndUpdate();
+
+  ESP_LOGI(kTag, "Recovery update: connect to FallDetector-OTA and open http://192.168.4.1/");
   ESP_LOGI(kTag, "Ready. Collecting MPU6886 at 20 Hz...");
   ESP_LOGI(kTag, "CSV: ms,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps");
 
