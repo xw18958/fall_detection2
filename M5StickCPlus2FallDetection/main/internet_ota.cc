@@ -248,7 +248,6 @@ bool HttpGetSmallText(const char* url, char* out, size_t out_size) {
     received += static_cast<size_t>(count);
   }
 
-  // Reject oversized metadata instead of parsing a truncated document.
   if (received + 1 == out_size) {
     char extra = 0;
     if (esp_http_client_read(client, &extra, 1) > 0) {
@@ -410,11 +409,12 @@ bool RunEncryptedOta(const UpdateManifest& manifest) {
 
   if (ok) {
     err = esp_encrypted_img_decrypt_end(ctx.decrypt_handle);
-    ctx.decrypt_handle = nullptr;
     if (err != ESP_OK) {
       ESP_LOGE(kTag, "Encrypted OTA authentication/decryption finalization failed: %s",
                esp_err_to_name(err));
       ok = false;
+    } else {
+      ctx.decrypt_handle = nullptr;
     }
   }
 
@@ -449,7 +449,7 @@ bool RunEncryptedOta(const UpdateManifest& manifest) {
   ESP_LOGI(kTag, "Encrypted OTA v%s installed; rebooting", manifest.version_text);
   vTaskDelay(pdMS_TO_TICKS(500));
   esp_restart();
-  return true;  // Unreachable after successful restart.
+  return true;
 }
 
 #endif  // FALL_ENCRYPTED_INTERNET_OTA
