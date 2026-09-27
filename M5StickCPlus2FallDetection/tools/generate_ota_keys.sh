@@ -3,13 +3,15 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SECURITY_DIR="$ROOT_DIR/security"
-PRIVATE_KEY="$SECURITY_DIR/ota_private.pem"
+PRIVATE_KEY="$ROOT_DIR/main/ota_private.pem"
 PUBLIC_KEY="$SECURITY_DIR/ota_public.pem"
 
 mkdir -p "$SECURITY_DIR"
 
 if [[ -e "$PRIVATE_KEY" || -e "$PUBLIC_KEY" ]]; then
-  echo "Refusing to overwrite existing OTA key material in $SECURITY_DIR" >&2
+  echo "Refusing to overwrite existing OTA key material." >&2
+  echo "  private: $PRIVATE_KEY" >&2
+  echo "  public:  $PUBLIC_KEY" >&2
   echo "Move/delete the existing files deliberately if you want to rotate the key." >&2
   exit 1
 fi
