@@ -1,15 +1,7 @@
 name: M5StickC PLUS2 firmware build
 
 on:
-  pull_request:
-    paths:
-      - 'M5StickCPlus2FallDetection/**'
-      - '.github/workflows/m5stick-build.yml'
-  push:
-    branches: [main]
-    paths:
-      - 'M5StickCPlus2FallDetection/**'
-      - '.github/workflows/m5stick-build.yml'
+  workflow_dispatch:
 
 jobs:
   build:
