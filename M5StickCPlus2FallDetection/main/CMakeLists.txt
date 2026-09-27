@@ -1,3 +1,14 @@
+# Keep the development OTA private key as a local, gitignored build input.
+# Using ESP-IDF's component EMBED_TXTFILES with a component-relative path avoids
+# PlatformIO/SCons path rewriting issues seen with an absolute target_add_binary_data path.
+set(FALL_OTA_PRIVATE_KEY "${CMAKE_CURRENT_LIST_DIR}/ota_private.pem")
+set(FALL_OTA_EMBED_TXTFILES "")
+set(FALL_ENCRYPTED_INTERNET_OTA_VALUE 0)
+if(EXISTS "${FALL_OTA_PRIVATE_KEY}")
+    list(APPEND FALL_OTA_EMBED_TXTFILES "ota_private.pem")
+    set(FALL_ENCRYPTED_INTERNET_OTA_VALUE 1)
+endif()
+
 idf_component_register(
     SRCS
         "main.cc"
@@ -20,7 +31,17 @@ idf_component_register(
         esp_wifi
         nvs_flash
         json
+    EMBED_TXTFILES ${FALL_OTA_EMBED_TXTFILES}
 )
+
+target_compile_definitions(
+    ${COMPONENT_LIB}
+    PRIVATE FALL_ENCRYPTED_INTERNET_OTA=${FALL_ENCRYPTED_INTERNET_OTA_VALUE}
+)
+
+if(NOT FALL_ENCRYPTED_INTERNET_OTA_VALUE)
+    message(WARNING "main/ota_private.pem not found: encrypted GitHub Internet OTA will be disabled in this build")
+endif()
 
 target_add_binary_data(
     ${COMPONENT_LIB}
@@ -29,20 +50,3 @@ target_add_binary_data(
     RENAME_TO "model_tflite"
     ALIGN 16
 )
-
-# GitHub Internet OTA is enabled only when a local RSA private key exists.
-# The private key is intentionally gitignored; clean CI/dev checkouts still build,
-# but Internet OTA is skipped until tools/generate_ota_keys.sh has been run.
-set(FALL_OTA_PRIVATE_KEY "${CMAKE_CURRENT_LIST_DIR}/../security/ota_private.pem")
-if(EXISTS "${FALL_OTA_PRIVATE_KEY}")
-    target_compile_definitions(${COMPONENT_LIB} PRIVATE FALL_ENCRYPTED_INTERNET_OTA=1)
-    target_add_binary_data(
-        ${COMPONENT_LIB}
-        "${FALL_OTA_PRIVATE_KEY}"
-        TEXT
-        RENAME_TO "ota_private_pem"
-    )
-else()
-    target_compile_definitions(${COMPONENT_LIB} PRIVATE FALL_ENCRYPTED_INTERNET_OTA=0)
-    message(WARNING "security/ota_private.pem not found: encrypted GitHub Internet OTA will be disabled in this build")
-endif()
