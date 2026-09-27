@@ -21,7 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 VERSION_HEADER = ROOT / "main" / "version.h"
 FIRMWARE_BIN = ROOT / ".pio" / "build" / "m5stickc-plus2" / "firmware.bin"
-PRIVATE_KEY = ROOT / "security" / "ota_private.pem"
+PRIVATE_KEY = ROOT / "main" / "ota_private.pem"
 PUBLIC_KEY = ROOT / "security" / "ota_public.pem"
 DEFAULT_TOOL = (
     ROOT
@@ -127,7 +127,7 @@ def main() -> int:
     print("Publish in this order:")
     print(f"  1. Create GitHub Release tag v{version} and attach firmware.enc")
     print("  2. Copy the generated stable.json to ota/stable.json and push it")
-    print("Never upload plaintext firmware.bin or security/ota_private.pem.")
+    print("Never upload plaintext firmware.bin or main/ota_private.pem.")
     return 0
 
 
