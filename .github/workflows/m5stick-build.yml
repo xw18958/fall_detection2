@@ -2,10 +2,6 @@ name: M5StickC PLUS2 firmware build
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - 'M5StickCPlus2FallDetection/**'
-      - '.github/workflows/m5stick-build.yml'
 
 jobs:
   build:
@@ -26,6 +22,7 @@ jobs:
 
       - name: Create CI-only local inputs
         run: |
+          # The real model, Wi-Fi credentials, and persistent OTA keys are never stored in Git.
           printf '\x1c\x00\x00\x00TFL3' > main/model.tflite
           cp main/wifi_secrets.example.h main/wifi_secrets.h
           sed -i 's/YOUR_WIFI_SSID/CI_TEST_WIFI/' main/wifi_secrets.h
@@ -35,16 +32,8 @@ jobs:
       - name: Static-check release helper
         run: python -m py_compile tools/prepare_release.py
 
-      - name: Development build/package check (non-blocking)
-        run: |
-          set +e
-          pio run
-          status=$?
-          if [ "$status" -eq 0 ]; then
-            python tools/prepare_release.py
-            status=$?
-          fi
-          if [ "$status" -ne 0 ]; then
-            echo "::warning::Development build/package check failed with exit code $status"
-          fi
-          exit 0
+      - name: Build ESP-IDF firmware
+        run: pio run
+
+      - name: Package and round-trip verify encrypted OTA artifact
+        run: python tools/prepare_release.py
