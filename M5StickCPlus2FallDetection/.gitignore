@@ -5,3 +5,6 @@ sdkconfig.old
 managed_components/
 main/model.tflite
 main/wifi_secrets.h
+security/ota_private.pem
+security/ota_public.pem
+dist/
