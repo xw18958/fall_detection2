@@ -60,6 +60,7 @@ The following are ignored by Git:
 main/model.tflite
 main/wifi_secrets.h
 main/ota_private.pem
+main/ota_private_blob.S
 security/ota_public.pem
 dist/
 ```
@@ -109,7 +110,7 @@ plaintext firmware.bin       (local only)
         ↓
 RSA-3072/AES-GCM packaging
         ↓
-firmware.enc                 (safe enough for current public GitHub development)
+firmware.enc                 (public GitHub release asset)
         ↓
 GitHub Release vX.Y.Z
         ↓ HTTPS
@@ -124,7 +125,7 @@ The Internet updater checks this manifest once at boot:
 M5StickCPlus2FallDetection/ota/stable.json
 ```
 
-The tracked manifest is intentionally disabled until a real release has been uploaded:
+The tracked manifest is intentionally disabled until a real release has been uploaded and physically tested:
 
 ```json
 {
@@ -153,13 +154,16 @@ bash tools/generate_ota_keys.sh
 This creates:
 
 ```text
-main/ota_private.pem          # embedded into this development firmware; gitignored
-security/ota_public.pem       # used locally to create firmware.enc; gitignored
+main/ota_private.pem          # RSA private key; gitignored
+main/ota_private_blob.S       # generated build source containing that key; gitignored
+security/ota_public.pem       # encrypts firmware.enc locally; gitignored
 ```
 
-The script refuses to overwrite an existing key pair. Back up `main/ota_private.pem` before deploying it to any device you care about. A device built with one private key cannot decrypt a release encrypted for another key.
+The generated assembly file is only a PlatformIO/ESP-IDF build workaround. It contains the same secret key material as `main/ota_private.pem` and must never be committed or shared.
 
-If `main/ota_private.pem` is absent, the project still builds, but GitHub Internet OTA is compiled as disabled.
+The script refuses to overwrite existing key material. Back up `main/ota_private.pem` before deploying it to any device you care about. A device built with one private key cannot decrypt a release encrypted for another key.
+
+If the private key/blob is absent, the project still builds, but GitHub Internet OTA is compiled as disabled.
 
 ## Build
 
@@ -288,9 +292,21 @@ What it does **not** yet protect:
 
 Before handing production units to customers, the next security stage should add ESP32 Flash Encryption + Secure Boot, production key provisioning, stronger recovery access control and a real authenticated backend. Those changes are deliberately postponed while the device and model are still being developed.
 
+# Software-side verification
+
+The GitHub Actions build/package test has been exercised successfully without physical hardware. It confirmed that:
+
+- the generated private-key assembly source compiles and links into the ESP-IDF firmware;
+- the firmware image fits comfortably in the current OTA slot using the CI dummy model;
+- `firmware.bin` can be pre-encrypted with the generated public key;
+- the resulting `firmware.enc` can be decrypted with the matching private key;
+- the decrypted bytes exactly match the original `firmware.bin`.
+
+The workflow uses a dummy model, test Wi-Fi values, and throwaway OTA keys, so this is a build/release-path verification only. It does not test the real model or real device behavior.
+
 # CI checks
 
-`.github/workflows/m5stick-build.yml` performs a compile/link check on changes to this project using a dummy local-only model, test Wi-Fi values and throwaway OTA keys. It then runs `tools/prepare_release.py` to verify the encrypted artifact can be decrypted back to the exact built firmware. No real model, Wi-Fi credential or persistent OTA private key is stored by the workflow.
+`.github/workflows/m5stick-build.yml` is intentionally **manual-only** (`workflow_dispatch`) during development, so ordinary pushes do not generate repeated build notifications. When manually run, it builds with a dummy local-only model, test Wi-Fi values and throwaway OTA keys, then runs `tools/prepare_release.py` as a strict round-trip packaging check. No real model, Wi-Fi credential or persistent OTA private key is stored by the workflow.
 
 # Hardware validation still required
 
