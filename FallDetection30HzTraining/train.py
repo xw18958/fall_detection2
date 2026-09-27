@@ -33,6 +33,9 @@ def seed_all(seed):
     if torch.cuda.is_available(): torch.cuda.manual_seed_all(seed)
 
 def extract(zip_path, work):
+    zip_path = Path(zip_path)
+    if zip_path.is_dir():
+        return zip_path
     root = work/"data"/"30Hz_processed_clean_v1"
     if root.exists(): return root
     root.parent.mkdir(parents=True, exist_ok=True)
@@ -288,11 +291,24 @@ def finetune(model,tr,va,cfg,dev,out):
 def save_rows(rows,path): pd.DataFrame(rows).to_csv(path,index=False)
 
 def main():
-    ap=argparse.ArgumentParser(); ap.add_argument("--zip",type=Path,required=True); ap.add_argument("--work",type=Path,default=Path("run"))
+    ap=argparse.ArgumentParser(); ap.add_argument("--zip",type=Path,required=False); ap.add_argument("--work",type=Path,default=Path("run"))
     ap.add_argument("--channels",type=int,default=24); ap.add_argument("--ssl-epochs",type=int,default=20)
     ap.add_argument("--head-epochs",type=int,default=3); ap.add_argument("--all-epochs",type=int,default=17)
     ap.add_argument("--batch",type=int,default=128); ap.add_argument("--seed",type=int,default=42); ap.add_argument("--smoke",action="store_true")
-    a=ap.parse_args(); cfg=Cfg(seed=a.seed,channels=a.channels,ssl_epochs=a.ssl_epochs,head_epochs=a.head_epochs,all_epochs=a.all_epochs,batch=a.batch)
+    a=ap.parse_args()
+    if a.zip is None:
+        kaggle_input=Path("/kaggle/input")
+        candidates=[]
+        if kaggle_input.exists():
+            for p in kaggle_input.rglob("*"):
+                if p.is_dir() and (p/"fall").is_dir() and (p/"non-fall").is_dir():
+                    candidates.append(p)
+        if not candidates:
+            ap.error("--zip is required unless a Kaggle input directory containing fall/ and non-fall/ is mounted")
+        a.zip=sorted(candidates,key=lambda p: len(str(p)))[0]
+        a.work=Path("/kaggle/working/fall_detection_30hz")
+        print("Kaggle dataset root:",a.zip,flush=True)
+    cfg=Cfg(seed=a.seed,channels=a.channels,ssl_epochs=a.ssl_epochs,head_epochs=a.head_epochs,all_epochs=a.all_epochs,batch=a.batch)
     if a.smoke:
         cfg.channels=min(cfg.channels,8); cfg.ssl_epochs=1; cfg.head_epochs=1; cfg.all_epochs=1; cfg.max_ssl_per_rec=4; cfg.max_neg_per_rec=4
     seed_all(cfg.seed); w=a.work; w.mkdir(parents=True,exist_ok=True)
