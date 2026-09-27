@@ -1,11 +1,13 @@
-# Keep the development OTA private key as a local, gitignored build input.
-# Using ESP-IDF's component EMBED_TXTFILES with a component-relative path avoids
-# PlatformIO/SCons path rewriting issues seen with an absolute target_add_binary_data path.
+# The development OTA private key is converted into a small generated assembly
+# source before the build. Treating it as an ordinary source file avoids the
+# PlatformIO/ESP-IDF binary-embedding path issue seen with target_add_binary_data
+# and EMBED_TXTFILES.
 set(FALL_OTA_PRIVATE_KEY "${CMAKE_CURRENT_LIST_DIR}/ota_private.pem")
-set(FALL_OTA_EMBED_TXTFILES "")
+set(FALL_OTA_PRIVATE_BLOB "${CMAKE_CURRENT_LIST_DIR}/ota_private_blob.S")
+set(FALL_OTA_EXTRA_SRCS "")
 set(FALL_ENCRYPTED_INTERNET_OTA_VALUE 0)
-if(EXISTS "${FALL_OTA_PRIVATE_KEY}")
-    list(APPEND FALL_OTA_EMBED_TXTFILES "ota_private.pem")
+if(EXISTS "${FALL_OTA_PRIVATE_KEY}" AND EXISTS "${FALL_OTA_PRIVATE_BLOB}")
+    list(APPEND FALL_OTA_EXTRA_SRCS "ota_private_blob.S")
     set(FALL_ENCRYPTED_INTERNET_OTA_VALUE 1)
 endif()
 
@@ -16,6 +18,7 @@ idf_component_register(
         "fall_op_resolver.cc"
         "wifi_ota.cc"
         "internet_ota.cc"
+        ${FALL_OTA_EXTRA_SRCS}
     INCLUDE_DIRS "."
     PRIV_REQUIRES
         driver
@@ -31,7 +34,6 @@ idf_component_register(
         esp_wifi
         nvs_flash
         json
-    EMBED_TXTFILES ${FALL_OTA_EMBED_TXTFILES}
 )
 
 target_compile_definitions(
@@ -40,7 +42,7 @@ target_compile_definitions(
 )
 
 if(NOT FALL_ENCRYPTED_INTERNET_OTA_VALUE)
-    message(WARNING "main/ota_private.pem not found: encrypted GitHub Internet OTA will be disabled in this build")
+    message(WARNING "Development OTA key blob not found: encrypted GitHub Internet OTA will be disabled in this build. Run tools/generate_ota_keys.sh to create it.")
 endif()
 
 target_add_binary_data(
