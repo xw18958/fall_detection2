@@ -19,15 +19,10 @@
 #include "freertos/task.h"
 #include "mbedtls/md.h"
 #include "version.h"
+#include "wifi_ota.h"
 
 #if FALL_ENCRYPTED_INTERNET_OTA
 #include "esp_encrypted_img.h"
-#endif
-
-#if __has_include("wifi_secrets.h")
-#include "wifi_secrets.h"
-#else
-#error "Missing main/wifi_secrets.h. Copy main/wifi_secrets.example.h to main/wifi_secrets.h and set your Wi-Fi credentials."
 #endif
 
 namespace fall_internet_ota {
@@ -123,9 +118,14 @@ void WifiEventHandler(void*, esp_event_base_t base, int32_t id, void* data) {
 }
 
 bool ConnectWifi() {
-  if (std::strcmp(FALL_WIFI_SSID, "YOUR_WIFI_SSID") == 0 ||
-      std::strcmp(FALL_WIFI_PASSWORD, "YOUR_WIFI_PASSWORD") == 0) {
-    ESP_LOGW(kTag, "Set credentials in main/wifi_secrets.h to enable Internet OTA");
+  char stored_ssid[33]{};
+  char stored_password[65]{};
+  if (!fall_ota::LoadStoredWifiCredentials(
+          stored_ssid, sizeof(stored_ssid),
+          stored_password, sizeof(stored_password))) {
+    ESP_LOGW(kTag,
+             "No provisioned Internet Wi-Fi. Connect to FallDetector-OTA and "
+             "open http://192.168.4.1/ to configure it.");
     return false;
   }
 
@@ -161,9 +161,9 @@ bool ConnectWifi() {
   }
 
   wifi_config_t config{};
-  std::strncpy(reinterpret_cast<char*>(config.sta.ssid), FALL_WIFI_SSID,
+  std::strncpy(reinterpret_cast<char*>(config.sta.ssid), stored_ssid,
                sizeof(config.sta.ssid) - 1);
-  std::strncpy(reinterpret_cast<char*>(config.sta.password), FALL_WIFI_PASSWORD,
+  std::strncpy(reinterpret_cast<char*>(config.sta.password), stored_password,
                sizeof(config.sta.password) - 1);
   config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
 
