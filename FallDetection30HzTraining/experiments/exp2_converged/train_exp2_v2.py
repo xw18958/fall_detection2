@@ -59,8 +59,12 @@ def public_data(root,c):
             ky='y' if 'y' in z else ('label' if 'label' in z else None)
             if ky is None: raise RuntimeError(f'{p.name}: missing fall/non-fall y')
             y=np.asarray(z[ky],np.int64); subjects=np.unique(sid); nv=min(len(subjects)-1,max(2,int(round(.10*len(subjects)))))
-            vs=set(rng.choice(subjects,nv,replace=False).tolist()); vi=np.array([i for i,s in enumerate(sid) if s in vs]); ti=np.array([i for i,s in enumerate(sid) if s not in vs])
-            assert set(sid[ti]).isdisjoint(set(sid[vi]))
+            best=None
+            for _ in range(200):
+                cand=set(rng.choice(subjects,nv,replace=False).tolist()); idx=np.array([i for i,s in enumerate(sid) if s in cand])
+                classes=len(np.unique(y[idx])); frac=len(idx)/max(len(y),1); score=(classes==2,-abs(frac-.10))
+                if best is None or score>best[0]: best=(score,cand,idx)
+            vs,vi=best[1],best[2]; ti=np.array([i for i,s in enumerate(sid) if s not in vs]); assert set(sid[ti]).isdisjoint(set(sid[vi]))
         else: ti=np.arange(len(x)); vi=np.array([],int)
         st=b.fit_domain_stats_windows(x[ti]); stats[name]={'acc_scale':st['acc_scale'],'gyro_bias':st['gyro_bias'].tolist(),'gyro_scale':st['gyro_scale']}
         tr[name]=pre_pub(b.domain_norm_windows(x[ti],st),y[ti],c,f'{name}/train'); tr[name]['subject_id']=sid[ti]
