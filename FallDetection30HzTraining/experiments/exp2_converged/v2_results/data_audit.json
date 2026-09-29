@@ -1,0 +1,27 @@
+{
+  "own": {
+    "train": {
+      "recordings": 170,
+      "windows": 19586,
+      "fraction": 0.6997999142489638
+    },
+    "val": {
+      "recordings": 31,
+      "windows": 4204,
+      "fraction": 0.15020723167071603
+    },
+    "test": {
+      "recordings": 28,
+      "windows": 4198,
+      "fraction": 0.14999285408032015
+    }
+  },
+  "public": {
+    "CGU_BES": {"train_subjects": 13, "val_subjects": 2},
+    "Cogent": {"train_subjects": 38, "val_subjects": 4},
+    "SFU_IMU": {"train_subjects": 8, "val_subjects": 2},
+    "UCI_SimulatedFalls": {"train_subjects": 15, "val_subjects": 2},
+    "PAMAP2": {"train_subjects": 9, "val_subjects": 0}
+  },
+  "checks": "LEAKAGE CHECK PASS"
+}
