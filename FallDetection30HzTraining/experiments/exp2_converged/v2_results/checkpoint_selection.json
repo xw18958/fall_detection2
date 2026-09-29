@@ -1,0 +1,41 @@
+{
+  "ssl": {
+    "id": "ssl_1000",
+    "metrics": {
+      "own_ap": 0.9943217620438791,
+      "public_ap": {
+        "CGU_BES": 0.759902551397943,
+        "Cogent": 0.62468130424983,
+        "SFU_IMU": 0.7303430003195182,
+        "UCI_SimulatedFalls": 0.6712986384399848
+      },
+      "public_mean_ap": 0.696556373601819
+    }
+  },
+  "public": {
+    "id": "public_7",
+    "metrics": {
+      "own_ap": 0.9542594125461938,
+      "public_ap": {
+        "CGU_BES": 0.8450770160828234,
+        "Cogent": 0.6404333621888554,
+        "SFU_IMU": 0.7828334818862105,
+        "UCI_SimulatedFalls": 0.8709040041531587
+      },
+      "public_mean_ap": 0.7848119660777619
+    }
+  },
+  "final": {
+    "id": "partial_freeze_4",
+    "metrics": {
+      "own_ap": 0.9883693810914982,
+      "public_ap": {
+        "CGU_BES": 0.8329535459542249,
+        "Cogent": 0.5876795243336641,
+        "SFU_IMU": 0.8139167732095277,
+        "UCI_SimulatedFalls": 0.8555878437983817
+      },
+      "public_mean_ap": 0.7725344218239496
+    }
+  }
+}
