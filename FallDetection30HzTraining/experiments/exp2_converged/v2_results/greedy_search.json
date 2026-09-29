@@ -1,0 +1,128 @@
+{
+  "protocol": "sequential_greedy",
+  "ssl_lr_trials": [
+    {
+      "idx": 0,
+      "ssl_lr": 0.0001,
+      "metrics": {
+        "own_ap": 0.9943217620438791,
+        "public_ap": {
+          "CGU_BES": 0.759903840117523,
+          "Cogent": 0.6246813042498301,
+          "SFU_IMU": 0.730352814189825,
+          "UCI_SimulatedFalls": 0.6712930057053611
+        },
+        "public_mean_ap": 0.6965577410656347
+      },
+      "id": "ssl_1000"
+    },
+    {
+      "idx": 1,
+      "ssl_lr": 0.0003,
+      "metrics": {
+        "own_ap": 0.9965217391304346,
+        "public_ap": {
+          "CGU_BES": 0.7241249213619096,
+          "Cogent": 0.5753788975703238,
+          "SFU_IMU": 0.6440174809389438,
+          "UCI_SimulatedFalls": 0.68028109398702
+        },
+        "public_mean_ap": 0.6559505984645493
+      },
+      "id": "ssl_1000"
+    },
+    {
+      "idx": 2,
+      "ssl_lr": 0.001,
+      "metrics": {
+        "own_ap": 0.9965217391304346,
+        "public_ap": {
+          "CGU_BES": 0.6686511358866276,
+          "Cogent": 0.5483733871797347,
+          "SFU_IMU": 0.5930443607062623,
+          "UCI_SimulatedFalls": 0.6400971387197394
+        },
+        "public_mean_ap": 0.612541505623091
+      },
+      "id": "ssl_1000"
+    }
+  ],
+  "selected_ssl_lr": 0.0001,
+  "fine_tune_lr_trials": [
+    {
+      "idx": 0,
+      "all_lr": 3e-05,
+      "metrics": {
+        "own_ap": 0.9903456656764784,
+        "public_ap": {
+          "CGU_BES": 0.8332200760227368,
+          "Cogent": 0.611572869664164,
+          "SFU_IMU": 0.8082322663071272,
+          "UCI_SimulatedFalls": 0.8569535921350169
+        },
+        "public_mean_ap": 0.7774947010322613
+      },
+      "public_stage": {
+        "own_ap": 0.9176490422401715,
+        "public_ap": {
+          "CGU_BES": 0.8389188648057389,
+          "Cogent": 0.643788110561013,
+          "SFU_IMU": 0.773134372114272,
+          "UCI_SimulatedFalls": 0.8644907668715339
+        },
+        "public_mean_ap": 0.7800830285881394
+      }
+    },
+    {
+      "idx": 1,
+      "all_lr": 8e-05,
+      "metrics": {
+        "own_ap": 0.9818367451538279,
+        "public_ap": {
+          "CGU_BES": 0.835066861916977,
+          "Cogent": 0.602266701562256,
+          "SFU_IMU": 0.7922551916647097,
+          "UCI_SimulatedFalls": 0.7993121832329741
+        },
+        "public_mean_ap": 0.7572252345942292
+      },
+      "public_stage": {
+        "own_ap": 0.9166141940583534,
+        "public_ap": {
+          "CGU_BES": 0.8201534871568842,
+          "Cogent": 0.6356745344527477,
+          "SFU_IMU": 0.7157203208221228,
+          "UCI_SimulatedFalls": 0.7746795757035252
+        },
+        "public_mean_ap": 0.7365569795338199
+      }
+    },
+    {
+      "idx": 2,
+      "all_lr": 0.0002,
+      "metrics": {
+        "own_ap": 0.986298987716757,
+        "public_ap": {
+          "CGU_BES": 0.8342688350182872,
+          "Cogent": 0.5872766287087012,
+          "SFU_IMU": 0.8038824744423082,
+          "UCI_SimulatedFalls": 0.816114306847207
+        },
+        "public_mean_ap": 0.7603855612541259
+      },
+      "public_stage": {
+        "own_ap": 0.9541608976745222,
+        "public_ap": {
+          "CGU_BES": 0.8208460145658818,
+          "Cogent": 0.631273688473334,
+          "SFU_IMU": 0.7485219257735506,
+          "UCI_SimulatedFalls": 0.7994719775906742
+        },
+        "public_mean_ap": 0.7500284016008602
+      }
+    }
+  ],
+  "selected_all_lr": 3e-05,
+  "selection_rule": "Own AP within 0.02 of best, then public mean AP, then Own AP",
+  "own_test_used_for_tuning": false
+}
