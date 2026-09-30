@@ -1,8 +1,79 @@
 # 30 Hz Fall Detection Training
 
-Compact six-axis IMU fall-detection training pipeline for the processed 30 Hz dataset.
+Compact six-axis IMU fall-detection training pipeline plus a reusable preprocessing pipeline for labelled fall recordings that contain surrounding non-fall activity.
 
-## Method
+## Repository structure
+
+```text
+FallDetection30HzTraining/
+  preprocess_noisy_fall_dataset.py   # universal noisy-fall preprocessing
+  train.py                            # 3 s / 90-sample detector training
+  requirements.txt
+  splits/
+  results/
+  experiments/
+```
+
+## V2 noisy-fall preprocessing
+
+The raw dataset uses recording-level fall labels: a file under `fall/` means that the recording contains a fall, not that every timestep is a fall. Long fall recordings can therefore contain substantial normal activity before or after the true fall event.
+
+`preprocess_noisy_fall_dataset.py` converts those noisy recording-level labels into cleaner event-level fall files while recovering the surrounding activity as hard negatives.
+
+### Preprocessing rule
+
+1. Resample every fall recording from `time_ms` to true 30 Hz.
+2. Compute accelerometer and gyroscope magnitudes and find strong peaks that occur close together.
+3. Define the fall-event center as the midpoint between the selected accelerometer and gyroscope peaks.
+4. Normal case: extract a 5 s / 150-sample fall file with that midpoint at the center.
+5. Boundary case: if the recording does not contain enough real data for a centered 5 s window, extract a real 3 s / 90-sample fall window instead.
+6. Short case: if the full recording is shorter than 3 s after 30 Hz resampling, preserve every real sample and pad only the missing samples to 3 s with small IMU-like noise estimated from quiet non-fall recordings.
+7. Every remaining real PRE/POST chunk of at least 3 s becomes a hard-negative file under `non-fall/`.
+8. No guard band around the selected fall window is discarded.
+9. Existing non-fall files are preserved unchanged.
+10. `preprocessing_audit.csv` records the detected peaks, midpoint, output type, crop positions, padding, generated negatives, and duplicate groups.
+
+The 5 s fall file is an offline clean event container. The commercial model still receives 3 s / 90-sample inputs; during later training, different 3 s views can be cropped from the 5 s container so the fall does not always occur at the same position inside the model input.
+
+### Run preprocessing
+
+```bash
+python preprocess_noisy_fall_dataset.py \
+  --input /path/to/30Hz_processed_clean_v1.zip \
+  --output /path/to/30Hz_processed_clean_v2 \
+  --zip-output /path/to/30Hz_processed_clean_v2.zip
+```
+
+Important defaults:
+
+```text
+sampling rate       = 30 Hz
+clean fall window   = 5 s
+model window        = 3 s
+Acc/Gyro pair gap   = <= 1 s
+padding seed        = 42
+```
+
+All defaults are configurable through command-line arguments so the preprocessing logic can be reused for other labelled IMU fall datasets with the same six-axis columns and `time_ms` timestamps.
+
+### Current V1 -> V2 processing result
+
+For `30Hz_processed_clean_v1.zip`:
+
+| Output | Count |
+| --- | ---: |
+| Original fall recordings | 174 |
+| Centered 5 s fall files | 100 |
+| Boundary 3 s fall files | 65 |
+| Padded 3 s fall files | 9 |
+| Existing non-fall files preserved | 55 |
+| New hard-negative files recovered | 120 |
+| Final non-fall files | 175 |
+| Duplicate fall files flagged in audit | 4 |
+
+The input files are first resampled to true 30 Hz because the original timestamps are not uniformly 30 Hz. This matches the resampling policy already used by `train.py`.
+
+## Detector training method
 
 - Recording-level 70/15/15 stratified split before any window generation.
 - True 30 Hz processing with 3 s windows (`90 x 6`) and 0.75 s stride.
@@ -13,11 +84,15 @@ Compact six-axis IMU fall-detection training pipeline for the processed 30 Hz da
 - Balanced supervised sampler and validation-only threshold selection.
 - Compact C24 model: 40,561 parameters.
 
-The dataset provides recording-level labels only. For supervised window training, fall location is therefore estimated inside each fall recording using an IMU impact score (accelerometer magnitude, gyroscope magnitude, and acceleration jerk). Windows close to that estimated event are positive; an ambiguity band is excluded from training. This is pseudo-event supervision, not manually annotated fall timing.
+### Legacy V1 supervision note
 
-## Dataset
+The currently committed `train.py` and reported seed-42 results below were produced with the original V1 dataset. For V1, fall location is estimated inside each recording using an IMU impact score based on acceleration magnitude, gyroscope magnitude, and acceleration jerk. Windows close to that estimated event are positive and an ambiguity band is excluded. This is pseudo-event supervision.
 
-Expected layout:
+The new V2 preprocessing is intended to clean the recording-level labels before future training. The V1 results below should therefore not be presented as V2 results.
+
+## Dataset layout
+
+Input to the preprocessing script:
 
 ```text
 30Hz_processed_clean_v1/
@@ -25,9 +100,21 @@ Expected layout:
   non-fall/*.csv
 ```
 
-The dataset is not committed to this repository. The experiment used 229 recordings: 174 fall and 55 non-fall.
+V2 output:
 
-## Local run
+```text
+30Hz_processed_clean_v2/
+  fall/*.csv
+  non-fall/*.csv
+  preprocessing_audit.csv
+  preprocessing_summary.json
+```
+
+The dataset itself is not committed to this repository.
+
+## Local training run
+
+Legacy V1 training:
 
 ```bash
 pip install -r requirements.txt
@@ -42,11 +129,11 @@ python train.py --zip /path/to/30Hz_processed_clean_v1.zip --work smoke_run --sm
 
 ## Kaggle
 
-The script auto-detects a mounted Kaggle dataset containing `fall/` and `non-fall/`, writes outputs under `/kaggle/working/fall_detection_30hz`, and runs the full configuration by default. `kaggle/kernel-metadata.json` records the private kernel configuration used for the final run.
+The training script auto-detects a mounted dataset containing `fall/` and `non-fall/`, writes outputs under `/kaggle/working/fall_detection_30hz`, and runs the full configuration by default. `kaggle/kernel-metadata.json` records the private kernel configuration used for the final V1 run.
 
-Final configuration: seed 42, C24, 20 SSL epochs, 3 head epochs, up to 17 full fine-tuning epochs with patience 5. Fine-tuning stopped early after epoch 13.
+Final V1 configuration: seed 42, C24, 20 SSL epochs, 3 head epochs, up to 17 full fine-tuning epochs with patience 5. Fine-tuning stopped early after epoch 13.
 
-## Final seed-42 results
+## Final seed-42 V1 results
 
 Threshold was selected using validation recordings only (`0.83`).
 
@@ -58,4 +145,4 @@ Threshold was selected using validation recordings only (`0.83`).
 
 Test recording confusion matrix: TN=9, FP=0, FN=3, TP=23.
 
-The exact split, normalization statistics, and full metrics are committed under `splits/`, `normalization_seed42.json`, and `results/` for reproducibility. Model checkpoints are intentionally not committed; they remain available in the Kaggle run output.
+The exact split, normalization statistics, and full V1 metrics are committed under `splits/`, `normalization_seed42.json`, and `results/` for reproducibility. Model checkpoints are intentionally not committed; they remain available in the Kaggle run output.
