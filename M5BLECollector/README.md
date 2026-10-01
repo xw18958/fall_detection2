@@ -59,13 +59,12 @@ The build guard verifies the locked model/configuration, kernels, inference func
 
 Requirements: macOS 14+, Apple's Command Line Tools or Xcode, Bluetooth enabled, and a device running the reviewed BLE firmware in COLLECT mode.
 
-Double-click `StartCollector.command` to open the collector in Terminal. Without flags, participant, activity and placement are recorded as `unspecified`; use the command below to describe a recording, or `activity LABEL` between sessions.
+Double-click `StartCollector.command` to open the collector in Terminal. Participant and placement default to `unspecified`; use the command below when you want to record those fields.
 
 ```bash
 cd M5BLECollector/macos
 ./Scripts/run-app.sh \
   --participant P001 \
-  \
   --placement waist
 ```
 
@@ -106,7 +105,7 @@ Before walking outside:
 
 1. Charge the M5; fasten it consistently and record placement/orientation in the session profile (`--placement`, e.g. `chest_front_axes_up`).
 2. Start with A. The screen stays awake in RECORDING and shows the elapsed trial time.
-3. Perform the activity, then press A to stop. The device enters REVIEW without transferring the sample data.
+3. Perform the movement, then press A to stop. The device enters REVIEW without transferring the sample data.
 4. Press A to KEEP or B to DISCARD. DISCARD clears the local trial. KEEP transfers it; if the Mac is unavailable the screen shows `WAITING FOR MAC` until transfer can resume.
 5. Wait for `SAVED` after KEEP before intentionally rebooting or returning to DETECT with C. In READY the screen may sleep after 60 seconds; the first button press then wakes it without executing an action.
 
