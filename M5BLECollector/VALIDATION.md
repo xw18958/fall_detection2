@@ -19,7 +19,10 @@ REVIEW → KEEP/DISCARD workflow and eight-column raw sensor CSV export.
 - macOS first reported `Peer removed pairing information`. The M5-specific
   Mac bond removal was confirmed in Bluetooth logs. The next attempt was
   blocked by `LeConnectionDenyList`; macOS ignored the connection request.
-  Physical KEEP/DISCARD validation is pending connection recovery.
+  A user-approved Bluetooth off/on refresh cleared that block. The receiver
+  then completed service/characteristic discovery, and macOS logged the Just
+  Works pairing prompt. The Mac was locked, so approval could not complete;
+  physical KEEP/DISCARD validation is pending pairing approval.
 
 The measurements below describe the original installation, not the recovery
 branch's pending radio acceptance tests.
