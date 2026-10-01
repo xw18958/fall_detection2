@@ -46,9 +46,8 @@ public final class Recorder {
         formatter.timeZone = .current
         formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
         let participant = safeName(profile["participant"] ?? "", fallback: "participant")
-        let activity = safeName(profile["activity"] ?? "", fallback: "activity")
         let shortSession = String(sessionHex.suffix(8))
-        return root.appendingPathComponent("\(formatter.string(from: created))_\(participant)_\(activity)_\(shortSession)")
+        return root.appendingPathComponent("\(formatter.string(from: created))_\(participant)_\(shortSession)")
     }
 
     public init(root: URL, session: UInt64, info: DeviceInfo, profile: [String: String]) throws {
