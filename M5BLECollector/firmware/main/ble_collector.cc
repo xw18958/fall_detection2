@@ -39,6 +39,7 @@ constexpr bool kEncryptedTransport = !M5BLE_UNPAIRED_TRANSPORT;
 const ble_uuid128_t kService=M5UUID(1), kInfo=M5UUID(2), kControl=M5UUID(3), kSamples=M5UUID(4), kStatus=M5UUID(5);
 uint16_t g_sample_handle=0, g_status_handle=0;
 uint8_t g_addr_type=0;
+uint8_t g_unpaired_address[6]{};
 std::atomic<uint16_t> g_conn{BLE_HS_CONN_HANDLE_NONE};
 std::atomic<bool> g_subscribed{false}, g_ready{false}, g_detect{false}, g_status_dirty{true};
 std::atomic<uint8_t> g_error{0};
@@ -186,7 +187,12 @@ int GapEvent(ble_gap_event* event, void*) {
 }
 void Sync() {
   if(ble_hs_util_ensure_addr(0)!=0) return;
-  if(!kEncryptedTransport) g_addr_type=BLE_OWN_ADDR_RANDOM;
+  if(!kEncryptedTransport) {
+    const int rc=ble_hs_id_set_rnd(g_unpaired_address);
+    ESP_LOGI(kTag,"Unpaired address setup result=%d",rc);
+    if(rc) return;
+    g_addr_type=BLE_OWN_ADDR_RANDOM;
+  }
   else if(ble_hs_id_infer_auto(0,&g_addr_type)!=0) return;
   Advertise();
 }
@@ -240,9 +246,8 @@ bool Init() {
   if(!kEncryptedTransport) {
     // A distinct static address avoids the Mac automatically restoring the
     // existing encrypted bond. The physical device ID in metadata is unchanged.
-    uint8_t address[6]; for(int i=0;i<6;++i) address[i]=mac[5-i];
-    address[0]^=0x80; address[5]|=0xc0;
-    if(ble_hs_id_set_rnd(address)!=0) return false;
+    for(int i=0;i<6;++i) g_unpaired_address[i]=mac[5-i];
+    g_unpaired_address[0]^=0x80; g_unpaired_address[5]|=0xc0;
   }
   // Keep the radio awake during field collection; detector mode never calls Init.
   ESP_LOGI(kTag,"Radio sleep disabled result=%d",int(esp_bt_sleep_disable()));
