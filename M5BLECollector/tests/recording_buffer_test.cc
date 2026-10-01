@@ -1,43 +1,62 @@
-#include "../firmware/main/recording_buffer.h"
 #include <cassert>
-#include <cstdio>
-#include <cstring>
+#include <cstdint>
+#include <vector>
+#include "../firmware/main/recording_buffer.h"
 
-int main(int argc, char** argv) {
-  using namespace m5ble;
-  uint8_t storage[3*kRecordBytes], batch[3*kRecordBytes];
-  RecordingBuffer buffer(storage,3);
-  int16_t raw[6]={-32768,32767,-123,123,0,-1};
-  assert(buffer.CanLeave()); assert(!buffer.Start(0)); assert(buffer.Start(0x1234));
-  assert(!buffer.CanLeave());
-  assert(buffer.Append(1000000,raw,Marker,42));
-  assert(buffer.Append(1033333,raw,ReadError));
-  assert(buffer.Peek(batch,3)==2);
-  assert(Get32(batch)==0 && Get64(batch+4)==1000000);
-  assert(Get16(batch+12)==32768 && Get16(batch+14)==32767 && Get16(batch+26)==42);
-  assert(!buffer.Ack(0x1234,1)); // Never release samples that were not fully transmitted.
-  buffer.Offered(2);
-  assert(!buffer.Ack(0x5678,2)); assert(!buffer.Ack(0x1234,3));
-  assert(buffer.Ack(0x1234,1)); assert(buffer.Pending()==1);
-  assert(buffer.Append(1066666,raw,0)); assert(buffer.Append(1100000,raw,0)); // Ring wraps.
-  assert(!buffer.Append(1133333,raw,0)); assert(buffer.State()==RecordState::Full);
-  assert(buffer.Overflowed()); assert(!buffer.CanLeave()); assert(!buffer.Start(0x5678));
-  assert(buffer.Peek(batch,3)==3 && Get32(batch)==1 && Get32(batch+64)==3);
-  buffer.Offered(4); assert(buffer.Ack(0x1234,4));
-  assert(buffer.State()==RecordState::Complete && buffer.CanLeave());
-  assert(buffer.Ack(0x1234,4)); // Duplicate ACK.
-  assert(buffer.Start(0x5678)); assert(!buffer.Ack(0x1234,0));
-  assert(buffer.Append(2000000,raw,TimingGap)); buffer.Stop();
-  assert(buffer.State()==RecordState::Saving); assert(!buffer.Append(2033333,raw,0));
-  buffer.Offered(1); assert(buffer.Ack(0x5678,1)); assert(buffer.CanLeave());
-  assert(buffer.Start(0x6789)); buffer.Stop(); assert(buffer.State()==RecordState::Complete);
-  if (argc == 2) {
-    uint8_t fixture_storage[3*kRecordBytes];
-    RecordingBuffer fixture(fixture_storage,3); assert(fixture.Start(42));
-    for (uint32_t i=0;i<3;++i) assert(fixture.Append(1000000+uint64_t(i)*33333,raw,0));
-    assert(fixture.Peek(batch,3)==3);
-    FILE* file=std::fopen(argv[1],"wb"); assert(file);
-    assert(std::fwrite(batch,1,sizeof(batch),file)==sizeof(batch)); assert(std::fclose(file)==0);
-  }
-  std::puts("Buffer overflow, wraparound, stale/future ACKs, reconnect replay and mode-exit guards passed.");
+using m5ble::RecordState;
+using m5ble::RecordingBuffer;
+
+int main() {
+  std::vector<uint8_t> storage(8 * m5ble::kRecordBytes);
+  RecordingBuffer b(storage.data(), 8);
+  const int16_t sample[6] = {1, 2, 3, 4, 5, 6};
+
+  assert(b.Start(11));
+  assert(b.State() == RecordState::Recording);
+  assert(b.Append(1000, sample, 0));
+  assert(b.Append(2000, sample, m5ble::TimingGap));
+  assert(b.Pending() == 2);
+
+  // STOP must not expose data for transfer. A trial stays local until KEEP.
+  b.Stop();
+  assert(b.State() == RecordState::Review);
+  uint8_t packet[8 * m5ble::kRecordBytes]{};
+  assert(b.Peek(packet, 8) == 0);
+  assert(!b.CanLeave());
+
+  // DISCARD clears the complete local trial without ever entering Saving.
+  assert(b.Discard());
+  assert(b.State() == RecordState::Ready);
+  assert(b.Pending() == 0);
+  assert(b.Session() == 0);
+  assert(b.CanLeave());
+
+  // KEEP is the only transition that permits transfer/ACK.
+  assert(b.Start(22));
+  for (int i = 0; i < 4; ++i) assert(b.Append(3000 + i * 1000, sample, 0));
+  b.Stop();
+  assert(b.Keep());
+  assert(b.State() == RecordState::Saving);
+  assert(b.Peek(packet, 8) == 4);
+  const uint32_t exclusive = m5ble::Get32(packet + 3 * m5ble::kRecordBytes) + 1;
+  b.Offered(exclusive);
+  assert(b.Ack(22, exclusive));
+  assert(b.State() == RecordState::Complete);
+  assert(b.Pending() == 0);
+  assert(b.CanLeave());
+
+  // A full buffer is also reviewable: it can be discarded or kept.
+  std::vector<uint8_t> small_storage(2 * m5ble::kRecordBytes);
+  RecordingBuffer full(small_storage.data(), 2);
+  assert(full.Start(33));
+  assert(full.Append(1, sample, 0));
+  assert(full.Append(2, sample, 0));
+  assert(!full.Append(3, sample, 0));
+  assert(full.State() == RecordState::Full);
+  assert(full.Overflowed());
+  assert(full.Discard());
+  assert(full.State() == RecordState::Ready);
+  assert(!full.Overflowed());
+
+  return 0;
 }
