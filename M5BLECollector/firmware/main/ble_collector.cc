@@ -36,10 +36,9 @@ std::atomic<bool> g_subscribed{false}, g_ready{false}, g_detect{false}, g_status
 std::atomic<uint8_t> g_error{0};
 portMUX_TYPE g_lock=portMUX_INITIALIZER_UNLOCKED;
 RecordingBuffer* g_buffer=nullptr;
-uint16_t g_marker=0;
 uint64_t g_boot=0;
 char g_device_id[18]{};
-struct Command { uint8_t op; uint64_t session; uint32_t exclusive; uint16_t marker; };
+struct Command { uint8_t op; uint64_t session; uint32_t exclusive; uint16_t reserved; };
 QueueHandle_t g_commands=nullptr;
 uint8_t g_packet[kRecordBytes*kMaxBatchRecords]{};
 size_t g_packet_len=0, g_part=0, g_parts=0, g_chunk=0;
@@ -83,7 +82,7 @@ int Access(uint16_t conn, uint16_t, ble_gatt_access_ctxt* ctx, void* arg) {
     uint8_t bytes[16]; uint16_t n=0;
     if (OS_MBUF_PKTLEN(ctx->om)!=16 || ble_hs_mbuf_to_flat(ctx->om,bytes,16,&n)!=0 || bytes[0]!=1)
       return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
-    if (bytes[1]<1 || bytes[1]>6) return BLE_ATT_ERR_VALUE_NOT_ALLOWED;
+    if (bytes[1]<1 || bytes[1]>7) return BLE_ATT_ERR_VALUE_NOT_ALLOWED;
     Command cmd{bytes[1],Get64(bytes+2),Get32(bytes+10),Get16(bytes+14)};
     return xQueueSend(g_commands,&cmd,0)==pdTRUE?0:BLE_ATT_ERR_INSUFFICIENT_RES;
   }
@@ -111,17 +110,14 @@ void Advertise() {
 int GapEvent(ble_gap_event* event, void*) {
   switch(event->type) {
     case BLE_GAP_EVENT_CONNECT:
-      if(event->connect.status==0) {
-        g_conn=event->connect.conn_handle; g_ready=false;
-        ble_gap_security_initiate(g_conn);
-      } else Advertise();
+      if(event->connect.status==0) { g_conn=event->connect.conn_handle; g_ready=false; ble_gap_security_initiate(g_conn); }
+      else Advertise();
       break;
     case BLE_GAP_EVENT_ENC_CHANGE: {
       ble_gap_conn_desc desc{};
       if(event->enc_change.status || ble_gap_conn_find(event->enc_change.conn_handle,&desc)!=0 || !desc.sec_state.encrypted) {
         ble_gap_terminate(event->enc_change.conn_handle,BLE_ERR_REM_USER_CONN_TERM); break;
       }
-      // Bond to the first central used in collection mode; future centrals must match.
       if(g_has_owner && ble_addr_cmp(&g_owner,&desc.peer_id_addr)!=0) {
         ble_gap_terminate(desc.conn_handle,BLE_ERR_REM_USER_CONN_TERM); break;
       }
@@ -141,9 +137,7 @@ int GapEvent(ble_gap_event* event, void*) {
     case BLE_GAP_EVENT_SUBSCRIBE:
       if(event->subscribe.attr_handle==g_sample_handle) g_subscribed=event->subscribe.cur_notify;
       break;
-    case BLE_GAP_EVENT_REPEAT_PAIRING:
-      // Do not silently replace an existing bond. Document explicit bond reset.
-      return BLE_GAP_REPEAT_PAIRING_IGNORE;
+    case BLE_GAP_EVENT_REPEAT_PAIRING: return BLE_GAP_REPEAT_PAIRING_IGNORE;
     case BLE_GAP_EVENT_ADV_COMPLETE: Advertise(); break;
     default: break;
   }
@@ -155,30 +149,27 @@ void HostTask(void*) { nimble_port_run(); nimble_port_freertos_deinit(); }
 void Process(const Command& cmd) {
   bool ok=false;
   switch(cmd.op) {
-    case 1: { // start
-      if(g_ready && g_subscribed) {
-        portENTER_CRITICAL(&g_lock); ok=g_buffer->Start(RandomSession()); g_marker=0; portEXIT_CRITICAL(&g_lock);
-        if(ok) ClearPacket();
-      }
+    case 1: {
+      portENTER_CRITICAL(&g_lock); ok=g_buffer->Start(RandomSession()); portEXIT_CRITICAL(&g_lock);
+      if(ok) ClearPacket();
       break;
     }
-    case 2: { // stop only the named session
-      portENTER_CRITICAL(&g_lock);
-      ok=cmd.session==g_buffer->Session(); if(ok) g_buffer->Stop();
-      portEXIT_CRITICAL(&g_lock); break;
+    case 2: {
+      portENTER_CRITICAL(&g_lock); ok=cmd.session==g_buffer->Session(); if(ok) g_buffer->Stop(); portEXIT_CRITICAL(&g_lock); break;
     }
-    case 3: { // cumulative, exclusive acknowledgement after durable host write
+    case 3: {
       portENTER_CRITICAL(&g_lock); ok=g_buffer->Ack(cmd.session,cmd.exclusive); portEXIT_CRITICAL(&g_lock);
       if(ok && g_packet_len && cmd.session==g_packet_session && cmd.exclusive>=g_exclusive) ClearPacket();
       break;
     }
-    case 4:
-      portENTER_CRITICAL(&g_lock);
-      ok=cmd.session==g_buffer->Session() && g_buffer->State()==RecordState::Recording && cmd.marker && !g_marker;
-      if(ok) g_marker=cmd.marker;
-      portEXIT_CRITICAL(&g_lock); break;
     case 5: g_ready=g_subscribed && IsEncrypted(g_conn); ok=g_ready; break;
     case 6: ok=CanLeave(); if(ok) g_detect=true; break;
+    case 7: {
+      portENTER_CRITICAL(&g_lock); ok=g_buffer->Keep(); portEXIT_CRITICAL(&g_lock);
+      if(ok) ClearPacket();
+      break;
+    }
+    default: break;
   }
   g_error=ok?0:1; g_status_dirty=true;
 }
@@ -202,10 +193,7 @@ bool Init() {
   uint16_t flags[]={uint16_t(BLE_GATT_CHR_F_READ|BLE_GATT_CHR_F_READ_ENC),
     uint16_t(BLE_GATT_CHR_F_WRITE|BLE_GATT_CHR_F_WRITE_ENC), BLE_GATT_CHR_F_NOTIFY,
     uint16_t(BLE_GATT_CHR_F_READ|BLE_GATT_CHR_F_READ_ENC|BLE_GATT_CHR_F_NOTIFY)};
-  for(int i=0;i<4;++i) {
-    auto& c=g_characteristics[i]; c.uuid=uuids[i]; c.access_cb=Access;
-    c.arg=reinterpret_cast<void*>(uintptr_t(i+2)); c.flags=flags[i];
-  }
+  for(int i=0;i<4;++i) { auto& c=g_characteristics[i]; c.uuid=uuids[i]; c.access_cb=Access; c.arg=reinterpret_cast<void*>(uintptr_t(i+2)); c.flags=flags[i]; }
   g_characteristics[2].val_handle=&g_sample_handle; g_characteristics[3].val_handle=&g_status_handle;
   g_services[0].type=BLE_GATT_SVC_TYPE_PRIMARY; g_services[0].uuid=&kService.u; g_services[0].characteristics=g_characteristics;
   if(ble_gatts_count_cfg(g_services)!=0 || ble_gatts_add_svcs(g_services)!=0) return false;
@@ -223,8 +211,8 @@ bool Init() {
 
 Status GetStatus() {
   Status s{}; portENTER_CRITICAL(&g_lock);
-  s.state=g_buffer->State(); s.session=g_buffer->Session(); s.samples=g_buffer->Next();
-  s.pending=g_buffer->Pending(); s.overflow=g_buffer->Overflowed(); portEXIT_CRITICAL(&g_lock);
+  s.state=g_buffer->State(); s.session=g_buffer->Session(); s.samples=g_buffer->Next(); s.pending=g_buffer->Pending(); s.overflow=g_buffer->Overflowed();
+  portEXIT_CRITICAL(&g_lock);
   s.connected=g_conn!=BLE_HS_CONN_HANDLE_NONE; s.ready=g_ready; s.last_error=g_error; return s;
 }
 bool CanLeave() { portENTER_CRITICAL(&g_lock); bool yes=g_buffer->CanLeave(); portEXIT_CRITICAL(&g_lock); return yes; }
@@ -237,20 +225,20 @@ bool ResetPairing() {
   if(err==ESP_ERR_NVS_NOT_FOUND) err=ESP_OK;
   if(err==ESP_OK) err=nvs_commit(h);
   nvs_close(h);
-  // Only BLE bonds and this app's owner key are reset. Never erase shared NVS.
   return err==ESP_OK && ble_store_clear()==0;
 }
-bool ToggleRecording() {
-  auto s=GetStatus();
-  if(s.state==RecordState::Recording) { Process(Command{2,s.session,0,0}); return true; }
-  Process(Command{1,0,0,0}); return !g_error;
+bool StartRecording() { auto s=GetStatus(); if(s.state!=RecordState::Ready && s.state!=RecordState::Complete) return false; Process(Command{1,0,0,0}); return !g_error; }
+bool StopRecording() { auto s=GetStatus(); if(s.state!=RecordState::Recording) return false; Process(Command{2,s.session,0,0}); return !g_error; }
+bool KeepRecording() { auto s=GetStatus(); if(s.state!=RecordState::Review && s.state!=RecordState::Full) return false; Process(Command{7,s.session,0,0}); return !g_error; }
+bool DiscardRecording() {
+  bool ok=false;
+  portENTER_CRITICAL(&g_lock); ok=g_buffer->Discard(); portEXIT_CRITICAL(&g_lock);
+  if(ok) { ClearPacket(); g_error=0; g_status_dirty=true; }
+  else { g_error=1; g_status_dirty=true; }
+  return ok;
 }
-void AddMarker(uint16_t marker) { auto s=GetStatus(); Process(Command{4,s.session,0,marker}); }
 void Capture(uint64_t time_us,const int16_t raw[6],uint16_t flags) {
-  portENTER_CRITICAL(&g_lock);
-  bool appended=g_buffer->Append(time_us,raw,flags|(g_marker?SampleFlags::Marker:0),g_marker);
-  if(appended) g_marker=0;
-  portEXIT_CRITICAL(&g_lock);
+  portENTER_CRITICAL(&g_lock); g_buffer->Append(time_us,raw,flags); portEXIT_CRITICAL(&g_lock);
 }
 
 void Tick() {
@@ -262,6 +250,8 @@ void Tick() {
     uint8_t bytes[20]; StatusBytes(bytes); auto mbuf=ble_hs_mbuf_from_flat(bytes,20);
     if(mbuf && ble_gatts_notify_custom(conn,g_status_handle,mbuf)==0) { g_status_at=now; g_status_dirty=false; }
   }
+  auto status=GetStatus();
+  if(status.state!=RecordState::Saving) { ClearPacket(); return; }
   if(g_offered_at && now-g_offered_at>2000000) { g_part=0; g_offered_at=0; }
   if(!g_packet_len) {
     if(now<g_next_send) return;
@@ -274,7 +264,6 @@ void Tick() {
     g_parts=(g_packet_len+g_chunk-1)/g_chunk; g_part=0; ++g_batch;
     g_exclusive=Get32(g_packet+g_packet_len-kRecordBytes)+1; g_next_send=now+100000;
   }
-  // Send fragments until stack backpressure; retry the unsent fragment next tick.
   while(g_part<g_parts) {
     uint8_t bytes[256]; bytes[0]=1; bytes[1]=1; bytes[2]=g_part; bytes[3]=g_parts;
     Put64(bytes+4,g_packet_session); Put32(bytes+12,g_batch);
