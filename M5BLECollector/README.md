@@ -125,6 +125,13 @@ completion.json     Created only after device completion and saved-count agreeme
 
 Journal writes are synchronized before acknowledgements are sent. Retransmitted samples are deduplicated and checked against committed contents. On collector restart the journal is recovered, including truncation of an incomplete final line. CSV snapshots are regenerated on startup, approximately every minute, at completion and on orderly exit. Use `completion.json` to distinguish a finished recording from a partial session.
 
+Completed recordings are no longer periodically exported or exported again
+when a new trial begins. You may move or delete a completed recording folder
+without blocking the next save. If the receiver restarts while the device still
+reports that completed trial and its local journal is absent, it stays ready
+for a new trial and does not create an empty substitute recording. Keep the
+folder of an unfinished recording in place until its transfer completes.
+
 The device has an 8,192-record / 256 KiB PSRAM buffer: approximately **273 seconds at 30 Hz** before overhead/timing effects. A full buffer stops acquisition instead of overwriting unsaved data. Power loss or reboot destroys pending RAM samples. Extended standalone recording is not supported in this version.
 
 Sampling timestamps use the device's monotonic microsecond clock. The M5 collection path stores the six signed 16-bit MPU6886 register counts untouched and performs no g/dps conversion, normalization, training-count mapping or model preprocessing. `samples.csv` contains only `seq,device_timestamp_us,ax,ay,az,gx,gy,gz`. Mac reception UTC remains only in the durable journal for transport debugging and is not exported as a training column.

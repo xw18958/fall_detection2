@@ -32,6 +32,26 @@ REVIEW → KEEP/DISCARD workflow and eight-column raw sensor CSV export.
   timing flags, sensor read errors and saturation counts were all zero.
   Physical button and outdoor body/backpack tests remain separate checks.
 
+## Completed-folder removal regression — 2 October 2026
+
+The user removed a completed 56-sample folder while the receiver retained its
+session object. Exporting that old folder stopped the receiver before the next
+save. The Mac-only fix stops exporting completed sessions, clears completed
+session objects when a new device trial appears, and treats an absent journal
+for a device-completed trial as moved/deleted rather than a new empty recording.
+
+- After restarting only the Mac receiver, the current 40-sample recording saved
+  completely at 30 Hz with zero gaps, timing flags or sensor read errors.
+- A newly generated 372-sample setup trial completed. Its entire folder was
+  moved aside before the next RECORDING/REVIEW/KEEP. The next session attached
+  while that folder was absent and saved 502/502 samples at 30 Hz, with zero
+  gaps, timing flags, saturation or sensor read errors. Setup files were restored.
+- Starting the receiver with a fresh temporary recordings root while the M5
+  reported COMPLETE reached confirmed READY without errors or creating a false
+  empty recording. The receiver was then returned to the user's recordings root.
+- Swift release compilation and diff whitespace checks passed. No M5 reboot,
+  firmware flash or detector change was performed during this recovery.
+
 The measurements below describe the original installation, not the recovery
 branch's pending radio acceptance tests.
 

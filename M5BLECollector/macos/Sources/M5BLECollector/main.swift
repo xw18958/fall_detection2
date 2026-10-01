@@ -176,6 +176,17 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         finishedSession = 0
         print("Session: \(recorder!.directory.path)")
     }
+    private func hasJournal(_ session: UInt64) -> Bool {
+        let hex = String(format: "%016llx", session)
+        let entries = (try? FileManager.default.contentsOfDirectory(at: options.recordings,
+            includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])) ?? []
+        return entries.contains { entry in
+            guard let data = try? Data(contentsOf: entry.appendingPathComponent("metadata.json")),
+                  let metadata = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  metadata["session_id"] as? String == hex else { return false }
+            return FileManager.default.fileExists(atPath: entry.appendingPathComponent("journal.jsonl").path)
+        }
+    }
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if characteristic.uuid == CBUUID(string: Wire.info) { infoReading = false }
         if characteristic.uuid == CBUUID(string: Wire.status) { statusReading = false }
@@ -212,11 +223,22 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
                     print("Connected and ready (confirmed by M5). Device recording remains local until KEEP.")
                 }
                 if let state = status, state.session != 0, info != nil, state.saving || state.complete {
-                    try attach(state.session)
-                    if state.complete, finishedSession != state.session, let recorder = recorder {
-                        try recorder.finish(produced: state.produced, overflowed: state.flags & 4 != 0)
-                        finishedSession = state.session; print("Saved \(state.produced) samples: \(recorder.directory.path)")
+                    if state.complete, recorder?.session != state.session, !hasJournal(state.session) {
+                        // The device has already received durable ACKs for every
+                        // sample. Do not recreate a moved/deleted trial as an empty
+                        // unfinished recording and disable future collection.
+                        if finishedSession != state.session {
+                            print("M5's previous recording is complete; its local journal was moved, deleted, or saved elsewhere. Ready for a new trial.")
+                        }
+                        finishedSession = state.session
                         if quitting { close(); return }
+                    } else {
+                        try attach(state.session)
+                        if state.complete, finishedSession != state.session, let recorder = recorder {
+                            try recorder.finish(produced: state.produced, overflowed: state.flags & 4 != 0)
+                            finishedSession = state.session; print("Saved \(state.produced) samples: \(recorder.directory.path)")
+                            if quitting { close(); return }
+                        }
                     }
                 }
                 handshake()
