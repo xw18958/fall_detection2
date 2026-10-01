@@ -98,7 +98,12 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         guard central.state == .poweredOn, !detecting, !fatalStorage else { return }
         if options.device == nil, let id = selected, let known = central.retrievePeripherals(withIdentifiers: [id]).first {
             peripheral = known; known.delegate = self; central.connect(known)
-        } else { central.scanForPeripherals(withServices: [CBUUID(string: Wire.service)]) }
+        } else {
+            // Recovery scans also accept a name-only advertisement. The known
+            // identity filter below and subsequent service/model verification
+            // still select the collector before any recording commands are sent.
+            central.scanForPeripherals(withServices: nil)
+        }
     }
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {

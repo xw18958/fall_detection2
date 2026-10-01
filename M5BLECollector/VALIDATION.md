@@ -92,3 +92,20 @@ automatically reconnected. A subsequent battery-powered BLE recording saved all
 and completion file. Unplug USB before starting acquisition; a power-transition
 reboot during acquisition would lose unsaved RAM samples. Long-duration outdoor
 body-to-backpack and closed-lid reception still need physical checks.
+
+Later out-of-range test: an interrupted session saved a contiguous 516-sample
+prefix on the Mac before disconnection. The M5 subsequently reported SAVING /
+DISCONNECTED beside the awake Mac. Receiver restart, cached direct connection,
+broader identity-filtered scanning and one approved Mac Bluetooth refresh did
+not restore the transfer. This session has no completion file and must not be
+treated as a fully saved recording. The M5 has not been rebooted or reflashed;
+its pending RAM samples remain subject to power loss.
+
+A recovery candidate now retries inactive BLE advertising every two seconds on
+the host event queue, reports advertising setup failures, and clears stale link
+flags on a host reset without clearing the recording buffer. The Mac can also
+discover the known M5 using a name-only advertisement. The firmware build,
+embedded-model/source preservation check and existing replay/buffer/journal
+smoke tests pass. This candidate is not installed or physically verified yet;
+installation would reboot the M5 and lose any unsent RAM samples. The observed
+failure's exact controller/host cause remains unconfirmed without device logs.

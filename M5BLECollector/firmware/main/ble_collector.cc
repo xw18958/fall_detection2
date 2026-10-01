@@ -56,6 +56,7 @@ uint64_t g_packet_session=0;
 uint32_t g_batch=0, g_exclusive=0;
 int64_t g_offered_at=0, g_next_send=0, g_status_at=0;
 ble_addr_t g_owner{}; bool g_has_owner=false;
+ble_npl_callout g_advertising_retry{};
 
 void ClearPacket() { g_packet_len=g_part=g_parts=g_chunk=0; g_offered_at=0; }
 uint64_t RandomSession() { uint64_t v; do { v=(uint64_t(esp_random())<<32)|esp_random(); } while(!v); return v; }
@@ -105,17 +106,32 @@ ble_gatt_svc_def g_services[2]{};
 int GapEvent(ble_gap_event*, void*);
 
 void Advertise() {
+  if(!ble_hs_synced() || g_conn!=BLE_HS_CONN_HANDLE_NONE || ble_gap_adv_active()) return;
   ble_hs_adv_fields fields{};
   fields.flags=BLE_HS_ADV_F_DISC_GEN|BLE_HS_ADV_F_BREDR_UNSUP;
   fields.uuids128=const_cast<ble_uuid128_t*>(&kService); fields.num_uuids128=1; fields.uuids128_is_complete=1;
-  if (ble_gap_adv_set_fields(&fields)!=0) return;
+  int rc=ble_gap_adv_set_fields(&fields);
+  if(rc) { ESP_LOGW(kTag,"Advertising fields failed: %d; will retry",rc); return; }
   ble_hs_adv_fields response{};
   auto name=ble_svc_gap_device_name(); response.name=reinterpret_cast<const uint8_t*>(name);
   response.name_len=std::strlen(name); response.name_is_complete=1;
-  if (ble_gap_adv_rsp_set_fields(&response)!=0) return;
+  rc=ble_gap_adv_rsp_set_fields(&response);
+  if(rc) { ESP_LOGW(kTag,"Advertising response failed: %d; will retry",rc); return; }
   ble_gap_adv_params params{}; params.conn_mode=BLE_GAP_CONN_MODE_UND; params.disc_mode=BLE_GAP_DISC_MODE_GEN;
-  int rc=ble_gap_adv_start(g_addr_type,nullptr,BLE_HS_FOREVER,&params,GapEvent,nullptr);
+  rc=ble_gap_adv_start(g_addr_type,nullptr,BLE_HS_FOREVER,&params,GapEvent,nullptr);
   if(rc) ESP_LOGW(kTag,"Advertising failed: %d",rc);
+}
+
+void RetryAdvertising(ble_npl_event*) {
+  // Execute on the host event queue; retry without resetting the device or its
+  // recording buffer. A temporary GAP failure must not strand pending samples.
+  Advertise();
+  ble_npl_callout_reset(&g_advertising_retry,ble_npl_time_ms_to_ticks32(2000));
+}
+
+void HostReset(int reason) {
+  ESP_LOGW(kTag,"BLE host reset reason=%d; retaining buffered samples",reason);
+  g_conn=BLE_HS_CONN_HANDLE_NONE; g_subscribed=false; g_ready=false; g_status_dirty=true;
 }
 
 int GapEvent(ble_gap_event* event, void*) {
@@ -195,6 +211,7 @@ void Sync() {
   }
   else if(ble_hs_id_infer_auto(0,&g_addr_type)!=0) return;
   Advertise();
+  ble_npl_callout_reset(&g_advertising_retry,ble_npl_time_ms_to_ticks32(2000));
 }
 void HostTask(void*) { nimble_port_run(); nimble_port_freertos_deinit(); }
 
@@ -268,7 +285,9 @@ bool Init() {
   g_characteristics[2].val_handle=&g_sample_handle; g_characteristics[3].val_handle=&g_status_handle;
   g_services[0].type=BLE_GATT_SVC_TYPE_PRIMARY; g_services[0].uuid=&kService.u; g_services[0].characteristics=g_characteristics;
   if(ble_gatts_count_cfg(g_services)!=0 || ble_gatts_add_svcs(g_services)!=0) return false;
-  ble_hs_cfg.sync_cb=Sync; ble_hs_cfg.sm_io_cap=BLE_HS_IO_NO_INPUT_OUTPUT;
+  ble_hs_cfg.sync_cb=Sync; ble_hs_cfg.reset_cb=HostReset;
+  ble_npl_callout_init(&g_advertising_retry,nimble_port_get_dflt_eventq(),RetryAdvertising,nullptr);
+  ble_hs_cfg.sm_io_cap=BLE_HS_IO_NO_INPUT_OUTPUT;
   ble_hs_cfg.sm_bonding=kEncryptedTransport; ble_hs_cfg.sm_sc=1; ble_hs_cfg.sm_mitm=0;
   ble_hs_cfg.sm_our_key_dist=BLE_SM_PAIR_KEY_DIST_ENC|BLE_SM_PAIR_KEY_DIST_ID;
   ble_hs_cfg.sm_their_key_dist=BLE_SM_PAIR_KEY_DIST_ENC|BLE_SM_PAIR_KEY_DIST_ID;
