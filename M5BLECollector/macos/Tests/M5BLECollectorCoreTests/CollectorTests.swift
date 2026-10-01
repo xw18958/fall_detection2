@@ -79,7 +79,7 @@ final class CollectorTests {
         XCTAssertEqual(try recorder!.append([sample(0),sample(1)]),2)
         XCTAssertEqual(try recorder!.append([sample(0),sample(1)]),2)
         let directory = recorder!.directory; recorder = nil
-        let handle = try FileHandle(forWritingTo:directory.appendingPathComponent("journal.jsonl"))
+        let handle = try FileHandle(forWritingTo:Recorder.journalURL(in: directory))
         try handle.seekToEnd(); try handle.write(contentsOf:Data("{\"partial\":".utf8)); try handle.close()
         let recovered = try Recorder(root:root,session:42,info:info,profile:["participant":"P999", "activity":"wrong-new-profile"])
         XCTAssertEqual(recovered.exclusive,2)
@@ -111,10 +111,71 @@ final class CollectorTests {
         XCTAssertEqual(csv.split(separator:"\n").count,2)
         XCTAssertFalse(csv.contains("flags"))
         XCTAssertFalse(FileManager.default.fileExists(atPath: recorder.directory.appendingPathComponent("events.csv").path))
-        let quality = try JSONSerialization.jsonObject(with:Data(contentsOf:recorder.directory.appendingPathComponent("quality_report.json"))) as! [String:Any]
+        let metadata = try JSONSerialization.jsonObject(with:Data(contentsOf:recorder.directory.appendingPathComponent("metadata.json"))) as! [String:Any]
+        let quality = metadata["quality"] as! [String: Any]
         XCTAssertEqual(quality["read_errors"] as? Int,1)
         XCTAssertEqual(quality["timing_gap_flags"] as? Int,1)
         XCTAssertEqual(quality["saturated_samples"] as? Int,1)
+        let completion = metadata["completion"] as! [String: Any]
+        XCTAssertEqual(completion["complete"] as? Bool, true)
+        XCTAssertEqual(completion["device_buffer_overflowed"] as? Bool, true)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(at: recorder.directory, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]).map(\.lastPathComponent).sorted(), ["metadata.json", "samples.csv"])
+    }
+    func testLegacyMigrationPreservesDataAndCompletion() throws {
+        let root = try root(), info = try info()
+        var recorder: Recorder? = try Recorder(root: root, session: 42, info: info, profile: ["participant": "P001", "placement": "waist"])
+        _ = try recorder!.append([sample(0), sample(1)])
+        try recorder!.finish(produced: 2, overflowed: false)
+        let directory = recorder!.directory
+        recorder = nil
+        let metadataURL = directory.appendingPathComponent("metadata.json")
+        var metadata = try JSONSerialization.jsonObject(with: Data(contentsOf: metadataURL)) as! [String: Any]
+        let completion = metadata.removeValue(forKey: "completion") as! [String: Any]
+        let quality = metadata.removeValue(forKey: "quality") as! [String: Any]
+        metadata["schema_version"] = 2
+        metadata["annotation"] = ["fall_label": "non_fall", "notes": "verified trial"]
+        try JSONSerialization.data(withJSONObject: metadata).write(to: metadataURL)
+        try JSONSerialization.data(withJSONObject: completion).write(to: directory.appendingPathComponent("completion.json"))
+        try JSONSerialization.data(withJSONObject: quality).write(to: directory.appendingPathComponent("quality_report.json"))
+        try FileManager.default.moveItem(at: Recorder.journalURL(in: directory), to: directory.appendingPathComponent("journal.jsonl"))
+        let csv = try Data(contentsOf: directory.appendingPathComponent("samples.csv"))
+        let journal = try Data(contentsOf: directory.appendingPathComponent("journal.jsonl"))
+        XCTAssertTrue(Recorder.hasJournal(in: directory))
+        XCTAssertEqual(try Recorder.migrateCompletedRecordings(root: root), 1)
+        XCTAssertEqual(try Recorder.migrateCompletedRecordings(root: root), 0)
+        XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent("samples.csv")), csv)
+        XCTAssertEqual(try Data(contentsOf: Recorder.journalURL(in: directory)), journal)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]).map(\.lastPathComponent).sorted(), ["metadata.json", "samples.csv"])
+        let recovered = try Recorder(root: root, session: 42, info: info, profile: [:])
+        XCTAssertEqual(recovered.exclusive, 2)
+        XCTAssertEqual(try recovered.append([sample(1)]), 2)
+        XCTAssertThrowsError(try recovered.append([sample(2)]))
+        try recovered.finish(produced: 2, overflowed: false)
+        let saved = try JSONSerialization.jsonObject(with: Data(contentsOf: metadataURL)) as! [String: Any]
+        let savedCompletion = saved["completion"] as! [String: Any]
+        XCTAssertEqual(savedCompletion["finished_timestamp_utc"] as? Double, completion["finished_timestamp_utc"] as? Double)
+        XCTAssertEqual((saved["annotation"] as? [String: String])?["fall_label"], "non_fall")
+        XCTAssertEqual((saved["profile"] as? [String: String])?["placement"], "waist")
+        XCTAssertEqual(saved["schema_version"] as? Int, 3)
+    }
+    func testCompletedCountMismatchCannotRewriteCSV() throws {
+        let root = try root(), info = try info()
+        var recorder: Recorder? = try Recorder(root: root, session: 42, info: info, profile: [:])
+        _ = try recorder!.append([sample(0), sample(1)])
+        try recorder!.finish(produced: 2, overflowed: false)
+        let directory = recorder!.directory
+        recorder = nil
+        let csvURL = directory.appendingPathComponent("samples.csv")
+        let originalCSV = try Data(contentsOf: csvURL)
+        let journalURL = Recorder.journalURL(in: directory)
+        let journal = try Data(contentsOf: journalURL)
+        let end = journal.firstIndex(of: 10)! + 1
+        try journal.prefix(end).write(to: journalURL)
+        XCTAssertThrowsError(try Recorder(root: root, session: 42, info: info, profile: [:]))
+        XCTAssertEqual(try Data(contentsOf: csvURL), originalCSV)
+        try FileManager.default.removeItem(at: journalURL)
+        XCTAssertThrowsError(try Recorder(root: root, session: 42, info: info, profile: [:]))
+        XCTAssertEqual(try Data(contentsOf: csvURL), originalCSV)
     }
 }
 
@@ -126,6 +187,8 @@ final class CollectorTests {
         try tests.testJournalReplayDedupAndTruncatedTailRecovery()
         try tests.testInvalidSequenceCannotAdvanceAcknowledgement()
         try tests.testQualityFlagsStayOutOfTrainingCSV()
+        try tests.testLegacyMigrationPreservesDataAndCompletion()
+        try tests.testCompletedCountMismatchCannotRewriteCSV()
         if CommandLine.arguments.count == 2 { try tests.testCppWireFixture(CommandLine.arguments[1]) }
         print("PASS: protocol/journal smoke scenarios; no Bluetooth or device access.")
     }

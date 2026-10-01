@@ -20,6 +20,42 @@ public final class Recorder {
     private let info: DeviceInfo
     private var profile: [String: String]
     private let createdUTC: Double
+    private var metadata: [String: Any] = [:]
+    private var completion: [String: Any] = ["complete": false, "saved_samples": 0]
+
+    public static func journalURL(in directory: URL) -> URL {
+        directory.appendingPathComponent(".recovery/journal.jsonl")
+    }
+    public static func hasJournal(in directory: URL) -> Bool {
+        FileManager.default.fileExists(atPath: journalURL(in: directory).path) ||
+        FileManager.default.fileExists(atPath: directory.appendingPathComponent("journal.jsonl").path)
+    }
+
+    // Caller must hold the recordings-folder lock. Unfinished sessions migrate
+    // when attached, so this offline pass never invents a completion decision.
+    public static func migrateCompletedRecordings(root: URL) throws -> Int {
+        let entries = try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
+        var migrated = 0
+        for entry in entries {
+            guard ["journal.jsonl", "quality_report.json", "completion.json"].contains(where: {
+                FileManager.default.fileExists(atPath: entry.appendingPathComponent($0).path)
+            }) else { continue }
+            let data = try Data(contentsOf: entry.appendingPathComponent("metadata.json"))
+            guard let old = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let hex = old["session_id"] as? String, let session = UInt64(hex, radix: 16),
+                  let device = old["device"] else { throw ProtocolError.invalid("Invalid legacy recording metadata") }
+            let completionURL = entry.appendingPathComponent("completion.json")
+            var completion = old["completion"] as? [String: Any]
+            if completion == nil, FileManager.default.fileExists(atPath: completionURL.path) {
+                completion = try JSONSerialization.jsonObject(with: Data(contentsOf: completionURL)) as? [String: Any]
+            }
+            guard completion?["complete"] as? Bool == true else { continue }
+            let info = try JSONDecoder().decode(DeviceInfo.self, from: JSONSerialization.data(withJSONObject: device))
+            _ = try Recorder(root: root, session: session, info: info, profile: old["profile"] as? [String: String] ?? [:])
+            migrated += 1
+        }
+        return migrated
+    }
 
     private static func safeName(_ value: String, fallback: String) -> String {
         let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
@@ -68,11 +104,29 @@ public final class Recorder {
                 throw ProtocolError.invalid("Existing session metadata does not match this device")
             }
             if let savedProfile = old?["profile"] as? [String: String] { self.profile = savedProfile.filter { $0.key != "activity" } }
+            metadata = old ?? [:]
             createdUTC = old?["created_timestamp_utc"] as? Double ?? Date().timeIntervalSince1970
         } else {
             createdUTC = Date().timeIntervalSince1970
         }
-        let journal = directory.appendingPathComponent("journal.jsonl")
+        if let saved = metadata["completion"] as? [String: Any] {
+            completion = saved
+        } else {
+            let legacy = directory.appendingPathComponent("completion.json")
+            if FileManager.default.fileExists(atPath: legacy.path) {
+                guard let saved = try JSONSerialization.jsonObject(with: Data(contentsOf: legacy)) as? [String: Any] else {
+                    throw ProtocolError.invalid("Invalid legacy completion")
+                }
+                completion = saved
+            }
+        }
+        let hiddenJournal = Self.journalURL(in: directory)
+        let legacyJournal = directory.appendingPathComponent("journal.jsonl")
+        guard !(FileManager.default.fileExists(atPath: hiddenJournal.path) && FileManager.default.fileExists(atPath: legacyJournal.path)) else {
+            throw ProtocolError.invalid("Both legacy and hidden journals exist; refusing ambiguous recovery")
+        }
+        let journal = FileManager.default.fileExists(atPath: legacyJournal.path) ? legacyJournal : hiddenJournal
+        try FileManager.default.createDirectory(at: hiddenJournal.deletingLastPathComponent(), withIntermediateDirectories: true)
         if FileManager.default.fileExists(atPath: journal.path) {
             let data = try Data(contentsOf: journal)
             let end = data.lastIndex(of: 10).map { $0 + 1 } ?? 0
@@ -86,16 +140,32 @@ public final class Recorder {
                 }
                 rows.append(row); exclusive += 1
             }
+            if completion["complete"] as? Bool == true {
+                guard completion["saved_samples"] as? UInt32 == exclusive else {
+                    throw ProtocolError.invalid("Completed recording disagrees with recovered journal count")
+                }
+            }
             handle = try FileHandle(forUpdating: journal)
             if end != data.count { try handle.truncate(atOffset: UInt64(end)); try handle.synchronize() }
         } else {
+            guard completion["complete"] as? Bool != true else { throw ProtocolError.invalid("Completed recording has no recovery journal") }
             guard FileManager.default.createFile(atPath: journal.path, contents: nil) else { throw ProtocolError.invalid("Cannot create journal") }
             handle = try FileHandle(forUpdating: journal)
         }
         try handle.seekToEnd()
         try handle.synchronize()
-        try saveMetadata()
         try exportCSV()
+        // Metadata and CSV are durable before old visible files are relocated.
+        // Keep the original sidecars as hidden backups rather than deleting them.
+        for name in ["journal.jsonl", "quality_report.json", "completion.json"] {
+            let source = directory.appendingPathComponent(name)
+            guard FileManager.default.fileExists(atPath: source.path) else { continue }
+            let target = directory.appendingPathComponent(".recovery/\(name)")
+            guard !FileManager.default.fileExists(atPath: target.path) else { throw ProtocolError.invalid("Recovery backup already exists: \(name)") }
+            try FileManager.default.moveItem(at: source, to: target)
+        }
+        try syncDirectory(hiddenJournal.deletingLastPathComponent())
+        try syncDirectory(directory)
     }
     deinit { try? handle.close() }
 
@@ -121,6 +191,7 @@ public final class Recorder {
             pending.append(JournalRow(sample: sample, host_received_timestamp_utc: receivedUTC)); previousTime = sample.device_timestamp_us; next += 1
         }
         if !pending.isEmpty {
+            guard completion["complete"] as? Bool != true else { throw ProtocolError.invalid("Cannot append new samples to a completed recording") }
             var data = Data()
             for row in pending { data.append(try encoder.encode(row)); data.append(10) }
             try handle.write(contentsOf: data); try handle.synchronize()
@@ -131,16 +202,19 @@ public final class Recorder {
 
     private func saveMetadata() throws {
         let device = try JSONSerialization.jsonObject(with: encoder.encode(info))
-        let metadata: [String: Any] = [
-            "schema_version": 2,
+        let fields: [String: Any] = [
+            "schema_version": 3,
             "session_id": String(format: "%016llx", session),
             "created_timestamp_utc": createdUTC,
             "profile": profile,
             "device": device,
             "sample_columns": ["seq", "device_timestamp_us", "ax", "ay", "az", "gx", "gy", "gz"],
             "sample_value_note": "ax,ay,az,gx,gy,gz are untouched signed 16-bit MPU6886 register counts; conversions are intentionally left to downstream processing",
-            "timestamp_note": "device_timestamp_us is monotonic acquisition time; host reception time is retained only in journal.jsonl for transport debugging"
+            "timestamp_note": "device_timestamp_us is monotonic acquisition time; host reception time is retained only in .recovery/journal.jsonl for transport debugging",
+            "completion": completion
         ]
+        metadata.merge(fields) { _, new in new }
+        if metadata["annotation"] == nil { metadata["annotation"] = ["fall_label": NSNull()] }
         let data = try JSONSerialization.data(withJSONObject: metadata, options: [.prettyPrinted, .sortedKeys])
         try durableReplace(data, at: directory.appendingPathComponent("metadata.json"))
     }
@@ -151,7 +225,10 @@ public final class Recorder {
         do { try file.synchronize(); try file.close() } catch { try? file.close(); throw error }
         let result = temp.path.withCString { source in url.path.withCString { target in Darwin.rename(source, target) } }
         guard result == 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
-        let fd = Darwin.open(directory.path, O_RDONLY)
+        try syncDirectory(url.deletingLastPathComponent())
+    }
+    private func syncDirectory(_ url: URL) throws {
+        let fd = Darwin.open(url.path, O_RDONLY)
         guard fd >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
         defer { Darwin.close(fd) }
         guard Darwin.fsync(fd) == 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
@@ -189,17 +266,25 @@ public final class Recorder {
             "max_interval_ms": (deltas.max() ?? 0)*1000,
             "sequence_gaps": 0
         ]
-        try durableReplace(try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys]), at: directory.appendingPathComponent("quality_report.json"))
+        metadata["quality"] = report
+        if completion["complete"] as? Bool != true { completion["saved_samples"] = exclusive }
+        try saveMetadata()
     }
     public func finish(produced: UInt32, overflowed: Bool) throws {
         guard exclusive == produced else { throw ProtocolError.invalid("Device completion disagrees with saved sample count") }
         try exportCSV()
-        let report: [String: Any] = [
+        if completion["complete"] as? Bool == true {
+            guard completion["device_buffer_overflowed"] as? Bool == overflowed else {
+                throw ProtocolError.invalid("Device overflow state disagrees with saved completion")
+            }
+            return
+        }
+        completion = [
             "complete": true,
             "saved_samples": exclusive,
             "device_buffer_overflowed": overflowed,
             "finished_timestamp_utc": Date().timeIntervalSince1970
         ]
-        try durableReplace(try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted]), at: directory.appendingPathComponent("completion.json"))
+        try saveMetadata()
     }
 }

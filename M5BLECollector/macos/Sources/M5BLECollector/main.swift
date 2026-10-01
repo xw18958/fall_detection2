@@ -8,13 +8,16 @@ struct Options {
     var recordings = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("recordings")
     var profile = ["participant": "unspecified", "placement": "unspecified"]
     var device: String?
+    var migrateRecordings = false
     init() throws {
         let args = Array(CommandLine.arguments.dropFirst())
         var index = 0
         while index < args.count {
             let key = args[index]
+            if key == "--migrate-recordings" { migrateRecordings = true; index += 1; continue }
             if key == "--help" {
-                print("M5BLECollector [--recordings PATH] [--participant ID] [--placement NAME] [--device DEVICE_ID_OR_UUID]")
+                print("M5BLECollector [--recordings PATH] [--participant ID] [--placement NAME] [--device DEVICE_ID_OR_UUID] [--migrate-recordings]")
+                print("--migrate-recordings updates completed legacy folders without starting Bluetooth; stop the receiver first.")
                 print("Commands: status, start, stop, keep, discard, detect, quit, quit force")
                 exit(0)
             }
@@ -69,6 +72,10 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         recordingLock = open(options.recordings.appendingPathComponent(".collector.lock").path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
         guard recordingLock >= 0, flock(recordingLock, LOCK_EX | LOCK_NB) == 0 else {
             throw ProtocolError.invalid("Another collector is using this recordings folder, or the folder cannot be locked")
+        }
+        if options.migrateRecordings {
+            print("Migrated \(try Recorder.migrateCompletedRecordings(root: options.recordings)) completed recordings; sample values preserved.")
+            close()
         }
         activity = ProcessInfo.processInfo.beginActivity(options: [.userInitiated, .latencyCritical], reason: "Receive and durably save M5 motion samples")
         let rc = IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
@@ -179,7 +186,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
             guard let data = try? Data(contentsOf: entry.appendingPathComponent("metadata.json")),
                   let metadata = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   metadata["session_id"] as? String == hex else { return false }
-            return FileManager.default.fileExists(atPath: entry.appendingPathComponent("journal.jsonl").path)
+            return Recorder.hasJournal(in: entry)
         }
     }
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
