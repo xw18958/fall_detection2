@@ -6,7 +6,7 @@ import M5BLECollectorCore
 
 struct Options {
     var recordings = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("recordings")
-    var profile = ["participant": "unspecified", "activity": "unspecified", "placement": "unspecified"]
+    var profile = ["participant": "unspecified", "placement": "unspecified"]
     var device: String?
     init() throws {
         let args = Array(CommandLine.arguments.dropFirst())
@@ -14,15 +14,15 @@ struct Options {
         while index < args.count {
             let key = args[index]
             if key == "--help" {
-                print("M5BLECollector [--recordings PATH] [--participant ID] [--activity NAME] [--placement NAME] [--device DEVICE_ID_OR_UUID]")
-                print("Commands: status, start, stop, keep, discard, activity LABEL, detect, quit, quit force")
+                print("M5BLECollector [--recordings PATH] [--participant ID] [--placement NAME] [--device DEVICE_ID_OR_UUID]")
+                print("Commands: status, start, stop, keep, discard, detect, quit, quit force")
                 exit(0)
             }
             guard index+1 < args.count else { throw ProtocolError.invalid("Missing value for \(key)") }
             let value = args[index+1]
             switch key {
             case "--recordings": recordings = URL(fileURLWithPath: value).standardizedFileURL
-            case "--participant", "--activity", "--placement": profile[String(key.dropFirst(2))] = value
+            case "--participant", "--placement": profile[String(key.dropFirst(2))] = value
             case "--device":
                 guard UUID(uuidString: value) != nil || (value.count == 12 && value.allSatisfy({ $0.isHexDigit })) else {
                     throw ProtocolError.invalid("--device must be a 12-digit device ID or peripheral UUID")
@@ -265,10 +265,6 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         case "discard":
             guard let s = status, s.review else { print("DISCARD is available only after STOP or BUFFER FULL."); return }
             send(Wire.command(8, session: s.session), label: "discard")
-        case "activity":
-            guard !value.isEmpty, let s = status, s.idle else { print("Set activity LABEL only between completed trials."); return }
-            profile["activity"] = value
-            do { try saveProfile(); print("Next session activity: \(value)") } catch { fail("Cannot save profile: \(error)") }
         case "detect":
             guard let s = status, s.idle else { print("Finish KEEP/DISCARD and any transfer before switching to detector mode."); return }
             send(Wire.command(6), label: "detect")
@@ -287,7 +283,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
                 else { print("Waiting for pending samples. Use quit force only to detach without finishing transfer.") }
             } else if recorder == nil { close() }
             else { print("Disconnected: reconnect to finish saving. Use quit force or interrupt again to detach.") }
-        default: print("Commands: status, start, stop, keep, discard, activity LABEL, detect, quit, quit force")
+        default: print("Commands: status, start, stop, keep, discard, detect, quit, quit force")
         }
     }
     private func fail(_ message: String) {

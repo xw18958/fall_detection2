@@ -75,13 +75,13 @@ final class CollectorTests {
     }
     func testJournalReplayDedupAndTruncatedTailRecovery() throws {
         let root = try root(), info = try info()
-        var recorder: Recorder? = try Recorder(root:root,session:42,info:info,profile:["activity":"walking"])
+        var recorder: Recorder? = try Recorder(root:root,session:42,info:info,profile:["participant":"P001", "activity":"walking"])
         XCTAssertEqual(try recorder!.append([sample(0),sample(1)]),2)
         XCTAssertEqual(try recorder!.append([sample(0),sample(1)]),2)
         let directory = recorder!.directory; recorder = nil
         let handle = try FileHandle(forWritingTo:directory.appendingPathComponent("journal.jsonl"))
         try handle.seekToEnd(); try handle.write(contentsOf:Data("{\"partial\":".utf8)); try handle.close()
-        let recovered = try Recorder(root:root,session:42,info:info,profile:["activity":"wrong-new-profile"])
+        let recovered = try Recorder(root:root,session:42,info:info,profile:["participant":"P999", "activity":"wrong-new-profile"])
         XCTAssertEqual(recovered.exclusive,2)
         XCTAssertEqual(try recovered.append([sample(1),sample(2)]),3)
         try recovered.finish(produced:3,overflowed:false)
@@ -91,7 +91,7 @@ final class CollectorTests {
         XCTAssertTrue(csv.contains("-32768,32767,-123,123,0,-1"))
         XCTAssertFalse(csv.contains("host_received_timestamp_utc"))
         let meta = try String(contentsOf:directory.appendingPathComponent("metadata.json"))
-        XCTAssertTrue(meta.contains("walking")); XCTAssertFalse(meta.contains("wrong-new-profile"))
+        XCTAssertTrue(meta.contains("P001")); XCTAssertFalse(meta.contains("walking")); XCTAssertFalse(meta.contains("wrong-new-profile")); XCTAssertFalse(meta.contains("activity"))
     }
     func testInvalidSequenceCannotAdvanceAcknowledgement() throws {
         let recorder = try Recorder(root:root(),session:42,info:info(),profile:[:])

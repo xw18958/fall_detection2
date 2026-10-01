@@ -65,7 +65,7 @@ Double-click `StartCollector.command` to open the collector in Terminal. Without
 cd M5BLECollector/macos
 ./Scripts/run-app.sh \
   --participant P001 \
-  --activity walking \
+  \
   --placement waist
 ```
 
@@ -81,12 +81,11 @@ start
 stop
 keep
 discard
-activity sitting
 detect
 quit
 ```
 
-`activity` changes the label for the next session. `keep` and `discard` mirror the REVIEW decision for terminal/debug use. `detect` requires a clean idle state and reboots the M5 into detection. `quit` never silently keeps a trial: if a recording is active it stops it and asks for an explicit KEEP/DISCARD decision. `quit force` detaches immediately; unsent device samples remain only in RAM.
+`keep` and `discard` mirror the REVIEW decision for terminal/debug use. `detect` requires a clean idle state and reboots the M5 into detection. `quit` never silently keeps a trial: if a recording is active it stops it and asks for an explicit KEEP/DISCARD decision. `quit force` detaches immediately; unsent device samples remain only in RAM.
 
 ## Buttons and field workflow
 

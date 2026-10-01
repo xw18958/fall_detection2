@@ -53,7 +53,7 @@ public final class Recorder {
     public init(root: URL, session: UInt64, info: DeviceInfo, profile: [String: String]) throws {
         try info.validate()
         guard session != 0 else { throw ProtocolError.invalid("Cannot record a zero session") }
-        self.session = session; self.info = info; self.profile = profile
+        self.session = session; self.info = info; self.profile = profile.filter { $0.key != "activity" }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let sessionHex = String(format: "%016llx", session)
         directory = Self.existingDirectory(root: root, sessionHex: sessionHex) ?? Self.newDirectory(root: root, sessionHex: sessionHex, profile: profile, created: Date())
@@ -67,7 +67,7 @@ public final class Recorder {
                   old?["session_id"] as? String == sessionHex else {
                 throw ProtocolError.invalid("Existing session metadata does not match this device")
             }
-            if let savedProfile = old?["profile"] as? [String: String] { self.profile = savedProfile }
+            if let savedProfile = old?["profile"] as? [String: String] { self.profile = savedProfile.filter { $0.key != "activity" } }
             createdUTC = old?["created_timestamp_utc"] as? Double ?? Date().timeIntervalSince1970
         } else {
             createdUTC = Date().timeIntervalSince1970
