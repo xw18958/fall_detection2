@@ -10,10 +10,10 @@
   "files": {
     "M5BLECollector/firmware/partitions.csv": "17345ecb5c52bf32fcc5e9c6b40cdceaacc99121462eec5ac8962c799caa6bee",
     "M5BLECollector/firmware/sdkconfig.defaults": "b617f439fe89c31a17ee675dd71dcf4b25044c63432c645cf8570d4b8a1fe473",
-    "M5BLECollector/macos/Sources/M5BLECollectorCore/Recorder.swift": "555ce75a5ca1d053beffa1756d3b655f091e6d0f9275c378a14e06996bc1b3da",
+    "M5BLECollector/macos/Sources/M5BLECollectorCore/Recorder.swift": "b3b2f98961780be732809d970f7156e828b05d7031cb94ebb75d24e3f3da6688",
     "M5BLECollector/macos/Sources/M5BLECollectorCore/Protocol.swift": "af3d6454906b8a726cf2252f1d48cb9b46bcaa4d3f476cd3994ed1d39d084e3e",
-    "M5BLECollector/macos/Sources/M5BLECollector/main.swift": "92622edf96de6df4bf87b78a7b4ad940bdd7faa0e19328a34ee27c2a28adc3b1",
-    "M5BLECollector/macos/Tests/M5BLECollectorCoreTests/CollectorTests.swift": "51f38c13cd6db0baab7b937afbb3a2beb132281748544192969909cd7e6bd366",
+    "M5BLECollector/macos/Sources/M5BLECollector/main.swift": "cc30a9e9d810dbffb0d01f3928e28fc64a34b320a8d0d31b0489951c77ff8b11",
+    "M5BLECollector/macos/Tests/M5BLECollectorCoreTests/CollectorTests.swift": "a4952194512e55de1cae0b924284cb87a07de2bc0019d23c82e5ee15e74a79ca",
     "M5BLECollector/firmware/main/wifi_ota.cc": "0e982f57d020fe09abdeb3fe842d556bb9a7e37a2ae7608798c508d041414c25",
     "M5BLECollector/firmware/main/recording_buffer.h": "191448405c2102bf06a53f88c8e7889b0f0380a437e5c71aa8dd53dd66663d77",
     "M5BLECollector/firmware/main/wifi_ota.h": "faa44bc99e41d7de1441a1b0d0008fa2dd61df1c0ebcf6d2f39301265e7739ac",
@@ -25,5 +25,5 @@
     "commands_and_wake": "eb79f1e7373ac29e5062568a6d6be54e832b15cc0eceed7c6dbedf972ecb6044",
     "sleep": "9316e7de4bc64c59a2fdc3710d606014e6bf62bb6878688f88e0a86544b70976"
   },
-  "base_commit": "5def1a6d8968b87e3cf67bbaf4cc5c1620c3ba7e"
+  "base_commit": "ef48bcfd8e956f8960f633296e110dc9c6a9723a"
 }

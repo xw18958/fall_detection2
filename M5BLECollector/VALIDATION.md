@@ -10,6 +10,25 @@ hashes match baseline. No device was connected for installation or physical
 30 Hz/battery verification. See [UI_BATTERY.md](UI_BATTERY.md) for precise results,
 board-specific battery sources, screen previews and remaining hardware checks.
 
+## Simplified Mac recording folders — 2 October 2026
+
+- Recording schema 3 exposes only `samples.csv` and `metadata.json`. Quality
+  and completion are nested in metadata; journals and original legacy sidecars
+  are retained inside hidden `.recovery` directories. No firmware was changed.
+- Six Python preservation guards, sanitized C++ buffer/wire tests and standalone
+  Swift smoke scenarios passed. New cases cover legacy migration, byte-identical
+  CSV/journal recovery, completion timestamp and annotation preservation,
+  duplicate replay, and refusal to rewrite completed CSVs when the journal is
+  missing or its count disagrees. The signed release receiver built successfully.
+- The receiver was stopped after device-confirmed READY with zero pending
+  samples. The existing completed 60-sample recording was migrated under the
+  recordings-folder lock. SHA-256 values of its CSV, journal and both original
+  sidecars matched the pre-migration baseline exactly. Combined quality and
+  completion matched the original reports, including the completion timestamp.
+- Unknown body placement remains `unspecified` and fall label remains `null`;
+  neither is invented. `collector_profile.json` remains absent. The updated
+  Mac receiver was restarted with the original recordings path and device ID.
+
 ## Latest-main BLE regression recovery — 2 October 2026
 
 The recovery branch is based on `e288bdd`, retaining the local RECORDING →

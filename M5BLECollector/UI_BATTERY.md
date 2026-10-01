@@ -1,6 +1,8 @@
 # M5StickC PLUS2 UI and battery display
 
-Based on remote `main` at `5def1a6d8968b87e3cf67bbaf4cc5c1620c3ba7e`.
+Originally based on remote `main` at `5def1a6d8968b87e3cf67bbaf4cc5c1620c3ba7e`;
+merged latest `main` at `ef48bcfd8e956f8960f633296e110dc9c6a9723a` before installation.
+The merged Mac collector retains schema 3 with two visible recording files.
 This change affects presentation and battery measurement only.
 
 ## Screens
