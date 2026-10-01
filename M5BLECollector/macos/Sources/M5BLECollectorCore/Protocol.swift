@@ -30,6 +30,7 @@ public struct DeviceInfo: Codable {
     public let accel_g_per_lsb, gyro_dps_per_lsb: Double
     public let time_us: UInt64
     public let last_error: Int
+    public let transport: String?
     public func validate() throws {
         guard `protocol` == 1, rate_hz == 30, accel_range_g == 8, gyro_range_dps == 2000,
               accel_g_per_lsb == 8.0/32768, gyro_dps_per_lsb == 2000.0/32768,

@@ -101,6 +101,15 @@ final class CollectorTests {
         let backwards = Sample(seq:1,deviceTimestamp:5,raw:[1,2,3,4,5,6])
         XCTAssertThrowsError(try recorder.append([backwards])); XCTAssertEqual(recorder.exclusive,1)
     }
+    func testTransportMetadataSurvivesJournalCreation() throws {
+        XCTAssertNil(try info().transport)
+        var fields = try JSONSerialization.jsonObject(with: JSONEncoder().encode(info())) as! [String:Any]
+        fields["transport"] = "ble_unpaired"
+        let decoded = try JSONDecoder().decode(DeviceInfo.self, from: JSONSerialization.data(withJSONObject: fields))
+        let recorder = try Recorder(root: root(), session: 42, info: decoded, profile: [:])
+        let metadata = try JSONSerialization.jsonObject(with: Data(contentsOf: recorder.directory.appendingPathComponent("metadata.json"))) as! [String:Any]
+        XCTAssertEqual((metadata["device"] as? [String:Any])?["transport"] as? String, "ble_unpaired")
+    }
     func testMarkerEscapingAndQualityFlags() throws {
         let recorder = try Recorder(root:root(),session:42,info:info(),profile:[:])
         try recorder.setMarker(2,label:"stairs, \"start\"")
@@ -122,6 +131,7 @@ final class CollectorTests {
         try tests.testJournalReplayDedupAndTruncatedTailRecovery()
         try tests.testInvalidSequenceCannotAdvanceAcknowledgement()
         try tests.testMarkerEscapingAndQualityFlags()
+        try tests.testTransportMetadataSurvivesJournalCreation()
         if CommandLine.arguments.count == 2 { try tests.testCppWireFixture(CommandLine.arguments[1]) }
         print("PASS: protocol/journal smoke scenarios; no Bluetooth or device access.")
     }

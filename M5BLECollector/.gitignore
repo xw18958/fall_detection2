@@ -10,5 +10,6 @@ firmware/sdkconfig*
 firmware/main/model.tflite
 firmware/main/model_v2_replay.h
 firmware/main/model_identity.h
+firmware/main/ble_transport_config.local.h
 firmware/local_model_manifest.json
 artifacts/

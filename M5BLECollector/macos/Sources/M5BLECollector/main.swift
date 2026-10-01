@@ -147,7 +147,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         guard error == nil else { fail("Characteristic discovery failed"); return }
         for characteristic in service.characteristics ?? [] { characteristics[characteristic.uuid.uuidString.uppercased()] = characteristic }
         guard let information = characteristic(Wire.info), characteristic(Wire.samples) != nil, characteristic(Wire.status) != nil, characteristic(Wire.control) != nil else { fail("Missing BLE characteristic"); return }
-        print("Collector service found; reading encrypted device information.")
+        print("Collector service found; reading device information.")
         infoReading = true; peripheral.readValue(for: information)
     }
     private func characteristic(_ uuid: String) -> CBCharacteristic? { characteristics[uuid.uppercased()] }
@@ -158,7 +158,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     private func handshake() {
         guard info != nil, status != nil, subscribed, !readySent else { return }
         readySent = true; send(Wire.command(5), label: "ready")
-        print("Pairing complete; waiting for device readiness.")
+        print("Collector handshake sent; waiting for device readiness.")
     }
     private func attach(_ session: UInt64) throws {
         guard session != 0, let info = info else { throw ProtocolError.invalid("Session arrived before device information") }
@@ -186,6 +186,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
                 info = incoming; selected = peripheral.identifier
                 UserDefaults.standard.set(peripheral.identifier.uuidString, forKey: "M5BLEPeripheral")
                 print("Verified detector model \(incoming.model_sha256.prefix(12))…; firmware \(incoming.firmware)")
+                if incoming.transport == "ble_unpaired" { print("Transport: unpaired BLE; motion data is not encrypted.") }
                 if let state = self.characteristic(Wire.status) { statusReading = true; peripheral.readValue(for: state) }
                 handshake()
             case CBUUID(string: Wire.status):

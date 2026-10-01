@@ -50,4 +50,13 @@ the request accepted (45 ms). These changes have not established sustained BLE
 reliability. Opening the USB diagnostic port was observed to reboot the board;
 do not open serial tools during recording or while samples remain pending.
 
+The Mac's Bluetooth daemon additionally recorded an explicit MIC failure during
+sample transfer. Restarting Mac Bluetooth did not recover the link. A candidate
+with a 64-byte fragment payload and legacy-sized encrypted link packets also
+disconnected while idle, before recording. The optional unpaired transport test
+is isolated behind an ignored local build override; it is not the default build
+and must not be installed without approval for unencrypted motion transfer.
+The optional transport field is backward compatible, and a smoke test confirms
+that its value survives creation of saved session metadata.
+
 No claim of validated real-device accuracy or battery duration is made. Pending device samples are buffered in PSRAM and are lost on power loss/reboot; the Mac's synchronized journal is the persistent record.

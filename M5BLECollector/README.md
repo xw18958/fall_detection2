@@ -19,7 +19,7 @@ The baseline is the local V2 working tree, not a claim that the physical device 
 
 The current detector cannot acquire new BLE functionality without a firmware update. After validation and device backup, install the new **application-only** `firmware.bin` into the inactive OTA slot using the existing recovery page. Keep the existing partition table and bootloader. The previous active application remains in the other slot after this first update; a later OTA update may reuse that slot, so keep the external backup.
 
-Do not run a generic USB upload, erase flash, or upload `model.tflite`. Do not publish this development build through the Internet OTA release channel. No physical installation or radio validation is performed by this source change.
+Do not run a generic USB upload, erase flash, or upload `model.tflite`. Do not publish this development build through the Internet OTA release channel. See the installation record below for the development device's actual status.
 
 The development M5 was installed on 1 October 2026 using a targeted USB write to the inactive `ota_1` application slot at `0x3E0000`, after backing up and validating the complete active detector application and boot/settings regions. Only the unused second OTA selector sector was updated to activate the new application with rollback enabled. The original `ota_0` detector, first valid OTA selector, bootloader, partition table and NVS were preserved. The deployed model matched the locked model byte for byte. Private backups and device logs are kept under the ignored `artifacts/` directory. See `VALIDATION.md` for hardware checks.
 
@@ -130,6 +130,22 @@ Sampling timestamps use the device's monotonic microsecond clock. Mac reception 
 Flags: `1=read error`, `2=sampling timing gap`, `4=sensor rail/saturation`, `8=marker`. Button markers refer to the next acquisition (normally within one 30 Hz interval). Use labels and session metadata for ground truth; model predictions are not labels.
 
 BLE uses encrypted Just Works bonding and one active central. Initial pairing has no passkey/MITM authentication; pair with your intended Mac in a controlled setting. If pairing fails after removing a Mac bond, reset the device bond using A+B while all data is saved, then pair again.
+
+### Optional unpaired transport test
+
+The default build requires encrypted bonding. A local diagnostic override can
+test an unpaired link when macOS reports an encrypted-packet MIC failure:
+create `firmware/main/ble_transport_config.local.h` containing
+`#define M5BLE_UNPAIRED_TRANSPORT 1`, then rebuild. Remove the local override to
+return to the encrypted build. The override file is ignored by Git.
+
+Install this test only with the device owner's approval: motion data is sent
+without encryption or paired-Mac access control. A nearby central could connect
+to it. It uses a separate static BLE address to avoid restoring the encrypted
+bond, while retaining the same physical device ID, detector model, sensor data
+and save protocol. The Mac prints the unpaired transport and stores
+`device.transport = "ble_unpaired"` in session metadata. This test does not erase
+existing pairing records. Stop and save all data before changing firmware.
 
 ## Tests
 
