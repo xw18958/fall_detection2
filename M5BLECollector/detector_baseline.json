@@ -1,0 +1,34 @@
+{
+  "source": "Local V2 working tree, not assumed to match the device flash",
+  "model_sha256": "1553dde844bf34928d360cc5f23e06f353e1c78e7aac6b2271cbc36410920530",
+  "source_sha256": {
+    "main/main.cc": "163f84d738631dedce4c7ee9474462084709241289f4bced3d9f281b46412934",
+    "main/gelu_kernel.cc": "4c0d4eaba62faf47d49551749275a328ef68c73fcc8935dd500805bdcaef555a",
+    "main/gelu_kernel.h": "c966be4081b9511fafacd1861b2e60c79a3a44d0bbfb833e917c7f5d70d7d71d",
+    "main/fast_conv1d.cc": "4203afadb44dc5b222ada2371c71d971ae489f531ba49087a3218467f8c683dc",
+    "main/fast_conv1d.h": "97d0263856f1e1764669026d726587f2ae9e92ea8263d8853b71998a40d2e8cb",
+    "main/fall_op_resolver.cc": "be6fe8e9eb84cb7f3866cf639eb2fab83499454ca51a49562423d50f032c7014",
+    "main/fall_op_resolver.h": "e6fe1778dfd0b7455606cc88eb814ad7555ed2fa34b97b8bb72b5520e4433e40",
+    "main/inference_profiler.h": "93304210796db2f6005b4c8b17766e98fc7d86778f1d5e45b4df7c153d4b59f2",
+    "main/model_v2_config.h": "319bfbc0eb331674f1dc697be89a004eae8e663a71ad52bf4ae4a81948f6f90c",
+    "main/simple_display.h": "7a90ab9c976c1939b0118022597904ef4f25f6d06d560abc3db67248634dbb14",
+    "main/wifi_ota.cc": "6e2689523ddfcd59670970d9097fd935d120da03eb13918c9606b47771c07495",
+    "main/wifi_ota.h": "faa44bc99e41d7de1441a1b0d0008fa2dd61df1c0ebcf6d2f39301265e7739ac",
+    "main/idf_component.yml": "6634f80a66d4bded623f34355ab26372b474599afa1c304e9127065c0ae322b8",
+    "partitions.csv": "17345ecb5c52bf32fcc5e9c6b40cdceaacc99121462eec5ac8962c799caa6bee",
+    "CMakeLists.txt": "9850c410b06b9a5d62490a21d423b0047fcd88866fe08750b639f7b1111a1b70",
+    "sdkconfig.defaults": "4d8bda7dc94a90c286d8dd3bb712cb9de2637808b8f6db9815a73341eba34b07"
+  },
+  "detector_functions_sha256": {
+    "InitMpu6886": "c5a9a4a85979d0f8b16c16495c3316e40c5f756b9dcf905090c6481c321f567f",
+    "Normalize": "8933b72c736dedf794286ad02bc57ba1ec94e29059ad4e9efabb16f2f879ea58",
+    "PushSample": "1c6a5e71c1564eee907b4512e3580af0f11c7ae20ee0e25c89180bbb672ee608",
+    "FillModelInput": "c297a3c56a5f7f8016d21c200b4395384d4aa7c8a62f435c2db27598f987b1c5",
+    "ModelReplaySelfTest": "e406e3c10aca47d29beb629e97d4ca489da11fcb92b95587bbfe9361f49d18d1",
+    "ReadLogits": "fa00eef5b2fffaa1a43df7c93d43e7bae6f4eb1b5587767c56bef16ef78f4e39",
+    "Softmax2": "30398ef23f454dd2f20980d60bb6dbef776a1cf5cfd43d5a48090bff81121d01",
+    "RunInference": "a8782383b246239c55e6225750346aa4b8b5f2d487d11ea7fe37428b20bdca1f",
+    "InitModel": "e3a26efb52db0b085699523751ea55b86960b42544365424c9cacee23459915b"
+  },
+  "replay_sha256": "2012da170aa73d9098397950a59ecee27e3589a10734ea815b991fbe50243259"
+}

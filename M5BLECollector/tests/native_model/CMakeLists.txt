@@ -1,0 +1,32 @@
+cmake_minimum_required(VERSION 3.20)
+project(v2_micro_replay CXX)
+set(CMAKE_CXX_STANDARD 17)
+get_filename_component(ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../firmware" ABSOLUTE)
+set(T "${ROOT}/managed_components/espressif__esp-tflite-micro")
+file(GLOB CORE "${T}/tensorflow/lite/micro/*.cc")
+list(FILTER CORE EXCLUDE REGEX "(test|mock)\\.cc$")
+file(GLOB ALLOC "${T}/tensorflow/lite/micro/arena_allocator/*.cc" "${T}/tensorflow/lite/micro/memory_planner/*.cc")
+file(GLOB COMMON "${T}/tensorflow/lite/micro/kernels/*_common.cc")
+set(KERNELS)
+foreach(NAME if neg add concatenation conv dequantize div elementwise fully_connected kernel_util mul pack quantize reduce reshape softmax squared_difference strided_slice sub transpose)
+ list(APPEND KERNELS "${T}/tensorflow/lite/micro/kernels/${NAME}.cc")
+endforeach()
+add_executable(replay replay.cc ${CORE} ${ALLOC} ${COMMON} ${KERNELS}
+ "${ROOT}/main/gelu_kernel.cc" "${ROOT}/main/fast_conv1d.cc" "${ROOT}/main/fall_op_resolver.cc"
+ "${T}/tensorflow/lite/micro/tflite_bridge/flatbuffer_conversions_bridge.cc"
+ "${T}/tensorflow/lite/micro/tflite_bridge/micro_error_reporter.cc"
+ "${T}/tensorflow/lite/core/api/flatbuffer_conversions.cc"
+ "${T}/tensorflow/lite/core/api/tensor_utils.cc"
+ "${T}/tensorflow/lite/core/c/common.cc"
+ "${T}/tensorflow/lite/kernels/kernel_util.cc"
+ "${T}/tensorflow/lite/kernels/internal/common.cc"
+ "${T}/tensorflow/lite/kernels/internal/quantization_util.cc"
+ "${T}/tensorflow/lite/kernels/internal/portable_tensor_utils.cc"
+ "${T}/tensorflow/lite/kernels/internal/tensor_utils.cc"
+ "${T}/tensorflow/lite/kernels/internal/tensor_ctypes.cc"
+ "${T}/tensorflow/lite/kernels/internal/reference/portable_tensor_utils.cc"
+ "${T}/tensorflow/compiler/mlir/lite/core/api/error_reporter.cc"
+ "${T}/tensorflow/compiler/mlir/lite/schema/schema_utils.cc")
+target_include_directories(replay PRIVATE "${ROOT}/main" "${T}" "${T}/third_party/gemmlowp" "${T}/third_party/flatbuffers/include" "${T}/third_party/ruy")
+target_compile_definitions(replay PRIVATE TF_LITE_STATIC_MEMORY TF_LITE_DISABLE_X86_NEON)
+target_compile_options(replay PRIVATE -O2 -ffunction-sections -fdata-sections)
