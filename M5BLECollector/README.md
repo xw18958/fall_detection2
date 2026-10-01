@@ -113,10 +113,14 @@ The normal screen emphasizes state, recording duration, BLE readiness, and the a
 
 ## Data and reliability
 
+See [Understanding and using M5 motion recordings](COLLECTED_DATA.md) for exact
+column/metadata definitions, nominal unit conversions, quality flags, timing,
+transfer guarantees and the preparation still required before training.
+
 Each session directory shows two files:
 
 ```text
-samples.csv         Clean acquisition data: seq,time,ax,ay,az,gx,gy,gz
+samples.csv         Raw counts: seq,device_timestamp_us,ax,ay,az,gx,gy,gz
 metadata.json       Device/sensor settings, participant/placement, quality and completion
 ```
 
