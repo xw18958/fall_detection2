@@ -169,7 +169,9 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     private func attach(_ session: UInt64) throws {
         guard session != 0, let info = info else { throw ProtocolError.invalid("Session arrived before device information") }
         if let current = recorder, current.session == session { return }
-        if let old = recorder { try old.exportCSV() }
+        // Finished files are already durable. They may have been moved by the
+        // user; exporting them again must not block the next device recording.
+        if let old = recorder, finishedSession != old.session { try old.exportCSV() }
         recorder = try Recorder(root: options.recordings, session: session, info: info, profile: profile)
         finishedSession = 0
         print("Session: \(recorder!.directory.path)")
@@ -196,6 +198,10 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
                 handshake()
             case CBUUID(string: Wire.status):
                 status = try DeviceStatus(data)
+                if let old = recorder, finishedSession == old.session,
+                   status!.session != old.session {
+                    recorder = nil; finishedSession = 0
+                }
                 if !subscriptionsRequested, info != nil,
                    let stream = self.characteristic(Wire.samples), let state = self.characteristic(Wire.status) {
                     subscriptionsRequested = true
@@ -256,7 +262,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
             if info != nil, !statusReading, let state = characteristic(Wire.status) { statusReading = true; peripheral.readValue(for: state) }
             handshake()
         }
-        if Date().timeIntervalSince(lastExport) > 60, let recorder = recorder {
+        if Date().timeIntervalSince(lastExport) > 60, let recorder = recorder, finishedSession != recorder.session {
             do { try recorder.exportCSV(); lastExport = Date() } catch { fail("CSV export failed: \(error)") }
         }
         if Date().timeIntervalSince(lastStatusPrint) >= 10 { showStatus(); lastStatusPrint = Date() }
@@ -265,8 +271,9 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         let states = ["READY", "RECORDING", "REVIEW", "SAVING", "COMPLETE", "BUFFER FULL"]
         if let s = status {
             let seconds = Double(s.produced) / 30.0
-            let timing = recorder.map { String(format: "%.1f Hz | %.1f s", $0.measuredHz, $0.elapsedSeconds) } ?? String(format: "%.1f s", seconds)
-            print("\(states[Int(s.state)]) | \(timing) | acquired=\(s.produced) saved=\(recorder?.exclusive ?? 0) pending=\(s.pending)\(s.flags & 8 != 0 ? " | command rejected" : "")")
+            let current = recorder.flatMap { $0.session == s.session ? $0 : nil }
+            let timing = current.map { String(format: "%.1f Hz | %.1f s", $0.measuredHz, $0.elapsedSeconds) } ?? String(format: "%.1f s", seconds)
+            print("\(states[Int(s.state)]) | \(timing) | acquired=\(s.produced) saved=\(current?.exclusive ?? 0) pending=\(s.pending)\(s.flags & 8 != 0 ? " | command rejected" : "")")
         } else { print("Disconnected or connecting | saved=\(recorder?.exclusive ?? 0)") }
     }
     func command(_ line: String) {
@@ -314,7 +321,9 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         if let peripheral = peripheral { central.cancelPeripheralConnection(peripheral) }
     }
     private func close() {
-        do { try recorder?.exportCSV() } catch { print("Export failed; journal retained: \(error)") }
+        do {
+            if let recorder = recorder, finishedSession != recorder.session { try recorder.exportCSV() }
+        } catch { print("Export failed; journal retained: \(error)") }
         if assertion != 0 { IOPMAssertionRelease(assertion) }
         if let activity = activity { ProcessInfo.processInfo.endActivity(activity) }
         if recordingLock >= 0 { flock(recordingLock, LOCK_UN); Darwin.close(recordingLock) }
