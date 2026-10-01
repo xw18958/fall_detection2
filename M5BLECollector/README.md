@@ -125,6 +125,13 @@ completion.json     Created only after device completion and saved-count agreeme
 
 Journal writes are synchronized before acknowledgements are sent. Retransmitted samples are deduplicated and checked against committed contents. On collector restart the journal is recovered, including truncation of an incomplete final line. CSV snapshots are regenerated on startup, approximately every minute, at completion and on orderly exit. Use `completion.json` to distinguish a finished recording from a partial session.
 
+Completed recordings are no longer periodically exported or exported again
+when a new trial begins. You may move or delete a completed recording folder
+without blocking the next save. If the receiver restarts while the device still
+reports that completed trial and its local journal is absent, it stays ready
+for a new trial and does not create an empty substitute recording. Keep the
+folder of an unfinished recording in place until its transfer completes.
+
 The device has an 8,192-record / 256 KiB PSRAM buffer: approximately **273 seconds at 30 Hz** before overhead/timing effects. A full buffer stops acquisition instead of overwriting unsaved data. Power loss or reboot destroys pending RAM samples. Extended standalone recording is not supported in this version.
 
 Sampling timestamps use the device's monotonic microsecond clock. The M5 collection path stores the six signed 16-bit MPU6886 register counts untouched and performs no g/dps conversion, normalization, training-count mapping or model preprocessing. `samples.csv` contains only `seq,device_timestamp_us,ax,ay,az,gx,gy,gz`. Mac reception UTC remains only in the durable journal for transport debugging and is not exported as a training column.
@@ -132,6 +139,21 @@ Sampling timestamps use the device's monotonic microsecond clock. The M5 collect
 Per-sample quality bits (`read error`, `timing gap`, `sensor saturation`) remain internal to the wire/journal so `quality_report.json` can report collection problems without polluting the training CSV. There is no marker workflow and no `events.csv`. Timestamp gaps remain visible and are not filled or resampled.
 
 BLE uses encrypted Just Works bonding and one active central. Initial pairing has no passkey/MITM authentication; pair with your intended Mac in a controlled setting. If pairing fails after removing a Mac bond, reset the device bond using A+B while all data is saved, then pair again.
+
+The receiver serializes the protected INFO read, STATUS read and notification
+subscriptions before sending READY. It prints `Connected and ready` only after
+the M5 confirms readiness. One receiver may write a recordings folder at a time;
+a second instance exits before touching recording files. Participant and
+placement are stored in each recording's metadata; no root profile file is created.
+
+This ESP-IDF 5.5.3 build disables NimBLE host flow control
+(`CONFIG_BT_NIMBLE_HS_FLOW_CTRL=n`), following the vendor workaround for
+[connection loss issue #18323](https://github.com/espressif/esp-idf/issues/18323).
+For an existing build directory, set the same option in its generated sdkconfig
+or regenerate configuration, and check the generated `config/sdkconfig.h` has
+no enabled definition. BLE advertisements retry on the host queue after a
+temporary failure; a host reset clears connection state while retaining the
+local recording. Notifications carry at most 64 bytes of sample payload.
 
 ## Tests
 
