@@ -15,7 +15,7 @@ struct Options {
             let key = args[index]
             if key == "--help" {
                 print("M5BLECollector [--recordings PATH] [--participant ID] [--activity NAME] [--placement NAME] [--device DEVICE_ID_OR_UUID]")
-                print("Commands: status, start, stop, mark LABEL, activity LABEL, detect, quit, quit force")
+                print("Commands: status, start, stop, keep, discard, activity LABEL, detect, quit, quit force")
                 exit(0)
             }
             guard index+1 < args.count else { throw ProtocolError.invalid("Missing value for \(key)") }
@@ -69,7 +69,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         guard rc == kIOReturnSuccess else { throw ProtocolError.invalid("Cannot create idle-sleep prevention assertion") }
         print("Bluetooth collector; Wi-Fi and Internet are unnecessary. Recordings: \(options.recordings.path)")
         print("Idle sleep prevented. Verify your separate closed-lid awake configuration before walking outside.")
-        print("Switch M5 into COLLECT by holding B for 2 seconds. Press A to start/stop; B adds a marker.")
+        print("Switch the M5 into COLLECT, then use A to start/stop and A/B on REVIEW to keep/discard. Samples are not transferred before KEEP.")
         central = CBCentralManager(delegate: self, queue: .main)
         timer = DispatchSource.makeTimerSource(queue: .main)
         timer?.schedule(deadline: .now()+1, repeating: 1)
@@ -154,7 +154,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     private func handshake() {
         guard info != nil, status != nil, subscribed, !readySent else { return }
         readySent = true; send(Wire.command(5), label: "ready")
-        print("Connected and ready. Recording starts with A or the start command.")
+        print("Connected and ready. Device recording remains local until KEEP.")
     }
     private func attach(_ session: UInt64) throws {
         guard session != 0, let info = info else { throw ProtocolError.invalid("Session arrived before device information") }
@@ -185,7 +185,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
                 handshake()
             case CBUUID(string: Wire.status):
                 status = try DeviceStatus(data)
-                if let state = status, state.session != 0, info != nil {
+                if let state = status, state.session != 0, info != nil, state.saving || state.complete {
                     try attach(state.session)
                     if state.complete, finishedSession != state.session, let recorder = recorder {
                         try recorder.finish(produced: state.produced, overflowed: state.flags & 4 != 0)
@@ -240,9 +240,10 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         if Date().timeIntervalSince(lastStatusPrint) >= 10 { showStatus(); lastStatusPrint = Date() }
     }
     private func showStatus() {
-        let states = ["READY", "RECORDING", "SAVING", "COMPLETE", "BUFFER FULL"]
+        let states = ["READY", "RECORDING", "REVIEW", "SAVING", "COMPLETE", "BUFFER FULL"]
         if let s = status {
-            let timing = String(format: "%.1f Hz | %.1f s", recorder?.measuredHz ?? 0, recorder?.elapsedSeconds ?? 0)
+            let seconds = Double(s.produced) / 30.0
+            let timing = recorder.map { String(format: "%.1f Hz | %.1f s", $0.measuredHz, $0.elapsedSeconds) } ?? String(format: "%.1f s", seconds)
             print("\(states[Int(s.state)]) | \(timing) | acquired=\(s.produced) saved=\(recorder?.exclusive ?? 0) pending=\(s.pending)\(s.flags & 8 != 0 ? " | command rejected" : "")")
         } else { print("Disconnected or connecting | saved=\(recorder?.exclusive ?? 0)") }
     }
@@ -253,32 +254,40 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         switch name {
         case "status": showStatus()
         case "start":
-            guard readySent, let s = status, !s.recording, s.pending == 0 else { print("Wait for a ready connection and finish saving the preceding session."); return }
+            guard readySent, let s = status, s.idle else { print("Start is allowed only from READY/COMPLETE with a ready BLE link."); return }
             send(Wire.command(1), label: "start")
         case "stop":
             guard let s = status, s.recording else { print("No active recording."); return }
             send(Wire.command(2, session: s.session), label: "stop")
-        case "mark":
-            guard !value.isEmpty, let s = status, s.recording, let recorder = recorder else { print("Use mark LABEL during recording."); return }
-            do { let id = try recorder.nextMarker(); try recorder.setMarker(id, label: value); send(Wire.command(4, session: s.session, marker: id), label: "marker") }
-            catch { fail("Cannot save marker: \(error)") }
+        case "keep":
+            guard let s = status, s.review else { print("KEEP is available only after STOP or BUFFER FULL."); return }
+            send(Wire.command(7, session: s.session), label: "keep")
+        case "discard":
+            guard let s = status, s.review else { print("DISCARD is available only after STOP or BUFFER FULL."); return }
+            send(Wire.command(8, session: s.session), label: "discard")
         case "activity":
-            guard !value.isEmpty, status?.recording != true, (status?.pending ?? 0) == 0 else { print("Set activity LABEL between sessions."); return }
+            guard !value.isEmpty, let s = status, s.idle else { print("Set activity LABEL only between completed trials."); return }
             profile["activity"] = value
             do { try saveProfile(); print("Next session activity: \(value)") } catch { fail("Cannot save profile: \(error)") }
         case "detect":
-            guard let s = status, !s.recording, s.pending == 0 else { print("Stop recording and wait for all data to be saved first."); return }
+            guard let s = status, s.idle else { print("Finish KEEP/DISCARD and any transfer before switching to detector mode."); return }
             send(Wire.command(6), label: "detect")
         case "quit":
             if value == "force" { close(); return }
             quitting = true
             if let s = status, peripheral?.state == .connected {
-                if s.recording { send(Wire.command(2, session: s.session), label: "stop"); print("Stopping; waiting for saved completion.") }
-                else if s.pending == 0 { close() }
+                if s.recording {
+                    send(Wire.command(2, session: s.session), label: "stop")
+                    print("Recording stopped; choose KEEP or DISCARD on the M5 before quitting.")
+                    quitting = false
+                } else if s.review {
+                    print("Choose KEEP or DISCARD on the M5 before quitting.")
+                    quitting = false
+                } else if s.pending == 0 { close() }
                 else { print("Waiting for pending samples. Use quit force only to detach without finishing transfer.") }
             } else if recorder == nil { close() }
             else { print("Disconnected: reconnect to finish saving. Use quit force or interrupt again to detach.") }
-        default: print("Commands: status, start, stop, mark LABEL, activity LABEL, detect, quit, quit force")
+        default: print("Commands: status, start, stop, keep, discard, activity LABEL, detect, quit, quit force")
         }
     }
     private func fail(_ message: String) {

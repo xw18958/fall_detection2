@@ -82,7 +82,7 @@ int Access(uint16_t conn, uint16_t, ble_gatt_access_ctxt* ctx, void* arg) {
     uint8_t bytes[16]; uint16_t n=0;
     if (OS_MBUF_PKTLEN(ctx->om)!=16 || ble_hs_mbuf_to_flat(ctx->om,bytes,16,&n)!=0 || bytes[0]!=1)
       return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
-    if (bytes[1]<1 || bytes[1]>7) return BLE_ATT_ERR_VALUE_NOT_ALLOWED;
+    if (bytes[1]<1 || bytes[1]>8) return BLE_ATT_ERR_VALUE_NOT_ALLOWED;
     Command cmd{bytes[1],Get64(bytes+2),Get32(bytes+10),Get16(bytes+14)};
     return xQueueSend(g_commands,&cmd,0)==pdTRUE?0:BLE_ATT_ERR_INSUFFICIENT_RES;
   }
@@ -169,6 +169,11 @@ void Process(const Command& cmd) {
       if(ok) ClearPacket();
       break;
     }
+    case 8: {
+      portENTER_CRITICAL(&g_lock); ok=g_buffer->Discard(); portEXIT_CRITICAL(&g_lock);
+      if(ok) ClearPacket();
+      break;
+    }
     default: break;
   }
   g_error=ok?0:1; g_status_dirty=true;
@@ -231,11 +236,10 @@ bool StartRecording() { auto s=GetStatus(); if(s.state!=RecordState::Ready && s.
 bool StopRecording() { auto s=GetStatus(); if(s.state!=RecordState::Recording) return false; Process(Command{2,s.session,0,0}); return !g_error; }
 bool KeepRecording() { auto s=GetStatus(); if(s.state!=RecordState::Review && s.state!=RecordState::Full) return false; Process(Command{7,s.session,0,0}); return !g_error; }
 bool DiscardRecording() {
-  bool ok=false;
-  portENTER_CRITICAL(&g_lock); ok=g_buffer->Discard(); portEXIT_CRITICAL(&g_lock);
-  if(ok) { ClearPacket(); g_error=0; g_status_dirty=true; }
-  else { g_error=1; g_status_dirty=true; }
-  return ok;
+  auto s=GetStatus();
+  if(s.state!=RecordState::Review && s.state!=RecordState::Full) return false;
+  Process(Command{8,s.session,0,0});
+  return !g_error;
 }
 void Capture(uint64_t time_us,const int16_t raw[6],uint16_t flags) {
   portENTER_CRITICAL(&g_lock); g_buffer->Append(time_us,raw,flags); portEXIT_CRITICAL(&g_lock);

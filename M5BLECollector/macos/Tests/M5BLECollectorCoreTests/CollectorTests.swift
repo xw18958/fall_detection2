@@ -36,7 +36,7 @@ final class CollectorTests {
     private func record(_ sample: Sample) -> Data {
         var b = put(UInt64(sample.seq), bytes: 4)+put(sample.device_timestamp_us, bytes: 8)
         for raw in sample.raw { b += put(UInt64(UInt16(bitPattern: raw)), bytes: 2) }
-        b += put(UInt64(sample.flags), bytes: 2)+put(UInt64(sample.marker), bytes: 2)+[0,0,0,0]
+        b += put(UInt64(sample.flags), bytes: 2)+[0,0,0,0,0,0]
         return Data(b)
     }
     private func fragments(_ payload: Data, chunk: Int, session: UInt64 = 42, batch: UInt32 = 7) -> [Data] {
@@ -87,7 +87,9 @@ final class CollectorTests {
         try recovered.finish(produced:3,overflowed:false)
         let csv = try String(contentsOf:directory.appendingPathComponent("samples.csv"))
         XCTAssertEqual(csv.split(separator:"\n").count,4)
-        XCTAssertTrue(csv.contains("-8.0,7.999755859375"))
+        XCTAssertTrue(csv.hasPrefix("seq,device_timestamp_us,ax,ay,az,gx,gy,gz\n"))
+        XCTAssertTrue(csv.contains("-32768,32767,-123,123,0,-1"))
+        XCTAssertFalse(csv.contains("host_received_timestamp_utc"))
         let meta = try String(contentsOf:directory.appendingPathComponent("metadata.json"))
         XCTAssertTrue(meta.contains("walking")); XCTAssertFalse(meta.contains("wrong-new-profile"))
     }
@@ -101,16 +103,18 @@ final class CollectorTests {
         let backwards = Sample(seq:1,deviceTimestamp:5,raw:[1,2,3,4,5,6])
         XCTAssertThrowsError(try recorder.append([backwards])); XCTAssertEqual(recorder.exclusive,1)
     }
-    func testMarkerEscapingAndQualityFlags() throws {
+    func testQualityFlagsStayOutOfTrainingCSV() throws {
         let recorder = try Recorder(root:root(),session:42,info:info(),profile:[:])
-        try recorder.setMarker(2,label:"stairs, \"start\"")
-        let flagged = Sample(seq:0,deviceTimestamp:1_000_000,raw:[0,0,0,0,0,0],flags:15,marker:2)
+        let flagged = Sample(seq:0,deviceTimestamp:1_000_000,raw:[0,0,0,0,0,0],flags:7)
         _ = try recorder.append([flagged]); try recorder.finish(produced:1,overflowed:true)
-        let events = try String(contentsOf:recorder.directory.appendingPathComponent("events.csv"))
-        XCTAssertTrue(events.contains("\"stairs, \"\"start\"\"\""))
-        XCTAssertEqual(try recorder.nextMarker(),3)
+        let csv = try String(contentsOf:recorder.directory.appendingPathComponent("samples.csv"))
+        XCTAssertEqual(csv.split(separator:"\n").count,2)
+        XCTAssertFalse(csv.contains("flags"))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: recorder.directory.appendingPathComponent("events.csv").path))
         let quality = try JSONSerialization.jsonObject(with:Data(contentsOf:recorder.directory.appendingPathComponent("quality_report.json"))) as! [String:Any]
         XCTAssertEqual(quality["read_errors"] as? Int,1)
+        XCTAssertEqual(quality["timing_gap_flags"] as? Int,1)
+        XCTAssertEqual(quality["saturated_samples"] as? Int,1)
     }
 }
 
@@ -121,7 +125,7 @@ final class CollectorTests {
         try tests.testDisconnectDropsPartialBatchAndNewBatchReassembles()
         try tests.testJournalReplayDedupAndTruncatedTailRecovery()
         try tests.testInvalidSequenceCannotAdvanceAcknowledgement()
-        try tests.testMarkerEscapingAndQualityFlags()
+        try tests.testQualityFlagsStayOutOfTrainingCSV()
         if CommandLine.arguments.count == 2 { try tests.testCppWireFixture(CommandLine.arguments[1]) }
         print("PASS: protocol/journal smoke scenarios; no Bluetooth or device access.")
     }

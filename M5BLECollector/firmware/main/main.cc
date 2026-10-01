@@ -200,25 +200,26 @@ int16_t ReadBe16(const uint8_t* p) {
   return static_cast<int16_t>((static_cast<uint16_t>(p[0]) << 8) | p[1]);
 }
 
-bool ReadImu(RawImu* out) {
+bool ReadImuCounts(int16_t out[6]) {
   uint8_t data[14] = {};
   if (ReadRegisters(kRegAccelXoutH, data, sizeof(data)) != ESP_OK) return false;
+  out[0] = ReadBe16(data + 0);
+  out[1] = ReadBe16(data + 2);
+  out[2] = ReadBe16(data + 4);
+  out[3] = ReadBe16(data + 8);
+  out[4] = ReadBe16(data + 10);
+  out[5] = ReadBe16(data + 12);
+  return true;
+}
 
-  const int16_t ax = ReadBe16(data + 0);
-  const int16_t ay = ReadBe16(data + 2);
-  const int16_t az = ReadBe16(data + 4);
-  const int16_t gx = ReadBe16(data + 8);
-  const int16_t gy = ReadBe16(data + 10);
-  const int16_t gz = ReadBe16(data + 12);
-
-  const int16_t counts[6] = {ax, ay, az, gx, gy, gz};
-  std::memcpy(out->counts, counts, sizeof(counts));
-  out->ax_g = ax * kAccelGPerLsb;
-  out->ay_g = ay * kAccelGPerLsb;
-  out->az_g = az * kAccelGPerLsb;
-  out->gx_dps = gx * kGyroDpsPerLsb;
-  out->gy_dps = gy * kGyroDpsPerLsb;
-  out->gz_dps = gz * kGyroDpsPerLsb;
+bool ReadImu(RawImu* out) {
+  if (!ReadImuCounts(out->counts)) return false;
+  out->ax_g = out->counts[0] * kAccelGPerLsb;
+  out->ay_g = out->counts[1] * kAccelGPerLsb;
+  out->az_g = out->counts[2] * kAccelGPerLsb;
+  out->gx_dps = out->counts[3] * kGyroDpsPerLsb;
+  out->gy_dps = out->counts[4] * kGyroDpsPerLsb;
+  out->gz_dps = out->counts[5] * kGyroDpsPerLsb;
   return true;
 }
 
@@ -450,18 +451,26 @@ void SensorTask(void*) {
       tick = 0;
       ESP_LOGW(kTag, "Sampling overrun; rebuilding the 3-second window");
     }
-    RawImu imu{};
     const uint64_t acquisition_us = esp_timer_get_time();
-    if (ReadImu(&imu)) {
-      if (!g_collection_mode) PushSample(imu);
-      for (int16_t value : imu.counts)
-        if (value == INT16_MIN || value == INT16_MAX) flags |= m5ble::Saturated;
+    if (g_collection_mode) {
+      int16_t counts[6] = {};
+      if (ReadImuCounts(counts)) {
+        for (int16_t value : counts)
+          if (value == INT16_MIN || value == INT16_MAX) flags |= m5ble::Saturated;
+      } else {
+        flags |= m5ble::ReadError;
+        ESP_LOGW(kTag, "IMU read failed during collection");
+      }
+      m5ble::Capture(acquisition_us, counts, flags);
     } else {
-      ResetSampleWindow();
-      flags |= m5ble::ReadError;
-      ESP_LOGW(kTag, "IMU read failed; rebuilding the window");
+      RawImu imu{};
+      if (ReadImu(&imu)) {
+        PushSample(imu);
+      } else {
+        ResetSampleWindow();
+        ESP_LOGW(kTag, "IMU read failed; rebuilding the window");
+      }
     }
-    if (g_collection_mode) m5ble::Capture(acquisition_us, imu.counts, flags);
     ++tick;
   }
 }
@@ -577,15 +586,16 @@ void SwitchMode(bool collection) {
 bool InitButtons() {
   gpio_config_t cfg{};
   cfg.pin_bit_mask = (1ULL << GPIO_NUM_37) | (1ULL << GPIO_NUM_39);
-  cfg.mode = GPIO_MODE_INPUT; // Input-only GPIOs use the board's external pulls.
-  cfg.pull_up_en = GPIO_PULLUP_DISABLE; cfg.pull_down_en = GPIO_PULLDOWN_DISABLE;
+  if (g_collection_mode) cfg.pin_bit_mask |= (1ULL << GPIO_NUM_35);  // C button, collection UI only.
+  cfg.mode = GPIO_MODE_INPUT;
+  cfg.pull_up_en = GPIO_PULLUP_DISABLE;
+  cfg.pull_down_en = GPIO_PULLDOWN_DISABLE;
   return gpio_config(&cfg) == ESP_OK;
 }
 
 struct Button {
   bool raw = false, stable = false, held = false;
   int64_t changed = 0, pressed = 0;
-  // 1=short release, 2=long hold; releases after a hold do not fire short events.
   int Poll(gpio_num_t pin, int64_t now) {
     bool down = gpio_get_level(pin) == 0;
     if (down != raw) { raw = down; changed = now; }
@@ -599,30 +609,73 @@ struct Button {
   }
 };
 
+void DrawCentered(const char* text, int y, int size, uint16_t color) {
+  fall_display::DrawText(fall_display::CenterX(text, size), y, text, size, color);
+}
+
+void FormatDuration(uint32_t samples, char out[16]) {
+  const uint32_t tenths = samples * 10 / fall_v2::kSampleHz;
+  const uint32_t minutes = tenths / 600;
+  const uint32_t seconds = (tenths / 10) % 60;
+  const uint32_t tenth = tenths % 10;
+  std::snprintf(out, 16, "%02lu:%02lu.%lu", static_cast<unsigned long>(minutes),
+                static_cast<unsigned long>(seconds), static_cast<unsigned long>(tenth));
+}
+
 void ShowCollection(const m5ble::Status& status) {
   using namespace fall_display;
   if (!g_ready) return;
   FillRect(0, 0, kWidth, kHeight, kBlack);
-  DrawText(CenterX("COLLECT", 2), 12, "COLLECT", 2, kCyan);
-  const char* state = "READY";
+
+  char duration[16];
+  FormatDuration(status.samples, duration);
+  const char* link = status.ready ? "MAC READY" : (status.connected ? "MAC LINKING" : "MAC OFFLINE");
+
   switch (status.state) {
-    case m5ble::RecordState::Recording: state = "RECORDING"; break;
-    case m5ble::RecordState::Saving: state = "SAVING"; break;
-    case m5ble::RecordState::Complete: state = status.overflow ? "FULL SAVED" : "SAVED"; break;
-    case m5ble::RecordState::Full: state = "BUFFER FULL"; break;
-    default: break;
+    case m5ble::RecordState::Ready:
+      DrawCentered("COLLECT", 10, 2, kCyan);
+      DrawCentered("READY", 52, 2, kGreen);
+      DrawCentered(link, 92, 1, status.ready ? kCyan : kYellow);
+      DrawText(12, 145, "A: START", 2, kWhite);
+      DrawText(12, 185, "C: DETECT", 2, kWhite);
+      break;
+    case m5ble::RecordState::Recording:
+      DrawCentered("RECORDING", 18, 2, kGreen);
+      DrawCentered(duration, 72, 3, kWhite);
+      DrawCentered(link, 130, 1, status.ready ? kCyan : kYellow);
+      DrawText(18, 178, "A: STOP", 2, kWhite);
+      break;
+    case m5ble::RecordState::Review:
+    case m5ble::RecordState::Full: {
+      DrawCentered(status.state == m5ble::RecordState::Full ? "BUFFER FULL" : "FINISHED",
+                   12, 2, status.state == m5ble::RecordState::Full ? kRed : kGreen);
+      DrawCentered(duration, 62, 2, kWhite);
+      char count[24];
+      std::snprintf(count, sizeof(count), "%lu SAMPLES", static_cast<unsigned long>(status.samples));
+      DrawCentered(count, 100, 1, kWhite);
+      DrawText(10, 145, "A: KEEP", 2, kGreen);
+      DrawText(10, 185, "B: DISCARD", 2, kYellow);
+      break;
+    }
+    case m5ble::RecordState::Saving: {
+      DrawCentered(status.ready ? "SENDING" : "WAITING FOR MAC", 18, status.ready ? 2 : 1,
+                   status.ready ? kCyan : kYellow);
+      const uint32_t sent = status.samples >= status.pending ? status.samples - status.pending : 0;
+      const uint32_t pct = status.samples ? (100 * sent / status.samples) : 100;
+      char progress[16];
+      std::snprintf(progress, sizeof(progress), "%lu%%", static_cast<unsigned long>(pct));
+      DrawCentered(progress, 78, 3, kWhite);
+      DrawCentered(duration, 145, 2, kWhite);
+      break;
+    }
+    case m5ble::RecordState::Complete:
+      DrawCentered(status.overflow ? "FULL SAVED" : "SAVED", 55, 2,
+                   status.overflow ? kYellow : kGreen);
+      DrawCentered(duration, 110, 2, kWhite);
+      DrawText(12, 175, "A: START", 2, kWhite);
+      break;
   }
-  DrawText(CenterX(state, 1), 55, state, 1, status.overflow ? kRed : kGreen);
-  char text[24];
-  snprintf(text, sizeof(text), "SAMPLES %lu", static_cast<unsigned long>(status.samples));
-  DrawText(5, 90, text, 1, kWhite);
-  snprintf(text, sizeof(text), "PENDING %lu", static_cast<unsigned long>(status.pending));
-  DrawText(5, 115, text, 1, kWhite);
-  const char* link = status.connected ? (status.ready ? "MAC READY" : "CONNECTING") : "DISCONNECTED";
-  DrawText(5, 145, link, 1, status.connected ? kCyan : kYellow);
-  DrawText(5, 175, "A START/STOP", 1, kWhite);
-  DrawText(5, 195, "B MARK/HOLD MODE", 1, kWhite);
-  if (status.last_error) DrawText(5, 220, "COMMAND REJECTED", 1, kRed);
+  if (status.last_error) DrawCentered("COMMAND REJECTED", 222, 1, kRed);
 }
 
 }  // namespace
@@ -691,36 +744,75 @@ extern "C" void app_main(void) {
   ESP_LOGI(kTag, "Collection mapping: accel=%g counts/g, gyro=%g counts/dps (inferred)",
            fall_v2::kTrainingAccelCountsPerG, fall_v2::kTrainingGyroCountsPerDps);
   int64_t next_inference = esp_timer_get_time();
-  Button button_a, button_b;
+  Button button_a, button_b, button_c;
   int64_t last_ui = 0, last_activity = esp_timer_get_time();
   int64_t both_pressed = 0;
   m5ble::RecordState previous_state = m5ble::RecordState::Ready;
   bool previous_link = true;
+  bool screen_awake = true;
+  bool suppress_buttons_until_release = false;
   while (true) {
     const int64_t now = esp_timer_get_time();
-    const int a = button_a.Poll(GPIO_NUM_37, now), b = button_b.Poll(GPIO_NUM_39, now);
-    if (a || b) { last_activity = now; gpio_set_level(fall_display::kBl, 1); }
-    if (g_collection_mode && button_a.stable && button_b.stable) {
+    int a = button_a.Poll(GPIO_NUM_37, now);
+    int b = button_b.Poll(GPIO_NUM_39, now);
+    int c = g_collection_mode ? button_c.Poll(GPIO_NUM_35, now) : 0;
+
+    if (!screen_awake && (a || b || c)) {
+      gpio_set_level(fall_display::kBl, 1);
+      screen_awake = true;
+      last_activity = now;
+      suppress_buttons_until_release = true;
+      a = b = c = 0;
+    }
+    if (suppress_buttons_until_release) {
+      a = b = c = 0;
+      if (!button_a.stable && !button_b.stable && (!g_collection_mode || !button_c.stable))
+        suppress_buttons_until_release = false;
+    }
+    if (a || b || c) { last_activity = now; gpio_set_level(fall_display::kBl, 1); screen_awake = true; }
+
+    if (g_collection_mode && !suppress_buttons_until_release && button_a.stable && button_b.stable) {
       if (!both_pressed) both_pressed = now;
       if (now - both_pressed >= 5000000 && m5ble::ResetPairing()) {
         Beep(100); esp_restart();
       }
     } else both_pressed = 0;
-    if (b == 2 && !button_a.stable) SwitchMode(!g_collection_mode);
+
+    if (!g_collection_mode && b == 2 && !button_a.stable) SwitchMode(true);
     if (g_collection_mode) {
       m5ble::Tick();
       if (m5ble::DetectRequested()) SwitchMode(false);
-      if (a == 1) m5ble::ToggleRecording();
-      if (b == 1) m5ble::AddMarker();
-      const auto status = m5ble::GetStatus();
+      auto status = m5ble::GetStatus();
+
+      if (a == 1) {
+        if (status.state == m5ble::RecordState::Ready || status.state == m5ble::RecordState::Complete)
+          m5ble::StartRecording();
+        else if (status.state == m5ble::RecordState::Recording)
+          m5ble::StopRecording();
+        else if (status.state == m5ble::RecordState::Review || status.state == m5ble::RecordState::Full)
+          m5ble::KeepRecording();
+      }
+      if (b == 1 && (status.state == m5ble::RecordState::Review || status.state == m5ble::RecordState::Full))
+        m5ble::DiscardRecording();
+      if (c == 1 && m5ble::CanLeave()) SwitchMode(false);
+
+      status = m5ble::GetStatus();
       if (status.state != previous_state) {
         Beep(status.state == m5ble::RecordState::Full ? 150 : 30);
-        previous_state = status.state; last_activity = now; gpio_set_level(fall_display::kBl, 1);
+        previous_state = status.state;
+        last_activity = now;
+        gpio_set_level(fall_display::kBl, 1);
+        screen_awake = true;
       }
-      if (!status.connected && previous_link && status.state == m5ble::RecordState::Recording) Beep(60);
+      if (!status.connected && previous_link && status.state == m5ble::RecordState::Saving) Beep(60);
       previous_link = status.connected;
-      if (now - last_ui >= 500000) { ShowCollection(status); last_ui = now; }
-      if (now - last_activity > 20000000) gpio_set_level(fall_display::kBl, 0);
+      if (now - last_ui >= 250000) { ShowCollection(status); last_ui = now; }
+
+      const bool may_sleep = status.state == m5ble::RecordState::Ready || status.state == m5ble::RecordState::Complete;
+      if (may_sleep && screen_awake && now - last_activity > 60000000) {
+        gpio_set_level(fall_display::kBl, 0);
+        screen_awake = false;
+      }
       vTaskDelay(1); continue;
     }
     portENTER_CRITICAL(&g_ring_lock);

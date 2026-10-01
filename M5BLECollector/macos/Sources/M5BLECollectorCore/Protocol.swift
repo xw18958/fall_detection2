@@ -14,11 +14,11 @@ public enum Wire {
     public static func integer(_ bytes: [UInt8], at offset: Int, count: Int) -> UInt64 {
         (0..<count).reduce(UInt64(0)) { $0 | UInt64(bytes[offset + $1]) << (8 * $1) }
     }
-    public static func command(_ op: UInt8, session: UInt64 = 0, exclusive: UInt32 = 0, marker: UInt16 = 0) -> Data {
+    public static func command(_ op: UInt8, session: UInt64 = 0, exclusive: UInt32 = 0) -> Data {
         var b: [UInt8] = [1, op]
         for i in 0..<8 { b.append(UInt8(truncatingIfNeeded: session >> (8*i))) }
         for i in 0..<4 { b.append(UInt8(truncatingIfNeeded: exclusive >> (8*i))) }
-        b += [UInt8(truncatingIfNeeded: marker), UInt8(truncatingIfNeeded: marker >> 8)]
+        b += [0, 0]
         return Data(b)
     }
 }
@@ -46,10 +46,13 @@ public struct DeviceStatus {
     public let session: UInt64
     public let produced, pending: UInt32
     public var recording: Bool { state == 1 }
-    public var complete: Bool { state == 3 && pending == 0 }
+    public var review: Bool { state == 2 || state == 5 }
+    public var saving: Bool { state == 3 }
+    public var complete: Bool { state == 4 && pending == 0 }
+    public var idle: Bool { (state == 0 || state == 4) && pending == 0 }
     public init(_ data: Data) throws {
         let b = Array(data)
-        guard b.count == 20, b[0] == 1, b[1] == 1, b[2] <= 4 else { throw ProtocolError.invalid("Invalid status packet") }
+        guard b.count == 20, b[0] == 1, b[1] == 1, b[2] <= 5 else { throw ProtocolError.invalid("Invalid status packet") }
         state = b[2]; flags = b[3]; session = Wire.integer(b, at: 4, count: 8)
         produced = UInt32(Wire.integer(b, at: 12, count: 4)); pending = UInt32(Wire.integer(b, at: 16, count: 4))
         guard pending <= produced else { throw ProtocolError.invalid("Invalid pending count") }
@@ -59,20 +62,19 @@ public struct DeviceStatus {
 public struct Sample: Codable, Equatable {
     public let seq: UInt32, device_timestamp_us: UInt64
     public let raw: [Int16]
-    public let flags, marker: UInt16
-    public init(seq: UInt32, deviceTimestamp: UInt64, raw: [Int16], flags: UInt16 = 0, marker: UInt16 = 0) {
-        self.seq = seq; device_timestamp_us = deviceTimestamp; self.raw = raw; self.flags = flags; self.marker = marker
+    public let flags: UInt16
+    public init(seq: UInt32, deviceTimestamp: UInt64, raw: [Int16], flags: UInt16 = 0) {
+        self.seq = seq; device_timestamp_us = deviceTimestamp; self.raw = raw; self.flags = flags
     }
     public static func decode(_ data: Data) throws -> [Sample] {
         let b = Array(data)
         guard !b.isEmpty, b.count <= 192, b.count % 32 == 0 else { throw ProtocolError.invalid("Invalid sample batch length") }
         return try stride(from: 0, to: b.count, by: 32).map { start in
-            guard b[(start+28)..<(start+32)].allSatisfy({ $0 == 0 }) else { throw ProtocolError.invalid("Nonzero reserved bytes") }
+            guard b[(start+26)..<(start+32)].allSatisfy({ $0 == 0 }) else { throw ProtocolError.invalid("Nonzero reserved bytes") }
             let raw = (0..<6).map { Int16(bitPattern: UInt16(Wire.integer(b, at: start+12+2*$0, count: 2))) }
             return Sample(seq: UInt32(Wire.integer(b, at: start, count: 4)),
                           deviceTimestamp: Wire.integer(b, at: start+4, count: 8), raw: raw,
-                          flags: UInt16(Wire.integer(b, at: start+24, count: 2)),
-                          marker: UInt16(Wire.integer(b, at: start+26, count: 2)))
+                          flags: UInt16(Wire.integer(b, at: start+24, count: 2)))
         }
     }
 }
