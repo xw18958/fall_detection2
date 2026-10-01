@@ -21,8 +21,16 @@ REVIEW → KEEP/DISCARD workflow and eight-column raw sensor CSV export.
   blocked by `LeConnectionDenyList`; macOS ignored the connection request.
   A user-approved Bluetooth off/on refresh cleared that block. The receiver
   then completed service/characteristic discovery, and macOS logged the Just
-  Works pairing prompt. The Mac was locked, so approval could not complete;
-  physical KEEP/DISCARD validation is pending pairing approval.
+  Works pairing prompt. After the user unlocked the Mac, encrypted pairing,
+  locked-model verification and device-confirmed READY completed.
+- Live Mac-command DISCARD test: stopped at REVIEW with 552 pending samples;
+  no recording directory was created. DISCARD returned READY with zero samples.
+- Live Mac-command KEEP test: 437/437 samples saved, M5 COMPLETE with zero
+  pending, `completion.json` true and buffer overflow false. CSV and journal
+  counts matched, sequence numbers were 0–436 and acquisition timestamps
+  increased. Measured rate: 30.000000688 Hz; sequence gaps, timestamp gaps,
+  timing flags, sensor read errors and saturation counts were all zero.
+  Physical button and outdoor body/backpack tests remain separate checks.
 
 The measurements below describe the original installation, not the recovery
 branch's pending radio acceptance tests.
