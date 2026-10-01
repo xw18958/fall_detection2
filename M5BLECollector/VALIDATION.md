@@ -2,12 +2,14 @@
 
 ## UI and battery redesign — 2 October 2026
 
-The UI branch starts from latest remote main `5def1a6`. Baseline smoke and
-firmware builds passed before changes. The final smoke/preservation suite,
-actual-driver text/layout checks, final firmware and unchanged Swift release
-build passed. The model is exact, the OTA slot fits, and backend/physical-button
-hashes match baseline. No device was connected for installation or physical
-30 Hz/battery verification. See [UI_BATTERY.md](UI_BATTERY.md) for precise results,
+The UI branch started from remote main `5def1a6` and merged latest main
+`ef48bcf` in `e055f8f`, retaining both validation sections and the schema-3 Mac
+recorder. Baseline and post-merge smoke/preservation suites, actual-driver
+text/layout checks, firmware and Swift release builds passed. The model is
+exact, the OTA slot fits, and backend/physical-button hashes match baseline.
+Application-only wireless OTA completed on 2 October: HTTP 200, "Update
+successful." The user confirmed the new DETECT screen and battery display
+after reboot. Physical 30 Hz and battery-accuracy measurements remain pending. See [UI_BATTERY.md](UI_BATTERY.md) for precise results,
 board-specific battery sources, screen previews and remaining hardware checks.
 
 ## Simplified Mac recording folders — 2 October 2026

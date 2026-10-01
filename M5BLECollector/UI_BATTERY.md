@@ -111,11 +111,18 @@ executable an output-directory argument. It writes the actual driver frames as
 
 ## Hardware checks still required
 
-No USB-connected M5 was available, so this change has not been installed or
-physically verified. No flash, partition table, NVS, bond or device data was
-modified. Before installing, finish or explicitly discard any pending recording.
-Use the existing application-only OTA update workflow; retain the detector
-fallback slot, bootloader, partition table and OTA rollback behavior.
+Application-only wireless OTA completed on 2 October 2026, using the existing
+DETECT-mode recovery updater. The M5 (`c0cdd6133276`) reported READY with zero
+pending samples before the mode switch. The uploaded 1,462,384-byte image
+(SHA-256 `59a1067c37f40437f32464771b86ddb8487a6322c01d91e6f65bb63011da9836`)
+returned HTTP 200 / `Update successful.` The user then confirmed the new DETECT
+screen with battery icon and percentage. The updater validates the application
+and selects the inactive slot; the bootloader and partition table were not
+written. Existing A/B updates can reuse the original detector slot, so the
+verified external detector backup remains retained. No second upload was made.
+
+The automatic internet-hotspot restore did not find that network; the user
+restored the Mac internet connection manually. No USB installation was needed.
 
 On the actual board, verify calibrated voltage/percentage and ADC read duration,
 readability in both modes, alert appearance, A/B/C and wake-only interactions,
