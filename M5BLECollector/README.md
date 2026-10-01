@@ -113,17 +113,18 @@ The normal screen emphasizes state, recording duration, BLE readiness, and the a
 
 ## Data and reliability
 
-Each session directory contains:
+Each session directory shows two files:
 
 ```text
-metadata.json       Device/model identity, sensor configuration and session profile
-journal.jsonl       Authoritative transport/recovery journal
 samples.csv         Clean acquisition data: seq,time,ax,ay,az,gx,gy,gz
-quality_report.json Timing, measured rate, gaps, sensor errors and saturation
-completion.json     Created only after device completion and saved-count agreement
+metadata.json       Device/sensor settings, participant/placement, quality and completion
 ```
 
-Journal writes are synchronized before acknowledgements are sent. Retransmitted samples are deduplicated and checked against committed contents. On collector restart the journal is recovered, including truncation of an incomplete final line. CSV snapshots are regenerated on startup, approximately every minute, at completion and on orderly exit. Use `completion.json` to distinguish a finished recording from a partial session.
+Schema 3 metadata includes `quality` (sample count, measured rate, timestamp gaps, sensor errors and saturation) and `completion`. Only recordings with `completion.complete: true` have a device-confirmed saved-count agreement. Partial recordings explicitly remain incomplete. Participant and body placement are in `profile`; use `--placement waist` (or the actual location) when starting the receiver. `annotation.fall_label` starts as `null`; supply a verified `fall` or `non_fall` label before supervised training. No labels or missing measurements are inferred automatically.
+
+The hidden `.recovery/journal.jsonl` is the authoritative transport/recovery journal. Keep it with the recording folder until transfer is finished; it also supports later recovery and per-sample quality inspection. The hidden root `.collector.lock` prevents concurrent writers. Journal writes are synchronized before acknowledgements are sent. Retransmitted samples are deduplicated and checked against committed contents. On collector restart the journal is recovered, including truncation of an incomplete final line. CSV snapshots are regenerated on startup, approximately every minute, at completion and on orderly exit.
+
+Legacy recordings migrate when resumed. To update all completed legacy folders, stop the receiver and run `Scripts/run-app.sh --recordings /absolute/path/to/recordings --migrate-recordings` from `macos`. This command takes the same folder lock and exits without starting Bluetooth. It validates journal counts, merges completion and recalculates quality, preserves existing annotations, and moves the original journal and sidecars into `.recovery`. Raw CSV values are unchanged. Incomplete or damaged recordings are not declared complete.
 
 Completed recordings are no longer periodically exported or exported again
 when a new trial begins. You may move or delete a completed recording folder
@@ -136,7 +137,7 @@ The device has an 8,192-record / 256 KiB PSRAM buffer: approximately **273 secon
 
 Sampling timestamps use the device's monotonic microsecond clock. The M5 collection path stores the six signed 16-bit MPU6886 register counts untouched and performs no g/dps conversion, normalization, training-count mapping or model preprocessing. `samples.csv` contains only `seq,device_timestamp_us,ax,ay,az,gx,gy,gz`. Mac reception UTC remains only in the durable journal for transport debugging and is not exported as a training column.
 
-Per-sample quality bits (`read error`, `timing gap`, `sensor saturation`) remain internal to the wire/journal so `quality_report.json` can report collection problems without polluting the training CSV. There is no marker workflow and no `events.csv`. Timestamp gaps remain visible and are not filled or resampled.
+Per-sample quality bits (`read error`, `timing gap`, `sensor saturation`) remain internal to the wire/journal; the metadata `quality` object reports collection problems. There is no marker workflow and no `events.csv`. Timestamp gaps remain visible and are not filled or resampled.
 
 BLE uses encrypted Just Works bonding and one active central. Initial pairing has no passkey/MITM authentication; pair with your intended Mac in a controlled setting. If pairing fails after removing a Mac bond, reset the device bond using A+B while all data is saved, then pair again.
 
