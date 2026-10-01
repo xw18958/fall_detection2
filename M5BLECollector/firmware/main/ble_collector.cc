@@ -5,6 +5,7 @@
 #include <cstring>
 #include <new>
 #include "esp_heap_caps.h"
+#include "esp_bt.h"
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_random.h"
@@ -31,6 +32,7 @@ constexpr char kTag[] = "m5ble";
 const ble_uuid128_t kService=M5UUID(1), kInfo=M5UUID(2), kControl=M5UUID(3), kSamples=M5UUID(4), kStatus=M5UUID(5);
 uint16_t g_sample_handle=0, g_status_handle=0;
 uint8_t g_addr_type=0;
+ble_npl_callout g_advertising_retry{};
 std::atomic<uint16_t> g_conn{BLE_HS_CONN_HANDLE_NONE};
 std::atomic<bool> g_subscribed{false}, g_ready{false}, g_detect{false}, g_status_dirty{true};
 std::atomic<uint8_t> g_error{0};
@@ -94,31 +96,49 @@ ble_gatt_svc_def g_services[2]{};
 int GapEvent(ble_gap_event*, void*);
 
 void Advertise() {
+  if(!ble_hs_synced() || g_conn!=BLE_HS_CONN_HANDLE_NONE || ble_gap_adv_active()) return;
   ble_hs_adv_fields fields{};
   fields.flags=BLE_HS_ADV_F_DISC_GEN|BLE_HS_ADV_F_BREDR_UNSUP;
   fields.uuids128=const_cast<ble_uuid128_t*>(&kService); fields.num_uuids128=1; fields.uuids128_is_complete=1;
-  if (ble_gap_adv_set_fields(&fields)!=0) return;
+  int rc=ble_gap_adv_set_fields(&fields);
+  if(rc) { ESP_LOGW(kTag,"Advertising fields failed: %d; will retry",rc); return; }
   ble_hs_adv_fields response{};
   auto name=ble_svc_gap_device_name(); response.name=reinterpret_cast<const uint8_t*>(name);
   response.name_len=std::strlen(name); response.name_is_complete=1;
-  if (ble_gap_adv_rsp_set_fields(&response)!=0) return;
+  rc=ble_gap_adv_rsp_set_fields(&response);
+  if(rc) { ESP_LOGW(kTag,"Advertising response failed: %d; will retry",rc); return; }
   ble_gap_adv_params params{}; params.conn_mode=BLE_GAP_CONN_MODE_UND; params.disc_mode=BLE_GAP_DISC_MODE_GEN;
-  int rc=ble_gap_adv_start(g_addr_type,nullptr,BLE_HS_FOREVER,&params,GapEvent,nullptr);
+  rc=ble_gap_adv_start(g_addr_type,nullptr,BLE_HS_FOREVER,&params,GapEvent,nullptr);
   if(rc) ESP_LOGW(kTag,"Advertising failed: %d",rc);
+}
+
+void RetryAdvertising(ble_npl_event*) {
+  // Host-queue retry preserves the recording even after a transient GAP error.
+  Advertise();
+  ble_npl_callout_reset(&g_advertising_retry,ble_npl_time_ms_to_ticks32(2000));
+}
+void HostReset(int reason) {
+  ESP_LOGW(kTag,"BLE host reset reason=%d; retaining buffered samples",reason);
+  g_conn=BLE_HS_CONN_HANDLE_NONE; g_subscribed=false; g_ready=false; g_status_dirty=true;
 }
 
 int GapEvent(ble_gap_event* event, void*) {
   switch(event->type) {
     case BLE_GAP_EVENT_CONNECT:
-      if(event->connect.status==0) { g_conn=event->connect.conn_handle; g_ready=false; ble_gap_security_initiate(g_conn); }
+      ESP_LOGI(kTag,"Connection result=%d handle=%u",event->connect.status,unsigned(event->connect.conn_handle));
+      // macOS starts encryption with the protected INFO read. Starting another
+      // security procedure here races that request and can stall pairing.
+      if(event->connect.status==0) { g_conn=event->connect.conn_handle; g_ready=false; }
       else Advertise();
       break;
     case BLE_GAP_EVENT_ENC_CHANGE: {
       ble_gap_conn_desc desc{};
+      ESP_LOGI(kTag,"Encryption result=%d",event->enc_change.status);
       if(event->enc_change.status || ble_gap_conn_find(event->enc_change.conn_handle,&desc)!=0 || !desc.sec_state.encrypted) {
         ble_gap_terminate(event->enc_change.conn_handle,BLE_ERR_REM_USER_CONN_TERM); break;
       }
       if(g_has_owner && ble_addr_cmp(&g_owner,&desc.peer_id_addr)!=0) {
+        ESP_LOGW(kTag,"Owner identity mismatch; explicit pairing reset required");
         ble_gap_terminate(desc.conn_handle,BLE_ERR_REM_USER_CONN_TERM); break;
       }
       if(!g_has_owner) {
@@ -130,9 +150,13 @@ int GapEvent(ble_gap_event* event, void*) {
         if(err!=ESP_OK) { ble_gap_terminate(desc.conn_handle,BLE_ERR_REM_USER_CONN_TERM); break; }
         g_owner=desc.peer_id_addr; g_has_owner=true;
       }
+      ble_gap_upd_params params{}; params.itvl_min=24; params.itvl_max=36;
+      params.latency=0; params.supervision_timeout=600;
+      ESP_LOGI(kTag,"Connection parameter request=%d",ble_gap_update_params(desc.conn_handle,&params));
       break;
     }
     case BLE_GAP_EVENT_DISCONNECT:
+      ESP_LOGW(kTag,"Disconnect reason=%d",event->disconnect.reason);
       g_conn=BLE_HS_CONN_HANDLE_NONE; g_subscribed=false; g_ready=false; Advertise(); break;
     case BLE_GAP_EVENT_SUBSCRIBE:
       if(event->subscribe.attr_handle==g_sample_handle) g_subscribed=event->subscribe.cur_notify;
@@ -143,7 +167,10 @@ int GapEvent(ble_gap_event* event, void*) {
   }
   g_status_dirty=true; return 0;
 }
-void Sync() { if(ble_hs_util_ensure_addr(0)==0 && ble_hs_id_infer_auto(0,&g_addr_type)==0) Advertise(); }
+void Sync() {
+  if(ble_hs_util_ensure_addr(0)==0 && ble_hs_id_infer_auto(0,&g_addr_type)==0) Advertise();
+  ble_npl_callout_reset(&g_advertising_retry,ble_npl_time_ms_to_ticks32(2000));
+}
 void HostTask(void*) { nimble_port_run(); nimble_port_freertos_deinit(); }
 
 void Process(const Command& cmd) {
@@ -193,6 +220,7 @@ bool Init() {
   if(nvs_open("m5ble",NVS_READWRITE,&h)!=ESP_OK) return false;
   size_t len=sizeof(g_owner); g_has_owner=nvs_get_blob(h,"owner",&g_owner,&len)==ESP_OK && len==sizeof(g_owner); nvs_close(h);
   if(nimble_port_init()!=ESP_OK) return false;
+  ESP_LOGI(kTag,"Radio sleep disabled result=%d",int(esp_bt_sleep_disable()));
   ble_svc_gap_init(); ble_svc_gatt_init();
   const ble_uuid_t* uuids[]={&kInfo.u,&kControl.u,&kSamples.u,&kStatus.u};
   uint16_t flags[]={uint16_t(BLE_GATT_CHR_F_READ|BLE_GATT_CHR_F_READ_ENC),
@@ -202,7 +230,9 @@ bool Init() {
   g_characteristics[2].val_handle=&g_sample_handle; g_characteristics[3].val_handle=&g_status_handle;
   g_services[0].type=BLE_GATT_SVC_TYPE_PRIMARY; g_services[0].uuid=&kService.u; g_services[0].characteristics=g_characteristics;
   if(ble_gatts_count_cfg(g_services)!=0 || ble_gatts_add_svcs(g_services)!=0) return false;
-  ble_hs_cfg.sync_cb=Sync; ble_hs_cfg.sm_io_cap=BLE_HS_IO_NO_INPUT_OUTPUT;
+  ble_hs_cfg.sync_cb=Sync; ble_hs_cfg.reset_cb=HostReset;
+  ble_npl_callout_init(&g_advertising_retry,nimble_port_get_dflt_eventq(),RetryAdvertising,nullptr);
+  ble_hs_cfg.sm_io_cap=BLE_HS_IO_NO_INPUT_OUTPUT;
   ble_hs_cfg.sm_bonding=1; ble_hs_cfg.sm_sc=1; ble_hs_cfg.sm_mitm=0;
   ble_hs_cfg.sm_our_key_dist=BLE_SM_PAIR_KEY_DIST_ENC|BLE_SM_PAIR_KEY_DIST_ID;
   ble_hs_cfg.sm_their_key_dist=BLE_SM_PAIR_KEY_DIST_ENC|BLE_SM_PAIR_KEY_DIST_ID;
@@ -264,7 +294,7 @@ void Tick() {
     portEXIT_CRITICAL(&g_lock);
     if(!g_packet_len) return;
     uint16_t mtu=ble_att_mtu(conn);
-    g_chunk=std::min<size_t>(240,mtu>19?mtu-19:1);
+    g_chunk=std::min<size_t>(64,mtu>19?mtu-19:1);
     g_parts=(g_packet_len+g_chunk-1)/g_chunk; g_part=0; ++g_batch;
     g_exclusive=Get32(g_packet+g_packet_len-kRecordBytes)+1; g_next_send=now+100000;
   }

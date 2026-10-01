@@ -133,6 +133,20 @@ Per-sample quality bits (`read error`, `timing gap`, `sensor saturation`) remain
 
 BLE uses encrypted Just Works bonding and one active central. Initial pairing has no passkey/MITM authentication; pair with your intended Mac in a controlled setting. If pairing fails after removing a Mac bond, reset the device bond using A+B while all data is saved, then pair again.
 
+The receiver serializes the protected INFO read, STATUS read and notification
+subscriptions before sending READY. It prints `Connected and ready` only after
+the M5 confirms readiness. One receiver may write a recordings folder at a time;
+a second instance exits before touching the profile or recording files.
+
+This ESP-IDF 5.5.3 build disables NimBLE host flow control
+(`CONFIG_BT_NIMBLE_HS_FLOW_CTRL=n`), following the vendor workaround for
+[connection loss issue #18323](https://github.com/espressif/esp-idf/issues/18323).
+For an existing build directory, set the same option in its generated sdkconfig
+or regenerate configuration, and check the generated `config/sdkconfig.h` has
+no enabled definition. BLE advertisements retry on the host queue after a
+temporary failure; a host reset clears connection state while retaining the
+local recording. Notifications carry at most 64 bytes of sample payload.
+
 ## Tests
 
 Fast tests use Command Line Tools and do not access hardware:

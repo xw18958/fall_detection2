@@ -1,5 +1,29 @@
 # Software validation — 1 October 2026
 
+## Latest-main BLE regression recovery — 2 October 2026
+
+The recovery branch is based on `e288bdd`, retaining the local RECORDING →
+REVIEW → KEEP/DISCARD workflow and eight-column raw sensor CSV export.
+
+- All six Python guards, sanitized C++ buffer tests and C++ → Swift protocol/
+  journal smoke scenarios passed. The signed Swift release receiver built.
+- A live second receiver was rejected by the recordings-folder lock before
+  changing the participant profile or recording files.
+- ESP-IDF 5.5.3 firmware built with NimBLE host flow control disabled; the
+  generated configuration was checked. Image size: 1,444,144 bytes; SHA-256:
+  `0dca200be65e0c94ef06e35efe1b42ec0ee242e227497cad09d4853167dbcb7e`.
+- Installed only `ota_1` at `0x3E0000`; esptool verified the written image hash.
+  The locked detector model, inference functions, kernels, configuration and
+  partition hashes passed preservation checks. Post-update serial output
+  confirmed model replay passed with an 80,192-byte arena and COLLECT startup.
+- macOS first reported `Peer removed pairing information`. The M5-specific
+  Mac bond removal was confirmed in Bluetooth logs. The next attempt was
+  blocked by `LeConnectionDenyList`; macOS ignored the connection request.
+  Physical KEEP/DISCARD validation is pending connection recovery.
+
+The measurements below describe the original installation, not the recovery
+branch's pending radio acceptance tests.
+
 The implementation is isolated in `M5BLECollector/`. The existing detector source files were not edited. The connected M5 was backed up and the collector was installed into its inactive OTA slot on 1 October 2026.
 
 | Check | Result |
