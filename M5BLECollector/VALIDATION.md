@@ -1,5 +1,15 @@
 # Software validation — 1 October 2026
 
+## UI and battery redesign — 2 October 2026
+
+The UI branch starts from latest remote main `5def1a6`. Baseline smoke and
+firmware builds passed before changes. The final smoke/preservation suite,
+actual-driver text/layout checks, final firmware and unchanged Swift release
+build passed. The model is exact, the OTA slot fits, and backend/physical-button
+hashes match baseline. No device was connected for installation or physical
+30 Hz/battery verification. See [UI_BATTERY.md](UI_BATTERY.md) for precise results,
+board-specific battery sources, screen previews and remaining hardware checks.
+
 ## Latest-main BLE regression recovery — 2 October 2026
 
 The recovery branch is based on `e288bdd`, retaining the local RECORDING →
