@@ -70,7 +70,6 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         guard recordingLock >= 0, flock(recordingLock, LOCK_EX | LOCK_NB) == 0 else {
             throw ProtocolError.invalid("Another collector is using this recordings folder, or the folder cannot be locked")
         }
-        try saveProfile()
         activity = ProcessInfo.processInfo.beginActivity(options: [.userInitiated, .latencyCritical], reason: "Receive and durably save M5 motion samples")
         let rc = IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
             IOPMAssertionLevel(kIOPMAssertionLevelOn), "M5 BLE motion recording" as CFString, &assertion)
@@ -94,10 +93,6 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         DispatchQueue.global().async { [weak self] in
             while let line = readLine() { DispatchQueue.main.async { self?.command(line) } }
         }
-    }
-    private func saveProfile() throws {
-        let data = try JSONSerialization.data(withJSONObject: profile, options: [.prettyPrinted, .sortedKeys])
-        try data.write(to: options.recordings.appendingPathComponent("collector_profile.json"), options: .atomic)
     }
     private func scan() {
         guard central.state == .poweredOn, !detecting, !fatalStorage else { return }

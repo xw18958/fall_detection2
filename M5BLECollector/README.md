@@ -143,7 +143,8 @@ BLE uses encrypted Just Works bonding and one active central. Initial pairing ha
 The receiver serializes the protected INFO read, STATUS read and notification
 subscriptions before sending READY. It prints `Connected and ready` only after
 the M5 confirms readiness. One receiver may write a recordings folder at a time;
-a second instance exits before touching the profile or recording files.
+a second instance exits before touching recording files. Participant and
+placement are stored in each recording's metadata; no root profile file is created.
 
 This ESP-IDF 5.5.3 build disables NimBLE host flow control
 (`CONFIG_BT_NIMBLE_HS_FLOW_CTRL=n`), following the vendor workaround for
