@@ -18,6 +18,8 @@
 
 #include "fall_op_resolver.h"
 #include "simple_display.h"
+#include "device_ui.h"
+#include "battery_monitor.h"
 #include "wifi_ota.h"
 #include "ble_collector.h"
 #include "nvs_flash.h"
@@ -609,74 +611,6 @@ struct Button {
   }
 };
 
-void DrawCentered(const char* text, int y, int size, uint16_t color) {
-  fall_display::DrawText(fall_display::CenterX(text, size), y, text, size, color);
-}
-
-void FormatDuration(uint32_t samples, char out[16]) {
-  const uint32_t tenths = samples * 10 / fall_v2::kSampleHz;
-  const uint32_t minutes = tenths / 600;
-  const uint32_t seconds = (tenths / 10) % 60;
-  const uint32_t tenth = tenths % 10;
-  std::snprintf(out, 16, "%02lu:%02lu.%lu", static_cast<unsigned long>(minutes),
-                static_cast<unsigned long>(seconds), static_cast<unsigned long>(tenth));
-}
-
-void ShowCollection(const m5ble::Status& status) {
-  using namespace fall_display;
-  if (!g_ready) return;
-  FillRect(0, 0, kWidth, kHeight, kBlack);
-
-  char duration[16];
-  FormatDuration(status.samples, duration);
-  const char* link = status.ready ? "MAC READY" : (status.connected ? "MAC LINKING" : "MAC OFFLINE");
-
-  switch (status.state) {
-    case m5ble::RecordState::Ready:
-      DrawCentered("COLLECT", 10, 2, kCyan);
-      DrawCentered("READY", 52, 2, kGreen);
-      DrawCentered(link, 92, 1, status.ready ? kCyan : kYellow);
-      DrawText(12, 145, "A: START", 2, kWhite);
-      DrawText(12, 185, "C: DETECT", 2, kWhite);
-      break;
-    case m5ble::RecordState::Recording:
-      DrawCentered("RECORDING", 18, 2, kGreen);
-      DrawCentered(duration, 72, 3, kWhite);
-      DrawCentered(link, 130, 1, status.ready ? kCyan : kYellow);
-      DrawText(18, 178, "A: STOP", 2, kWhite);
-      break;
-    case m5ble::RecordState::Review:
-    case m5ble::RecordState::Full: {
-      DrawCentered(status.state == m5ble::RecordState::Full ? "BUFFER FULL" : "FINISHED",
-                   12, 2, status.state == m5ble::RecordState::Full ? kRed : kGreen);
-      DrawCentered(duration, 62, 2, kWhite);
-      char count[24];
-      std::snprintf(count, sizeof(count), "%lu SAMPLES", static_cast<unsigned long>(status.samples));
-      DrawCentered(count, 100, 1, kWhite);
-      DrawText(10, 145, "A: KEEP", 2, kGreen);
-      DrawText(10, 185, "B: DISCARD", 2, kYellow);
-      break;
-    }
-    case m5ble::RecordState::Saving: {
-      DrawCentered(status.ready ? "SENDING" : "WAITING FOR MAC", 18, status.ready ? 2 : 1,
-                   status.ready ? kCyan : kYellow);
-      const uint32_t sent = status.samples >= status.pending ? status.samples - status.pending : 0;
-      const uint32_t pct = status.samples ? (100 * sent / status.samples) : 100;
-      char progress[16];
-      std::snprintf(progress, sizeof(progress), "%lu%%", static_cast<unsigned long>(pct));
-      DrawCentered(progress, 78, 3, kWhite);
-      DrawCentered(duration, 145, 2, kWhite);
-      break;
-    }
-    case m5ble::RecordState::Complete:
-      DrawCentered(status.overflow ? "FULL SAVED" : "SAVED", 55, 2,
-                   status.overflow ? kYellow : kGreen);
-      DrawCentered(duration, 110, 2, kWhite);
-      DrawText(12, 175, "A: START", 2, kWhite);
-      break;
-  }
-  if (status.last_error) DrawCentered("COMMAND REJECTED", 222, 1, kRed);
-}
 
 }  // namespace
 
@@ -696,6 +630,7 @@ extern "C" void app_main(void) {
   if (!fall_display::Init()) {
     ESP_LOGW(kTag, "Display initialization failed; continuing without screen UI");
   }
+  device_ui::DrawStarting(g_collection_mode);
   InitBuzzer();
   if (!InitButtons()) { fall_ota::RollbackPendingImageAndReboot(); return; }
   if (!InitI2C() || !InitMpu6886()) {
@@ -743,6 +678,7 @@ extern "C" void app_main(void) {
   ESP_LOGI(kTag, "Ready. Collecting MPU6886 at 30 Hz on a separate sampling task");
   ESP_LOGI(kTag, "Collection mapping: accel=%g counts/g, gyro=%g counts/dps (inferred)",
            fall_v2::kTrainingAccelCountsPerG, fall_v2::kTrainingGyroCountsPerDps);
+  m5_battery::Start();
   int64_t next_inference = esp_timer_get_time();
   Button button_a, button_b, button_c;
   int64_t last_ui = 0, last_activity = esp_timer_get_time();
@@ -806,7 +742,9 @@ extern "C" void app_main(void) {
       }
       if (!status.connected && previous_link && status.state == m5ble::RecordState::Saving) Beep(60);
       previous_link = status.connected;
-      if (now - last_ui >= 250000) { ShowCollection(status); last_ui = now; }
+      if (screen_awake && now - last_ui >= 250000) {
+        device_ui::DrawCollectionScreen(status, m5_battery::Percentage(), now); last_ui = now;
+      }
 
       const bool may_sleep = status.state == m5ble::RecordState::Ready || status.state == m5ble::RecordState::Complete;
       if (may_sleep && screen_awake && now - last_activity > 60000000) {
@@ -822,6 +760,9 @@ extern "C" void app_main(void) {
       const int64_t started = esp_timer_get_time();
       RunInference();
       next_inference = started + fall_v2::kInferencePeriodUs;
+    }
+    if (screen_awake && esp_timer_get_time() - last_ui >= 250000) {
+      device_ui::DrawDetectScreen(m5_battery::Percentage()); last_ui = esp_timer_get_time();
     }
     // Five milliseconds rounds to zero at a 100 Hz RTOS tick. Yield at least
     // one tick so the idle task can service the watchdog between predictions.

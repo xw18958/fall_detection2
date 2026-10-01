@@ -1,0 +1,29 @@
+{
+  "functions": {
+    "SensorTask": "0da0cfdbd06f8d9b18f0f25ef644bb22a38f2f85a6a4de9cd29459261b26ac39",
+    "ReadImuCounts": "e1631d6ae2c0ca2681bc9c797a4c913cd39fa42bdd748a66c3983237085dee36",
+    "ReadImu": "285f747c19e12c2b1f411b05bfd75bb7eab54b73bca274cbd9f52a8259453deb",
+    "InitButtons": "553966a3069ed9e3a4628bdd130aaa90d54d82e7fd38cac91228b51e309c242f",
+    "ReadMode": "fba1bbbcbc4273c003b988b0402e97f1d2c47ea8525067e33951cafed369f50c",
+    "SwitchMode": "3c86c746327f83e1537a193a3c0f19548121cbf7c8b1ddc9239e6a27b4837cf6"
+  },
+  "files": {
+    "M5BLECollector/firmware/partitions.csv": "17345ecb5c52bf32fcc5e9c6b40cdceaacc99121462eec5ac8962c799caa6bee",
+    "M5BLECollector/firmware/sdkconfig.defaults": "b617f439fe89c31a17ee675dd71dcf4b25044c63432c645cf8570d4b8a1fe473",
+    "M5BLECollector/macos/Sources/M5BLECollectorCore/Recorder.swift": "b3b2f98961780be732809d970f7156e828b05d7031cb94ebb75d24e3f3da6688",
+    "M5BLECollector/macos/Sources/M5BLECollectorCore/Protocol.swift": "af3d6454906b8a726cf2252f1d48cb9b46bcaa4d3f476cd3994ed1d39d084e3e",
+    "M5BLECollector/macos/Sources/M5BLECollector/main.swift": "cc30a9e9d810dbffb0d01f3928e28fc64a34b320a8d0d31b0489951c77ff8b11",
+    "M5BLECollector/macos/Tests/M5BLECollectorCoreTests/CollectorTests.swift": "a4952194512e55de1cae0b924284cb87a07de2bc0019d23c82e5ee15e74a79ca",
+    "M5BLECollector/firmware/main/wifi_ota.cc": "0e982f57d020fe09abdeb3fe842d556bb9a7e37a2ae7608798c508d041414c25",
+    "M5BLECollector/firmware/main/recording_buffer.h": "191448405c2102bf06a53f88c8e7889b0f0380a437e5c71aa8dd53dd66663d77",
+    "M5BLECollector/firmware/main/wifi_ota.h": "faa44bc99e41d7de1441a1b0d0008fa2dd61df1c0ebcf6d2f39301265e7739ac",
+    "M5BLECollector/firmware/main/ble_collector.h": "d928efa70b7d018a3c6938276a42d93ab78a087b83ae9cf2cae96981781ee46d",
+    "M5BLECollector/firmware/main/ble_collector.cc": "cde3172de3757a40f9d6d0e225ba2ab608e67ec0b0740ba0d4e1b1e3ed22341f"
+  },
+  "regions": {
+    "buttons": "cf10e1b7eb6a6ac4a644f5d80b9632021d2ee206f0cbe75f01e43179c7817be1",
+    "commands_and_wake": "eb79f1e7373ac29e5062568a6d6be54e832b15cc0eceed7c6dbedf972ecb6044",
+    "sleep": "9316e7de4bc64c59a2fdc3710d606014e6bf62bb6878688f88e0a86544b70976"
+  },
+  "base_commit": "ef48bcfd8e956f8960f633296e110dc9c6a9723a"
+}

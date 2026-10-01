@@ -176,3 +176,8 @@ cmake --build /tmp/m5ble-native -j 4
 ```
 
 Physical acceptance still requires model startup replay on the ESP32, sustained 30 Hz sampling, the actual body/backpack radio path, reconnect tests, closed-lid Mac reception, battery runtime and returning to detection. See `VALIDATION.md` for measured software checks and remaining hardware checks.
+
+## On-device interface and battery
+
+See [UI and battery details](UI_BATTERY.md) for the shared DETECT/COLLECT interface,
+actual-driver screen previews, PLUS2 battery measurement and verification status.

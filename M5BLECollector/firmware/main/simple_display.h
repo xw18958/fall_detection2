@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
@@ -37,7 +38,9 @@ constexpr uint16_t kYellow = 0xFFE0;
 
 static spi_device_handle_t g_spi = nullptr;
 static bool g_ready = false;
-static int g_last_state = -1;
+static bool g_has_result = false;
+static bool g_fall_triggered = false;
+static float g_fall_probability = 0.0f;
 
 inline bool Tx(bool data_mode, const uint8_t* bytes, size_t len) {
   if (g_spi == nullptr || bytes == nullptr || len == 0) return false;
@@ -135,18 +138,19 @@ inline void Glyph(char c, uint8_t out[5]) {
     case '%': { uint8_t v[5]={0x63,0x13,0x08,0x64,0x63}; std::copy(v,v+5,out); break; }
     case ':': { uint8_t v[5]={0x00,0x36,0x36,0x00,0x00}; std::copy(v,v+5,out); break; }
     case '.': { uint8_t v[5]={0x00,0x60,0x60,0x00,0x00}; std::copy(v,v+5,out); break; }
+    case '/': { uint8_t v[5]={0x60,0x10,0x08,0x04,0x03}; std::copy(v,v+5,out); break; }
     case '-': { uint8_t v[5]={0x08,0x08,0x08,0x08,0x08}; std::copy(v,v+5,out); break; }
     default: break;
   }
 }
 
 inline void DrawChar(int x, int y, char c, int scale, uint16_t fg, uint16_t bg) {
-  if (!g_ready || scale < 1 || scale > 3) return;
+  if (!g_ready || scale < 1 || scale > 4) return;
   uint8_t glyph[5];
   Glyph(c, glyph);
   const int w = 6 * scale;
   const int h = 8 * scale;
-  uint8_t pixels[6 * 3 * 8 * 3 * 2];
+  uint8_t pixels[6 * 4 * 8 * 4 * 2];
   int p = 0;
   for (int py = 0; py < h; ++py) {
     const int row = py / scale;
@@ -175,11 +179,6 @@ inline int CenterX(const char* text, int scale) {
   int n = 0;
   while (text[n]) ++n;
   return std::max(0, (kWidth - n * 6 * scale) / 2);
-}
-
-inline void DrawHeader() {
-  DrawText(CenterX("FALL", 2), 18, "FALL", 2, kWhite);
-  DrawText(CenterX("DETECTOR", 2), 42, "DETECTOR", 2, kWhite);
 }
 
 inline bool Init() {
@@ -228,55 +227,18 @@ inline bool Init() {
   g_ready = true;
   gpio_set_level(kBl, 1);
   FillRect(0, 0, kWidth, kHeight, kBlack);
-  DrawHeader();
-  DrawText(CenterX("BOOTING", 2), 105, "BOOTING", 2, kCyan);
-  DrawText(CenterX("WAIT 3S", 1), 142, "WAIT 3S", 1, kYellow);
-  g_last_state = -1;
+  g_has_result = false;
   return true;
 }
 
+// Keep the locked RunInference call unchanged; rendering consumes this cache.
 inline void ShowResult(float fall_probability, bool fall_triggered, int inference_ms,
                        int64_t cooldown_remaining_us = 0) {
-  if (!g_ready) return;
-  fall_probability = std::max(0.0f, std::min(1.0f, fall_probability));
-  cooldown_remaining_us = std::max<int64_t>(0, cooldown_remaining_us);
-  const int state = fall_triggered ? 1 : 0;
-
-  if (state != g_last_state) {
-    FillRect(0, 72, kWidth, 55, kBlack);
-    const char* status = fall_triggered ? "FALL" : "NORMAL";
-    const uint16_t status_color = fall_triggered ? kRed : kGreen;
-    DrawText(CenterX(status, 3), 88, status, 3, status_color);
-    g_last_state = state;
-  }
-
-  char line[24];
-  FillRect(0, 135, kWidth, 81, kBlack);
-
-  const int pct_tenths =
-      static_cast<int>(fall_probability * 1000.0f + 0.5f);
-  snprintf(line, sizeof(line), "FALL %d.%d%%",
-           pct_tenths / 10, pct_tenths % 10);
-  DrawText(CenterX(line, 2), 138, line, 2, kWhite);
-
-  if (cooldown_remaining_us > 0) {
-    const int cooldown_tenths =
-        static_cast<int>((cooldown_remaining_us + 99999) / 100000);
-    DrawText(CenterX("COOLDOWN", 2), 168, "COOLDOWN", 2, kYellow);
-    snprintf(line, sizeof(line), "%d.%dS",
-             cooldown_tenths / 10, cooldown_tenths % 10);
-    DrawText(CenterX(line, 2), 194, line, 2, kYellow);
-  } else {
-    snprintf(line, sizeof(line), "%d MS", inference_ms);
-    DrawText(CenterX(line, 2), 178, line, 2, kCyan);
-  }
-
-  FillRect(0, kBarY, kWidth, kBarHeight, kBlack);
-  const int bar_width = static_cast<int>(fall_probability * kWidth + 0.5f);
-  if (bar_width > 0) {
-    FillRect(0, kBarY, bar_width, kBarHeight,
-             fall_triggered ? kRed : kCyan);
-  }
+  (void)inference_ms;
+  (void)cooldown_remaining_us;
+  g_fall_probability = std::max(0.0f, std::min(1.0f, fall_probability));
+  g_fall_triggered = fall_triggered;
+  g_has_result = true;
 }
 
 }  // namespace fall_display
