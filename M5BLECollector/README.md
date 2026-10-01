@@ -131,6 +131,19 @@ Flags: `1=read error`, `2=sampling timing gap`, `4=sensor rail/saturation`, `8=m
 
 BLE uses encrypted Just Works bonding and one active central. Initial pairing has no passkey/MITM authentication; pair with your intended Mac in a controlled setting. If pairing fails after removing a Mac bond, reset the device bond using A+B while all data is saved, then pair again.
 
+### ESP-IDF 5.5.3 connection-loss workaround
+
+The pinned SDK has a documented NimBLE host flow-control defect that can stall
+transfers and disconnect ESP32 links. This project sets
+`CONFIG_BT_NIMBLE_HS_FLOW_CTRL=n`, following
+[Espressif's workaround](https://github.com/espressif/esp-idf/issues/18323).
+When rebuilding an existing checkout, ensure its generated
+`firmware/sdkconfig.m5stickc-plus2-ble` also has this option disabled; defaults
+do not override an already generated configuration. Confirm the final generated
+`config/sdkconfig.h` has no enabled `CONFIG_BT_NIMBLE_HS_FLOW_CTRL` definition.
+The fix is included upstream in ESP-IDF 5.5.4. Physical collection reliability
+must still be checked on the actual device and Mac.
+
 ### Optional unpaired transport test
 
 The default build requires encrypted bonding. A local diagnostic override can

@@ -60,3 +60,14 @@ The optional transport field is backward compatible, and a smoke test confirms
 that its value survives creation of saved session metadata.
 
 No claim of validated real-device accuracy or battery duration is made. Pending device samples are buffered in PSRAM and are lost on power loss/reboot; the Mac's synchronized journal is the persistent record.
+
+The approved unpaired candidate (1,443,088 bytes) also lost its connection while
+idle and repeatedly timed out during GATT discovery. Testing without USB did
+not establish reliability. The Mac receiver now uses its main Foundation run
+loop and explicitly prevents App Nap during reception.
+
+The pinned SDK is affected by Espressif's documented ESP-IDF 5.5.3 NimBLE
+host-flow-control defect (issue 18323). Its flow control was enabled in the
+failing builds. The project defaults and local generated configuration now
+disable it using the vendor's workaround. Build/installation and a completed
+physical recording with this workaround still require verification.

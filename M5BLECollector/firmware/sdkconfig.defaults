@@ -34,3 +34,6 @@ CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
 CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=185
 CONFIG_BT_NIMBLE_NVS_PERSIST=y
 CONFIG_BT_NIMBLE_SM_SC=y
+# ESP-IDF 5.5.3 host flow control can stall BLE and lose the connection.
+# Espressif's documented workaround: https://github.com/espressif/esp-idf/issues/18323
+CONFIG_BT_NIMBLE_HS_FLOW_CTRL=n

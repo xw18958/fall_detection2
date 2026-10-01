@@ -54,6 +54,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     private var lastExport = Date.distantPast, lastStatusPrint = Date.distantPast
     private var finishedSession: UInt64 = 0
     private var assertion: IOPMAssertionID = 0
+    private var activity: NSObjectProtocol?
     private var selected: UUID?
     private let lockedHash = "1553dde844bf34928d360cc5f23e06f353e1c78e7aac6b2271cbc36410920530"
 
@@ -68,6 +69,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         let rc = IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
             IOPMAssertionLevel(kIOPMAssertionLevelOn), "M5 BLE motion recording" as CFString, &assertion)
         guard rc == kIOReturnSuccess else { throw ProtocolError.invalid("Cannot create idle-sleep prevention assertion") }
+        activity = ProcessInfo.processInfo.beginActivity(options: [.userInitiated, .latencyCritical], reason: "Receive and durably save M5 motion samples")
         print("Bluetooth collector; Wi-Fi and Internet are unnecessary. Recordings: \(options.recordings.path)")
         print("Idle sleep prevented. Verify your separate closed-lid awake configuration before walking outside.")
         print("Switch M5 into COLLECT by holding B for 2 seconds. Press A to start/stop; B adds a marker.")
@@ -306,6 +308,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     private func close() {
         do { try recorder?.exportCSV() } catch { print("Export failed; journal retained: \(error)") }
         if assertion != 0 { IOPMAssertionRelease(assertion) }
+        if let activity = activity { ProcessInfo.processInfo.endActivity(activity) }
         exit(fatalStorage ? 1 : 0)
     }
 }
@@ -313,7 +316,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
 do {
     let collector = Collector(options: try Options())
     try collector.run()
-    withExtendedLifetime(collector) { dispatchMain() }
+    withExtendedLifetime(collector) { RunLoop.main.run() }
 } catch {
     fputs("\(error)\n", stderr); exit(1)
 }
