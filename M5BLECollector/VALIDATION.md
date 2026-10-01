@@ -5,8 +5,8 @@ The implementation is isolated in `M5BLECollector/`. The existing detector sourc
 | Check | Result |
 |---|---|
 | ESP-IDF 5.5.3 / PlatformIO release firmware build | PASS |
-| Application image size | 1,442,352 bytes with the host-flow-control workaround; existing OTA slot is 3,997,696 bytes |
-| Static internal RAM | 52,760 bytes; long-duration runtime memory still needs physical validation |
+| Application image size | 1,442,896 bytes with advertising retry and the host-flow-control workaround; existing OTA slot is 3,997,696 bytes |
+| Static internal RAM | 52,768 bytes; long-duration runtime memory still needs physical validation |
 | Exact embedded INT8 model | PASS; model is embedded once, 147,976 bytes |
 | Model SHA-256 | `1553dde844bf34928d360cc5f23e06f353e1c78e7aac6b2271cbc36410920530` |
 | Original detector source snapshot unchanged | PASS |
@@ -106,6 +106,24 @@ the host event queue, reports advertising setup failures, and clears stale link
 flags on a host reset without clearing the recording buffer. The Mac can also
 discover the known M5 using a name-only advertisement. The firmware build,
 embedded-model/source preservation check and existing replay/buffer/journal
-smoke tests pass. This candidate is not installed or physically verified yet;
-installation would reboot the M5 and lose any unsent RAM samples. The observed
-failure's exact controller/host cause remains unconfirmed without device logs.
+smoke tests pass. The operator confirmed the interrupted samples were disposable
+setup data, then reconnected USB. The recovery image was installed only at
+`0x3E0000`, and esptool verified its written hash. Its image SHA-256 is
+`c2f608c39abc976d46c3cf4834b8ce636eecbe8ade5a018ded6c44350d8d56c3`.
+The saved 516-sample journal remains intact and has an interruption record with
+`complete=false` and `use_for_training=false`; unsent test RAM data was discarded
+by the installation reboot with the operator's approval. The Mac successfully
+reconnected and reached READY after installation. The operator repeated the
+physical battery-powered out-of-range/return scenario: record, leave BLE range,
+stop on the M5 while disconnected, then return beside the Mac. The receiver
+rediscovered the same boot/session, resumed its existing 558-sample journal, and
+drained SAVING to COMPLETE without rebooting the device. All 1,371 produced
+samples were saved, with zero pending and no buffer overflow. JSONL and CSV
+counts agree with `completion.json`. The quality report measures 45.666666
+seconds at 30.0000004 Hz with no sequence/timestamp gaps, timing-gap flags,
+sensor read errors or saturation. A separate 46-sample button test also completed.
+Both sessions use `activity=setup_test`; further sessions are set back to
+`activity=unspecified`. This verifies one physical disconnect/return recovery
+case, not unrestricted standalone recording or repeated outdoor reliability.
+The earlier failure's exact controller/host cause remains unconfirmed without
+device logs.

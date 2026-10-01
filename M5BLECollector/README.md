@@ -31,6 +31,15 @@ gaps and no sensor read errors. Unplug USB while idle before starting acquisitio
 the observed USB power transition rebooted the board and the receiver reconnected.
 Outdoor/backpack and closed-lid reception still require a field check.
 
+The development device also has advertising retry installed. A battery-powered
+test repeated leaving the Mac, stopping on the M5 while disconnected, and
+returning to BLE range. SAVING drained to SAVED without a device reboot: all
+1,371 samples were saved at 30 Hz with zero pending and no sequence/timestamp
+gaps or sensor errors. Keep the device powered while SAVING and return within
+range of the awake receiver. Its unsaved RAM buffer holds about 273 seconds of
+30 Hz data; a full buffer stops acquisition, so take the Mac with you for longer
+continuous recordings.
+
 ## Prepare private model inputs
 
 Model binaries and deterministic private replay inputs are intentionally absent from Git. On the existing Mac checkout:
