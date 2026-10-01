@@ -21,11 +21,43 @@ public final class Recorder {
     private var profile: [String: String]
     private let createdUTC: Double
 
+    private static func safeName(_ value: String, fallback: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
+        let mapped = value.unicodeScalars.map { allowed.contains($0) ? Character(String($0)) : Character("_") }
+        let text = String(mapped).trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+        return text.isEmpty ? fallback : String(text.prefix(40))
+    }
+
+    private static func existingDirectory(root: URL, sessionHex: String) -> URL? {
+        guard let entries = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) else { return nil }
+        for entry in entries {
+            let metadata = entry.appendingPathComponent("metadata.json")
+            guard let data = try? Data(contentsOf: metadata),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  json["session_id"] as? String == sessionHex else { continue }
+            return entry
+        }
+        return nil
+    }
+
+    private static func newDirectory(root: URL, sessionHex: String, profile: [String: String], created: Date) -> URL {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        let participant = safeName(profile["participant"] ?? "", fallback: "participant")
+        let activity = safeName(profile["activity"] ?? "", fallback: "activity")
+        let shortSession = String(sessionHex.suffix(8))
+        return root.appendingPathComponent("\(formatter.string(from: created))_\(participant)_\(activity)_\(shortSession)")
+    }
+
     public init(root: URL, session: UInt64, info: DeviceInfo, profile: [String: String]) throws {
         try info.validate()
         guard session != 0 else { throw ProtocolError.invalid("Cannot record a zero session") }
         self.session = session; self.info = info; self.profile = profile
-        directory = root.appendingPathComponent("\(info.device_id)_\(info.boot_id)_\(String(format: "%016llx", session))")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let sessionHex = String(format: "%016llx", session)
+        directory = Self.existingDirectory(root: root, sessionHex: sessionHex) ?? Self.newDirectory(root: root, sessionHex: sessionHex, profile: profile, created: Date())
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let metadataURL = directory.appendingPathComponent("metadata.json")
         if FileManager.default.fileExists(atPath: metadataURL.path) {
@@ -33,7 +65,7 @@ public final class Recorder {
             let oldInfo = old?["device"] as? [String: Any]
             guard oldInfo?["model_sha256"] as? String == info.model_sha256,
                   oldInfo?["boot_id"] as? String == info.boot_id,
-                  old?["session_id"] as? String == String(format: "%016llx", session) else {
+                  old?["session_id"] as? String == sessionHex else {
                 throw ProtocolError.invalid("Existing session metadata does not match this device")
             }
             if let savedProfile = old?["profile"] as? [String: String] { self.profile = savedProfile }
