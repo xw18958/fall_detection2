@@ -130,6 +130,15 @@ V2 output:
 
 The dataset itself is not committed to this repository.
 
+## Newly collected M5 recordings
+
+M5 collection CSVs contain untouched MPU6886 register counts and device
+microsecond timestamps. They are not directly accepted by this trainer. See
+[the M5 collected-data guide](../M5BLECollector/COLLECTED_DATA.md) for units,
+quality/completion checks, labels, placement, grouping and the missing importer.
+The collector's raw counts must not be assumed to have the historical private
+dataset's count scale or normalization.
+
 ## Local training run
 
 ```bash
