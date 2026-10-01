@@ -1,0 +1,12 @@
+#!/bin/zsh
+set -euo pipefail
+SCRIPT_DIR=${0:A:h}
+COLLECTOR_DIR=${SCRIPT_DIR:h}
+APP_DIR=${COLLECTOR_DIR}/.build/M5BLECollector.app
+cd "$COLLECTOR_DIR"
+swift build -c release
+mkdir -p "$APP_DIR/Contents/MacOS"
+cp .build/release/M5BLECollector "$APP_DIR/Contents/MacOS/M5BLECollector"
+cp Info.plist "$APP_DIR/Contents/Info.plist"
+codesign --force --sign - "$APP_DIR"
+exec "$APP_DIR/Contents/MacOS/M5BLECollector" "$@"
