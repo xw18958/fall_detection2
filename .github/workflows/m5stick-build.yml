@@ -1,0 +1,39 @@
+name: M5StickC PLUS2 firmware build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: M5StickCPlus2FallDetection
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: python -m pip install --upgrade platformio cryptography
+
+      - name: Create CI-only local inputs
+        run: |
+          # The real model, Wi-Fi credentials, and persistent OTA keys are never stored in Git.
+          printf '\x1c\x00\x00\x00TFL3' > main/model.tflite
+          cp main/wifi_secrets.example.h main/wifi_secrets.h
+          sed -i 's/YOUR_WIFI_SSID/CI_TEST_WIFI/' main/wifi_secrets.h
+          sed -i 's/YOUR_WIFI_PASSWORD/CI_TEST_PASSWORD/' main/wifi_secrets.h
+          bash tools/generate_ota_keys.sh
+
+      - name: Static-check release helper
+        run: python -m py_compile tools/prepare_release.py
+
+      - name: Build ESP-IDF firmware
+        run: pio run
+
+      - name: Package and round-trip verify encrypted OTA artifact
+        run: python tools/prepare_release.py

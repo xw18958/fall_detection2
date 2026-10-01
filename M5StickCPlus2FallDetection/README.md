@@ -2,7 +2,7 @@
 
 ESP-IDF / PlatformIO firmware for running the pruned and fine-tuned TCN fall-detection model locally on an **M5Stack M5StickC PLUS2**.
 
-Current pipeline:
+Current inference pipeline:
 
 ```text
 MPU6886
@@ -11,32 +11,11 @@ MPU6886
   -> 60 x 6 rolling window (3.0 s)
   -> saved normalization
   -> TensorFlow Lite Micro
-  -> softmax Normal / Fall probability
+  -> Normal / Fall probability
   -> screen + buzzer
 ```
 
-The firmware supports local browser recovery OTA and one HTTPS Internet update check at boot. The TFLite model is embedded in the firmware image, so an update replaces application code and model together.
-
-## Internet OTA prototype
-
-Current firmware version is **1.0.0** (`kFirmwareVersion` in `main/internet_ota.cc`). At boot, after sensor/model initialization and the existing OTA self-test confirmation, firmware starts a 12-second Wi-Fi station connection while keeping the `FallDetector-OTA` recovery access point active. It synchronizes the clock with SNTP for certificate date checks, then GETs `latest.txt` over HTTPS with ESP-IDF's certificate bundle, compares three numeric version components, and downloads the release asset only when the published version is newer. `esp_https_ota` writes and validates the inactive A/B slot; success reboots. Wi-Fi, clock, version-file, TLS, or download failures are logged and the detector continues on the installed firmware. The Internet check runs once per boot.
-
-Credentials are local build inputs. Before building, copy `main/wifi_secrets.example.h` to `main/wifi_secrets.h`, then replace both placeholder values with your Wi-Fi SSID and password. The resulting header is gitignored and is not included in a clean checkout. A missing header produces a compile error with these setup instructions. Do not put credentials in source control or logs.
-
-Update source settings are constants near the top of `main/internet_ota.cc`:
-
-```cpp
-kLatestVersionUrl = "https://raw.githubusercontent.com/xw18958/fall_detection2/main/M5StickCPlus2FallDetection/ota/latest.txt"
-kFirmwareUrl = "https://github.com/xw18958/fall_detection2/releases/latest/download/firmware.bin"
-```
-
-`ota/latest.txt` must contain one strict `major.minor.patch` numeric version (optional surrounding whitespace/newline), for example `1.0.0`. Malformed files are rejected. Comparison is numeric by component (`1.10.0` is newer than `1.9.0`); equal and lower versions do nothing. The parser gives `1.0.0` vs `1.0.0` no update, `1.0.0` vs `1.0.1` update, `1.9.0` vs `1.10.0` update, `2.0.0` vs `1.99.99` no update, and rejects malformed versions.
-
-To publish: build with `pio run`, set `ota/latest.txt` to the new firmware version, create a GitHub Release with that exact version as its tag, and attach `.pio/build/m5stickc-plus2/firmware.bin` as the asset named `firmware.bin`. Only publish the version file after the matching release asset is available. Firmware contains the embedded TFLite model. The firmware binary is intentionally not committed or uploaded by this repository change; publish it as a release asset only after reviewing and approving that specific binary. Set the two URL constants if using another host or release URL. Keep HTTPS certificate verification enabled.
-
-The local `FallDetector-OTA` AP and `http://192.168.4.1/` remain available as recovery OTA in AP+STA mode. If Internet is unavailable, the finite connection/request timeouts let normal fall detection continue. Startup validation and A/B rollback remain in place: a newly booted image is marked valid only after the existing detector and recovery-OTA initialization succeeds; failures before that point request rollback. This prototype uses public static hosting and has no signed release manifest, anti-rollback policy, device identity, staged rollout, or private fleet authorization. HTTPS validates the server connection, but a compromised hosting account could publish malicious firmware. SNTP time synchronization is also unauthenticated.
-
-For a physical check, build and USB-flash this version once after creating `wifi_secrets.h`. First publish `1.0.0` and confirm serial logs show a version match and normal detection while the recovery AP still appears. Then build firmware with `kFirmwareVersion` set to `1.0.1`, create a GitHub Release tagged `1.0.1` with its `firmware.bin`, and update `ota/latest.txt` to `1.0.1`. Reboot the device and confirm logs show the HTTPS update and reboot, the new version boots, detection starts, and the AP remains available. Repeat with Wi-Fi disabled to confirm detection proceeds after the timeout. Internet OTA has not been physically verified by this source change.
+The TFLite model is embedded into the application firmware. Updating the application therefore updates both the firmware and model together.
 
 ## Current model interface
 
@@ -44,56 +23,24 @@ For a physical check, build and USB-flash this version once after creating `wifi
 - input shape: `[1, 60, 6]`
 - channel order: `[ax, ay, az, gx, gy, gz]`
 - sample rate: `20 Hz`
-- window length: `60` samples = `3.0 s`
+- window: `60` samples = `3.0 s`
 - inference stride: `15` samples = `0.75 s`
-- classes: `2` (`0 = normal`, `1 = fall`)
-- current live fall threshold: `0.88`
+- classes: `0 = normal`, `1 = fall`
+- current prototype fall threshold: `0.88`
 
-The current fine-tuned C16 TFLite model is about 62 KB. `main/model.tflite` is intentionally gitignored and remains a local deployment artifact.
+The current fine-tuned C16 TFLite model is about 62 KB. `main/model.tflite` is deliberately gitignored and must remain a local deployment artifact.
 
-## Current device behavior
+## Runtime behavior
 
-The screen shows:
+The screen displays the current `NORMAL` / `FALL` state, fall probability, inference latency, probability bar, and alarm cooldown. A fall alarm triggers when `p(fall) >= 0.88`; the buzzer emits one short beep followed by a 3-second cooldown.
 
-- large `NORMAL` / `FALL` state
-- fall probability with one decimal place, e.g. `FALL 88.4%`
-- inference latency
-- probability bar
-- a visible cooldown countdown after an alarm
-
-A fall alarm is triggered when:
+Live sensor preprocessing uses MPU6886 ±8 g accelerometer and ±2000 deg/s gyroscope settings. Firmware converts acceleration from `g` to `m/s^2`, angular velocity from `deg/s` to `rad/s`, then applies the saved normalization:
 
 ```text
-p(fall) >= 0.88
+x_norm = (x - mean) / (sigma + 1e-6)
 ```
 
-The buzzer produces one short beep. After that beep finishes, a **3.0 s cooldown** begins. The screen countdown and the buzzer use the same cooldown timer.
-
-## Prepare the model
-
-Place the deployment model at:
-
-```text
-M5StickCPlus2FallDetection/main/model.tflite
-```
-
-For the current fine-tuned C16 deployment, this is the model previously exported as:
-
-```text
-model_finetuned_c16_seed42.tflite
-```
-
-Example:
-
-```bash
-cd ~/Documents/fall_detection2
-cp ~/Downloads/model_finetuned_c16_seed42.tflite \
-  M5StickCPlus2FallDetection/main/model.tflite
-```
-
-Do not commit the model binary; it is ignored by Git.
-
-## PlatformIO configuration
+## PlatformIO / ESP-IDF
 
 The project uses:
 
@@ -103,16 +50,38 @@ framework = espidf
 board = m5stick-c
 ```
 
-The PLUS2 uses an ESP32-PICO-V3-02 with:
+The PLUS2 has an ESP32-PICO-V3-02, 8 MB flash and 2 MB PSRAM. The project uses the PlatformIO `m5stick-c` definition as the closest base board and overrides the PLUS2 flash/PSRAM configuration.
 
-- 8 MB flash
-- 2 MB PSRAM
+## Local files that must never be committed
 
-`m5stick-c` is used as the closest PlatformIO base board, with project-specific flash/PSRAM settings.
+The following are ignored by Git:
 
-## A/B OTA partition layout
+```text
+main/model.tflite
+main/wifi_secrets.h
+main/ota_private.pem
+main/ota_private_blob.S
+security/ota_public.pem
+dist/
+```
 
-The 8 MB flash now uses two application slots:
+Prepare Wi-Fi credentials once:
+
+```bash
+cp main/wifi_secrets.example.h main/wifi_secrets.h
+```
+
+then edit `main/wifi_secrets.h` with the development Wi-Fi SSID and password.
+
+Place the deployment model at:
+
+```text
+main/model.tflite
+```
+
+## A/B OTA and rollback
+
+The 8 MB flash uses two application slots:
 
 ```text
 nvs
@@ -122,170 +91,233 @@ ota_0   ~3.8 MB
 ota_1   ~3.8 MB
 ```
 
-The running application stays in one slot while a new firmware image is written to the inactive slot. After the upload, the ESP32 reboots into the new image.
+An OTA update is written to the inactive slot. After reboot, a newly installed image must successfully initialize the required detector components before it is marked valid. If startup validation fails while the image is pending verification, rollback can return to the previous known-good slot.
 
-Rollback support is enabled. A newly installed OTA image is marked valid only after the firmware successfully initializes the important runtime components, including the IMU, model, and wireless OTA service. If that startup validation fails, the device can return to the previous known-good OTA image.
+The complete firmware image, including the embedded TFLite model, must fit in one OTA slot. Runtime tensor memory must also fit the available RAM/PSRAM.
 
-## First installation: USB-C is required once
+# GitHub Internet OTA (development stage)
 
-Because the partition table changed from a single application partition to A/B OTA, install this OTA-capable firmware once over USB-C.
+The repository can currently act as the update host without publishing the plaintext model-containing `firmware.bin`.
 
-From the project folder:
+The flow is:
+
+```text
+local model.tflite + source
+        ↓
+pio run
+        ↓
+plaintext firmware.bin       (local only)
+        ↓
+RSA-3072/AES-GCM packaging
+        ↓
+firmware.enc                 (public GitHub release asset)
+        ↓
+GitHub Release vX.Y.Z
+        ↓ HTTPS
+M5StickC PLUS2
+        ↓
+decrypt -> inactive OTA slot -> reboot -> startup validation
+```
+
+The Internet updater checks this manifest once at boot:
+
+```text
+M5StickCPlus2FallDetection/ota/stable.json
+```
+
+The tracked manifest is intentionally disabled until a real release has been uploaded and physically tested:
+
+```json
+{
+  "enabled": false,
+  "version": "1.0.0",
+  "sha256": ""
+}
+```
+
+When enabled, the device downloads the exact versioned asset:
+
+```text
+https://github.com/xw18958/fall_detection2/releases/download/v<VERSION>/firmware.enc
+```
+
+It does **not** use GitHub's `/releases/latest/` alias. The encrypted asset SHA-256 must match the hash in `stable.json` before the OTA image is activated. HTTPS uses the ESP-IDF certificate bundle.
+
+## One-time development OTA key setup
+
+Generate the RSA-3072 development key pair locally:
+
+```bash
+bash tools/generate_ota_keys.sh
+```
+
+This creates:
+
+```text
+main/ota_private.pem          # RSA private key; gitignored
+main/ota_private_blob.S       # generated build source containing that key; gitignored
+security/ota_public.pem       # encrypts firmware.enc locally; gitignored
+```
+
+The generated assembly file is only a PlatformIO/ESP-IDF build workaround. It contains the same secret key material as `main/ota_private.pem` and must never be committed or shared.
+
+The script refuses to overwrite existing key material. Back up `main/ota_private.pem` before deploying it to any device you care about. A device built with one private key cannot decrypt a release encrypted for another key.
+
+If the private key/blob is absent, the project still builds, but GitHub Internet OTA is compiled as disabled.
+
+## Build
 
 ```bash
 cd ~/Documents/fall_detection2/M5StickCPlus2FallDetection
 source ~/.venvs/platformio39/bin/activate
-export PYTHONEXEPATH="$HOME/.venvs/platformio39/bin/python"
-
-pio run
-pio run -t upload --upload-port /dev/cu.usbserial-5B1E0454241
-```
-
-If the serial port is different:
-
-```bash
-pio device list
-```
-
-and substitute the correct `/dev/cu.usbserial-...` device.
-
-After this one USB-C installation, normal future software/model updates can be performed wirelessly.
-
-## Wireless software update
-
-The M5StickC PLUS2 creates its own local Wi-Fi access point:
-
-```text
-SSID:     FallDetector-OTA
-Password: fallupdate
-```
-
-To update:
-
-1. Build the new firmware on the Mac:
-
-```bash
-cd ~/Documents/fall_detection2/M5StickCPlus2FallDetection
 pio run
 ```
 
-2. The file to upload is:
+The plaintext build output is:
 
 ```text
 .pio/build/m5stickc-plus2/firmware.bin
 ```
 
-3. On the Mac or phone, connect Wi-Fi to:
+**Do not upload this plaintext file to the public GitHub repository or a public GitHub Release.** It contains the embedded model.
+
+## Prepare an encrypted GitHub release
+
+The firmware version has one source of truth:
 
 ```text
-FallDetector-OTA
+main/version.h
 ```
 
-using password:
+For example:
 
-```text
-fallupdate
+```cpp
+#define FALL_FIRMWARE_VERSION "1.1.0"
 ```
 
-4. Open a browser and go to:
-
-```text
-http://192.168.4.1/
-```
-
-5. Select `firmware.bin` and press **Upload and reboot**.
-
-6. Do not power off the M5StickC PLUS2 during the upload. When the image has been fully written and validated, the device reboots into the new OTA slot.
-
-Because `model.tflite` is embedded into `firmware.bin`, changing the local model and rebuilding the project also updates the model wirelessly. This allows OTA deployment of a different model architecture as long as the resulting firmware fits in an OTA slot and the model still fits the device's runtime RAM/PSRAM and latency constraints.
-
-## Important OTA limitation
-
-Each OTA application slot is about **3.8 MB**, so the complete compiled firmware image, including the embedded TFLite model, must fit inside one slot.
-
-A larger model can therefore be delivered wirelessly, but OTA does not remove the hardware constraints:
-
-- firmware/model image must fit the flash slot
-- TensorFlow Lite tensor arena must fit available RAM/PSRAM
-- required TFLite operators must be compiled into the firmware
-- inference should remain fast enough for the `0.75 s` inference stride
-
-## OTA security status
-
-The current OTA service is intended for **local prototype development**. It uses a WPA2-protected local access point and a browser upload page, but the OTA image itself is not yet production-signed and the web page uses local HTTP.
-
-Before commercial deployment, add at minimum:
-
-- unique per-device credentials instead of the shared prototype password
-- signed firmware verification / secure boot as appropriate
-- encrypted production update transport
-- version policy and downgrade protection
-- staged rollout / fleet management if devices are deployed remotely
-
-## Monitor serial logs
-
-```bash
-pio device monitor --port /dev/cu.usbserial-5B1E0454241 -b 115200
-```
-
-Useful startup lines include:
-
-```text
-MPU6886 WHO_AM_I = 0x..
-Embedded TFLite model: ... bytes
-PSRAM initialized=1
-input shape=[1,60,6] type=float32
-output shape=[1,2] type=float32
-Wireless software update ready
-Recovery access point ready (password is not printed)
-Update page: http://192.168.4.1/
-Ready. Collecting MPU6886 at 20 Hz...
-```
-
-Inference logs look like:
-
-```text
-infer=... us | logits=[... ...] | normal=... fall=... | sample=...
-```
-
-## Live preprocessing
-
-The MPU6886 is configured to:
-
-- accelerometer: ±8 g
-- gyroscope: ±2000 deg/s
-
-The firmware converts:
-
-- acceleration: `g -> m/s^2`
-- angular velocity: `deg/s -> rad/s`
-
-and then applies:
-
-```text
-x_norm = (x - mean) / (sigma + 1e-6)
-```
-
-with the normalization values stored in `main.cc`.
-
-## GELU / TensorFlow Lite Micro support
-
-The TCN uses GELU. The project includes the required TensorFlow Lite Micro GELU kernel and custom op resolver rather than changing the trained architecture to a different activation.
-
-If a future model architecture introduces new TensorFlow Lite operators, update the resolver and firmware together. The resulting firmware can then be delivered through the same OTA mechanism.
-
-## Troubleshooting
-
-Build failure:
+After changing the version and building:
 
 ```bash
 pio run
+python tools/prepare_release.py
 ```
 
-Runtime / OTA debugging:
+`prepare_release.py`:
+
+1. encrypts `firmware.bin` with the local OTA public key;
+2. decrypts the result again locally and verifies it exactly matches the original firmware;
+3. calculates SHA-256 of the encrypted artifact;
+4. writes:
+
+```text
+dist/v1.1.0/firmware.enc
+dist/v1.1.0/stable.json
+```
+
+## Publish an update
+
+Publish in this order so a device can never see a manifest pointing to a missing asset:
+
+1. Create a GitHub Release tagged exactly `v1.1.0`.
+2. Upload **only** `dist/v1.1.0/firmware.enc` as an asset named `firmware.enc`.
+3. Copy `dist/v1.1.0/stable.json` to `ota/stable.json`.
+4. Review the manifest and push it to `main`.
+
+Example generated manifest:
+
+```json
+{
+  "enabled": true,
+  "version": "1.1.0",
+  "sha256": "<sha256-of-firmware.enc>"
+}
+```
+
+On the next boot with Internet access, an older device checks the manifest, downloads the exact newer encrypted release, verifies the encrypted download hash, decrypts it while OTA is running, validates the resulting ESP32 application image, switches the A/B boot slot and reboots.
+
+Failures in Wi-Fi, SNTP, HTTPS, manifest parsing, hashing, decryption or OTA leave the installed detector firmware in use.
+
+## First physical installation
+
+Because the project uses a custom A/B partition table, install this OTA-capable firmware by USB-C at least once:
 
 ```bash
-pio device monitor --port /dev/cu.usbserial-5B1E0454241 -b 115200
+pio device list
+pio run -t upload --upload-port /dev/cu.usbserial-XXXXXXXX
 ```
 
-If wireless updating is unavailable because the currently installed firmware predates the OTA implementation or the partition table has not yet been migrated, use USB-C once to install the current firmware and partition table.
+Then monitor startup:
+
+```bash
+pio device monitor --port /dev/cu.usbserial-XXXXXXXX -b 115200
+```
+
+Useful log lines include model size, PSRAM allocation, model input/output shapes, MPU6886 identification, recovery OTA startup, Internet OTA version status and inference output.
+
+# Local recovery OTA
+
+For development/recovery, the current firmware also keeps the existing local access point:
+
+```text
+SSID:     FallDetector-OTA
+Password: fallupdate
+URL:      http://192.168.4.1/
+```
+
+Build with `pio run`, connect a Mac/phone to that AP, open the URL, select the local plaintext `.pio/build/m5stickc-plus2/firmware.bin`, then choose **Upload and reboot**.
+
+This local browser updater is intentionally retained for the current testing stage and writes to the inactive A/B slot. Do not power the device off during an upload.
+
+# Current security boundary
+
+This implementation is a **development-stage protection**, not the final commercial security architecture.
+
+What it currently protects:
+
+- `model.tflite` is not in Git.
+- plaintext `firmware.bin`, which contains the model, does not need to be published.
+- public GitHub Releases contain only `firmware.enc`.
+- GitHub downloads use HTTPS certificate verification.
+- encrypted release corruption/tampering is rejected by AES-GCM and the manifest SHA-256 check.
+- A/B OTA and rollback reduce the risk of an unusable remote update.
+
+What it does **not** yet protect:
+
+- a skilled attacker with physical access can potentially dump the ESP32 because Flash Encryption is not enabled yet;
+- the OTA private key is embedded in the development firmware;
+- Secure Boot is not enabled yet;
+- the public manifest is not independently signed;
+- the recovery AP uses one shared prototype password and local HTTP;
+- there is no per-device identity, private fleet authorization, staged rollout or server-side health reporting.
+
+Before handing production units to customers, the next security stage should add ESP32 Flash Encryption + Secure Boot, production key provisioning, stronger recovery access control and a real authenticated backend. Those changes are deliberately postponed while the device and model are still being developed.
+
+# Software-side verification
+
+The GitHub Actions build/package test has been exercised successfully without physical hardware. It confirmed that:
+
+- the generated private-key assembly source compiles and links into the ESP-IDF firmware;
+- the firmware image fits comfortably in the current OTA slot using the CI dummy model;
+- `firmware.bin` can be pre-encrypted with the generated public key;
+- the resulting `firmware.enc` can be decrypted with the matching private key;
+- the decrypted bytes exactly match the original `firmware.bin`.
+
+The workflow uses a dummy model, test Wi-Fi values, and throwaway OTA keys, so this is a build/release-path verification only. It does not test the real model or real device behavior.
+
+# CI checks
+
+`.github/workflows/m5stick-build.yml` is intentionally **manual-only** (`workflow_dispatch`) during development, so ordinary pushes do not generate repeated build notifications. When manually run, it builds with a dummy local-only model, test Wi-Fi values and throwaway OTA keys, then runs `tools/prepare_release.py` as a strict round-trip packaging check. No real model, Wi-Fi credential or persistent OTA private key is stored by the workflow.
+
+# Hardware validation still required
+
+The source/build/release path can be checked without a device, but the following must be tested when an M5StickC PLUS2 is available:
+
+1. USB flash and normal boot;
+2. display, IMU, buzzer and real model inference;
+3. Internet update from one version to a newer version;
+4. local recovery OTA;
+5. rollback after a deliberately bad startup;
+6. loss of Wi-Fi / Internet during update;
+7. power interruption during OTA.
+
+Until those tests pass, Internet OTA should remain disabled in `ota/stable.json`.

@@ -1,11 +1,21 @@
 #pragma once
 
+#include <cstddef>
+
 namespace fall_ota {
 
-// Starts a local Wi-Fi access point and browser-based OTA update server.
+// Starts the local recovery/provisioning access point and browser UI.
 // Connect to SSID "FallDetector-OTA" with password "fallupdate", then open
-// http://192.168.4.1/ and upload the PlatformIO firmware.bin file.
+// http://192.168.4.1/. The page supports both Wi-Fi provisioning and local OTA.
 bool Start();
+
+// Load Wi-Fi credentials previously provisioned through the local web page.
+// Returns false when no complete credential pair has been stored yet.
+bool LoadStoredWifiCredentials(char* ssid, size_t ssid_size,
+                               char* password, size_t password_size);
+
+// Remove provisioned Wi-Fi credentials from NVS.
+bool ClearStoredWifiCredentials();
 
 // True only while a firmware image is actively being written to the inactive
 // OTA slot. The sensor/inference loop can pause during this short period.

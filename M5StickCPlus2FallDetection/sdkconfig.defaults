@@ -11,6 +11,14 @@ CONFIG_LOG_DEFAULT_LEVEL_INFO=y
 CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y
 CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL=y
 
+# Enable the esp_https_ota external decryption hook used by esp_encrypted_img.
+CONFIG_ESP_HTTPS_OTA_DECRYPT_CB=y
+
+# GitHub release artifacts are pre-encrypted with Espressif's RSA-3072 + AES-GCM
+# encrypted-image format. The private RSA key remains a local, gitignored build input.
+CONFIG_PRE_ENCRYPTED_OTA_USE_RSA=y
+# CONFIG_PRE_ENCRYPTED_RSA_USE_DS is not set
+
 # Custom A/B application layout: ota_0 + ota_1 + otadata.
 CONFIG_PARTITION_TABLE_CUSTOM=y
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include "cJSON.h"
 #include "esp_event.h"
 #include "esp_http_server.h"
 #include "esp_log.h"
@@ -13,6 +14,7 @@
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "nvs.h"
 #include "nvs_flash.h"
 
 namespace fall_ota {
@@ -23,6 +25,10 @@ constexpr char kSsid[] = "FallDetector-OTA";
 constexpr char kPassword[] = "fallupdate";
 constexpr char kIpAddress[] = "192.168.4.1";
 constexpr size_t kReceiveBufferSize = 4096;
+constexpr char kWifiNvsNamespace[] = "fall_wifi";
+constexpr char kWifiSsidKey[] = "ssid";
+constexpr char kWifiPasswordKey[] = "password";
+constexpr size_t kMaxWifiRequestSize = 256;
 
 volatile bool g_update_in_progress = false;
 bool g_started = false;
@@ -33,46 +39,71 @@ const char kIndexHtml[] = R"HTML(
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fall Detector OTA</title>
+<title>Fall Detector Setup</title>
 <style>
-body{font-family:system-ui,-apple-system,sans-serif;max-width:560px;margin:40px auto;padding:0 18px;color:#111}
-.card{border:1px solid #ccc;border-radius:14px;padding:22px}
-h1{font-size:1.45rem;margin-top:0}
-input,button{font:inherit;margin-top:14px}
+body{font-family:system-ui,-apple-system,sans-serif;max-width:560px;margin:28px auto;padding:0 18px;color:#111}
+.card{border:1px solid #ccc;border-radius:14px;padding:22px;margin:0 0 18px}
+h1,h2{margin-top:0}h1{font-size:1.45rem}h2{font-size:1.15rem}
+input,button{font:inherit;margin-top:10px;box-sizing:border-box}
+input[type=text],input[type=password]{width:100%;padding:10px;border:1px solid #aaa;border-radius:8px}
 button{padding:10px 16px;border:0;border-radius:8px;background:#111;color:white}
-button:disabled{opacity:.45}
-#status{margin-top:16px;white-space:pre-wrap}
+button.secondary{background:#666}button:disabled{opacity:.45}
+.status{margin-top:14px;white-space:pre-wrap;color:#555;font-size:.92rem}
 .small{color:#555;font-size:.92rem}
 </style>
 </head>
 <body>
 <div class="card">
-<h1>Fall Detector Software Update</h1>
-<p>Select the <b>firmware.bin</b> produced by PlatformIO. The firmware and embedded TFLite model are updated together.</p>
+<h1>Fall Detector Setup</h1>
+<h2>Internet Wi-Fi</h2>
+<p class="small">Enter the Wi-Fi used by this device. The credentials are stored locally on the device and are not compiled into the firmware.</p>
+<label>Wi-Fi name (SSID)</label>
+<input id="ssid" type="text" maxlength="32" autocomplete="off">
+<label>Password</label>
+<input id="password" type="password" maxlength="63" autocomplete="new-password">
+<br><button id="saveWifi">Save Wi-Fi and reboot</button>
+<button id="forgetWifi" class="secondary">Forget saved Wi-Fi</button>
+<div id="wifiStatus" class="status">After reboot, the device will try this Wi-Fi for Internet OTA.</div>
+</div>
+<div class="card">
+<h2>Local software update</h2>
+<p class="small">Select the <b>firmware.bin</b> produced by PlatformIO. Firmware and the embedded TFLite model are updated together.</p>
 <input id="file" type="file" accept=".bin,application/octet-stream">
 <br><button id="upload">Upload and reboot</button>
-<div id="status" class="small">Do not power off the device during the upload.</div>
+<div id="otaStatus" class="status">Do not power off the device during the upload.</div>
 </div>
 <script>
+const ssid=document.getElementById('ssid');
+const password=document.getElementById('password');
+const saveWifi=document.getElementById('saveWifi');
+const forgetWifi=document.getElementById('forgetWifi');
+const wifiStatus=document.getElementById('wifiStatus');
+saveWifi.addEventListener('click',async()=>{
+  const s=ssid.value.trim(),p=password.value;
+  if(!s){wifiStatus.textContent='Enter a Wi-Fi name.';return;}
+  if(p.length<8){wifiStatus.textContent='WPA2 password must be at least 8 characters.';return;}
+  saveWifi.disabled=true;forgetWifi.disabled=true;
+  wifiStatus.textContent='Saving Wi-Fi...';
+  try{
+    const r=await fetch('/wifi',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ssid:s,password:p})});
+    const text=await r.text();if(!r.ok)throw new Error(text||('HTTP '+r.status));
+    wifiStatus.textContent=text;
+  }catch(e){wifiStatus.textContent='Wi-Fi setup failed: '+e.message;saveWifi.disabled=false;forgetWifi.disabled=false;}
+});
+forgetWifi.addEventListener('click',async()=>{
+  forgetWifi.disabled=true;saveWifi.disabled=true;wifiStatus.textContent='Removing saved Wi-Fi...';
+  try{const r=await fetch('/wifi/forget',{method:'POST'});const text=await r.text();if(!r.ok)throw new Error(text||('HTTP '+r.status));wifiStatus.textContent=text;}
+  catch(e){wifiStatus.textContent='Could not forget Wi-Fi: '+e.message;forgetWifi.disabled=false;saveWifi.disabled=false;}
+});
 const file=document.getElementById('file');
 const button=document.getElementById('upload');
-const status=document.getElementById('status');
+const otaStatus=document.getElementById('otaStatus');
 button.addEventListener('click',async()=>{
-  if(!file.files.length){status.textContent='Choose firmware.bin first.';return;}
-  const f=file.files[0];
-  button.disabled=true;
-  file.disabled=true;
-  status.textContent='Uploading '+f.name+' ('+f.size+' bytes)...';
-  try{
-    const r=await fetch('/update',{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:f});
-    const text=await r.text();
-    if(!r.ok) throw new Error(text||('HTTP '+r.status));
-    status.textContent=text+'\nThe device is rebooting. Reconnect to FallDetector-OTA after it restarts.';
-  }catch(e){
-    status.textContent='Update failed: '+e.message;
-    button.disabled=false;
-    file.disabled=false;
-  }
+  if(!file.files.length){otaStatus.textContent='Choose firmware.bin first.';return;}
+  const f=file.files[0];button.disabled=true;file.disabled=true;
+  otaStatus.textContent='Uploading '+f.name+' ('+f.size+' bytes)...';
+  try{const r=await fetch('/update',{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:f});const text=await r.text();if(!r.ok)throw new Error(text||('HTTP '+r.status));otaStatus.textContent=text+'\nThe device is rebooting.';}
+  catch(e){otaStatus.textContent='Update failed: '+e.message;button.disabled=false;file.disabled=false;}
 });
 </script>
 </body>
@@ -90,6 +121,91 @@ esp_err_t RootHandler(httpd_req_t* req) {
   httpd_resp_set_type(req, "text/html");
   httpd_resp_set_hdr(req, "Cache-Control", "no-store");
   return httpd_resp_send(req, kIndexHtml, HTTPD_RESP_USE_STRLEN);
+}
+
+
+bool ReadStoredWifiCredentials(char* ssid, size_t ssid_size,
+                               char* password, size_t password_size) {
+  if (ssid == nullptr || password == nullptr || ssid_size < 2 || password_size < 2) {
+    return false;
+  }
+  nvs_handle_t handle = 0;
+  if (nvs_open(kWifiNvsNamespace, NVS_READONLY, &handle) != ESP_OK) return false;
+  size_t ssid_len = ssid_size;
+  size_t password_len = password_size;
+  const esp_err_t ssid_err = nvs_get_str(handle, kWifiSsidKey, ssid, &ssid_len);
+  const esp_err_t password_err = nvs_get_str(handle, kWifiPasswordKey, password, &password_len);
+  nvs_close(handle);
+  return ssid_err == ESP_OK && password_err == ESP_OK && ssid[0] != '\0';
+}
+
+bool StoreWifiCredentials(const char* ssid, const char* password) {
+  if (ssid == nullptr || password == nullptr) return false;
+  const size_t ssid_len = std::strlen(ssid);
+  const size_t password_len = std::strlen(password);
+  if (ssid_len == 0 || ssid_len > 32 || password_len < 8 || password_len > 63) {
+    return false;
+  }
+  nvs_handle_t handle = 0;
+  if (nvs_open(kWifiNvsNamespace, NVS_READWRITE, &handle) != ESP_OK) return false;
+  esp_err_t err = nvs_set_str(handle, kWifiSsidKey, ssid);
+  if (err == ESP_OK) err = nvs_set_str(handle, kWifiPasswordKey, password);
+  if (err == ESP_OK) err = nvs_commit(handle);
+  nvs_close(handle);
+  return err == ESP_OK;
+}
+
+bool EraseWifiCredentials() {
+  nvs_handle_t handle = 0;
+  esp_err_t err = nvs_open(kWifiNvsNamespace, NVS_READWRITE, &handle);
+  if (err == ESP_ERR_NVS_NOT_FOUND) return true;
+  if (err != ESP_OK) return false;
+  err = nvs_erase_all(handle);
+  if (err == ESP_OK) err = nvs_commit(handle);
+  nvs_close(handle);
+  return err == ESP_OK;
+}
+
+esp_err_t WifiProvisionHandler(httpd_req_t* req) {
+  if (req->content_len <= 0 || req->content_len >= static_cast<int>(kMaxWifiRequestSize)) {
+    return SendError(req, "400 Bad Request", "Invalid Wi-Fi setup request.");
+  }
+  char body[kMaxWifiRequestSize]{};
+  int total = 0;
+  while (total < req->content_len) {
+    const int received = httpd_req_recv(req, body + total, req->content_len - total);
+    if (received == HTTPD_SOCK_ERR_TIMEOUT) continue;
+    if (received <= 0) return SendError(req, "400 Bad Request", "Wi-Fi setup request was interrupted.");
+    total += received;
+  }
+  body[total] = '\0';
+  cJSON* root = cJSON_Parse(body);
+  if (root == nullptr) return SendError(req, "400 Bad Request", "Invalid Wi-Fi setup JSON.");
+  const cJSON* ssid = cJSON_GetObjectItemCaseSensitive(root, "ssid");
+  const cJSON* password = cJSON_GetObjectItemCaseSensitive(root, "password");
+  const bool valid = cJSON_IsString(ssid) && ssid->valuestring != nullptr &&
+                     cJSON_IsString(password) && password->valuestring != nullptr &&
+                     StoreWifiCredentials(ssid->valuestring, password->valuestring);
+  if (valid) ESP_LOGI(kTag, "Provisioned Internet Wi-Fi SSID: %s", ssid->valuestring);
+  cJSON_Delete(root);
+  if (!valid) return SendError(req, "400 Bad Request", "SSID must be 1-32 bytes and WPA2 password 8-63 bytes.");
+  httpd_resp_set_type(req, "text/plain");
+  httpd_resp_sendstr(req, "Wi-Fi saved. Device is rebooting and will try the saved network.");
+  vTaskDelay(pdMS_TO_TICKS(800));
+  esp_restart();
+  return ESP_OK;
+}
+
+esp_err_t WifiForgetHandler(httpd_req_t* req) {
+  if (!EraseWifiCredentials()) {
+    return SendError(req, "500 Internal Server Error", "Could not erase saved Wi-Fi.");
+  }
+  ESP_LOGI(kTag, "Stored Internet Wi-Fi credentials erased");
+  httpd_resp_set_type(req, "text/plain");
+  httpd_resp_sendstr(req, "Saved Wi-Fi removed. Device is rebooting.");
+  vTaskDelay(pdMS_TO_TICKS(800));
+  esp_restart();
+  return ESP_OK;
 }
 
 esp_err_t UpdateHandler(httpd_req_t* req) {
@@ -220,6 +336,18 @@ bool StartHttpServer() {
   root.handler = RootHandler;
   root.user_ctx = nullptr;
 
+  httpd_uri_t wifi{};
+  wifi.uri = "/wifi";
+  wifi.method = HTTP_POST;
+  wifi.handler = WifiProvisionHandler;
+  wifi.user_ctx = nullptr;
+
+  httpd_uri_t forget{};
+  forget.uri = "/wifi/forget";
+  forget.method = HTTP_POST;
+  forget.handler = WifiForgetHandler;
+  forget.user_ctx = nullptr;
+
   httpd_uri_t update{};
   update.uri = "/update";
   update.method = HTTP_POST;
@@ -227,6 +355,8 @@ bool StartHttpServer() {
   update.user_ctx = nullptr;
 
   if (httpd_register_uri_handler(g_server, &root) != ESP_OK ||
+      httpd_register_uri_handler(g_server, &wifi) != ESP_OK ||
+      httpd_register_uri_handler(g_server, &forget) != ESP_OK ||
       httpd_register_uri_handler(g_server, &update) != ESP_OK) {
     ESP_LOGE(kTag, "Failed to register OTA HTTP handlers");
     httpd_stop(g_server);
@@ -313,6 +443,15 @@ bool Start() {
   ESP_LOGI(kTag, "Wi-Fi SSID: %s", kSsid);
   ESP_LOGI(kTag, "Update page: http://%s/", kIpAddress);
   return true;
+}
+
+bool LoadStoredWifiCredentials(char* ssid, size_t ssid_size,
+                               char* password, size_t password_size) {
+  return ReadStoredWifiCredentials(ssid, ssid_size, password, password_size);
+}
+
+bool ClearStoredWifiCredentials() {
+  return EraseWifiCredentials();
 }
 
 bool InProgress() {
