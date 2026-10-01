@@ -5,8 +5,8 @@ The implementation is isolated in `M5BLECollector/`. The existing detector sourc
 | Check | Result |
 |---|---|
 | ESP-IDF 5.5.3 / PlatformIO release firmware build | PASS |
-| Application image size | 1,443,696 bytes after BLE diagnostics/stability changes; existing OTA slot is 3,997,696 bytes |
-| Static internal RAM | 52,768 bytes; runtime heap requirements still need physical validation |
+| Application image size | 1,442,352 bytes with the host-flow-control workaround; existing OTA slot is 3,997,696 bytes |
+| Static internal RAM | 52,760 bytes; long-duration runtime memory still needs physical validation |
 | Exact embedded INT8 model | PASS; model is embedded once, 147,976 bytes |
 | Model SHA-256 | `1553dde844bf34928d360cc5f23e06f353e1c78e7aac6b2271cbc36410920530` |
 | Original detector source snapshot unchanged | PASS |
@@ -30,23 +30,23 @@ Hardware checks completed during installation:
 
 Not yet physically verified:
 
-- BLE connection/bonding and saving a physical recording on the actual M5.
-- Sustained collection timing and runtime memory under BLE load.
+- Sustained encrypted collection/bonding with the flow-control workaround (current physical tests use the approved unpaired build).
+- Long-duration collection timing and runtime memory under BLE load.
 - Outdoor body-to-backpack radio reliability and reconnect recovery.
 - Continuous reception with the Mac closed and awake on battery.
-- Battery runtime, button interactions, OTA fallback and return to detection.
+- Battery runtime, extended button/mode interactions, OTA fallback and return to detection.
 - Sensor mounting/orientation and the existing detector's provisional training-count scale.
 
 BLE troubleshooting update: encrypted model identification and the READY handshake
 have succeeded on the actual M5. Two short setup attempts durably saved 11 and
 40 samples respectively, but neither recording completed. Repeated supervision
-timeouts and GATT discovery timeouts remain unresolved. These interrupted tests
+timeouts and GATT discovery timeouts occurred before the SDK workaround below. These interrupted tests
 must not be treated as complete training recordings. The Mac now serializes its
 initial encrypted reads before notification subscription, avoids duplicate
 pending reads, and reports readiness only after the device confirms it. The
 collector radio keeps modem sleep disabled and requests a 30–45 ms interval,
 zero slave latency and a six-second supervision timeout; a physical test showed
-the request accepted (45 ms). These changes have not established sustained BLE
+the request accepted (45 ms). Those changes alone did not establish sustained BLE
 reliability. Opening the USB diagnostic port was observed to reboot the board;
 do not open serial tools during recording or while samples remain pending.
 
@@ -69,5 +69,26 @@ loop and explicitly prevents App Nap during reception.
 The pinned SDK is affected by Espressif's documented ESP-IDF 5.5.3 NimBLE
 host-flow-control defect (issue 18323). Its flow control was enabled in the
 failing builds. The project defaults and local generated configuration now
-disable it using the vendor's workaround. Build/installation and a completed
-physical recording with this workaround still require verification.
+disable it using the vendor's workaround. The final image built successfully,
+passed detector/model preservation verification, and was installed only at
+`0x3E0000`; esptool verified the written image hash. Image SHA-256:
+`b55d30874cc81e72171d50879a56a2cfaae227d2846c041631ac4f843c9a142c`.
+
+With that workaround, five physical recordings completed and were saved on
+the Mac: 759, 194, 108, 203 and 217 samples (1,481 total). All five quality
+reports show no sequence/timestamp gaps, read errors, saturation or timing-gap
+flags. The first recording spans 25.266667 seconds
+at 29.9999996 Hz, with no sequence gaps, timestamp gaps, timing-gap flags,
+sensor read errors or saturation. Its JSONL contains 759 records and its CSV
+759 data rows; `completion.json` confirms 759 saved samples, no overflow, and
+device status confirms zero pending samples. The device buttons stopped and
+started sessions, and a button marker was retained. The first three are setup
+recordings (`activity=setup_test`), not activity
+ground truth for training. Further sessions
+default to `activity=unspecified` until the operator supplies a truthful label.
+The user unplugged USB while the M5 was idle. Its boot ID changed and the Mac
+automatically reconnected. A subsequent battery-powered BLE recording saved all
+217 samples (7.2 seconds at 30 Hz), with zero pending samples and a matching CSV
+and completion file. Unplug USB before starting acquisition; a power-transition
+reboot during acquisition would lose unsaved RAM samples. Long-duration outdoor
+body-to-backpack and closed-lid reception still need physical checks.

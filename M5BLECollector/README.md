@@ -23,6 +23,14 @@ Do not run a generic USB upload, erase flash, or upload `model.tflite`. Do not p
 
 The development M5 was installed on 1 October 2026 using a targeted USB write to the inactive `ota_1` application slot at `0x3E0000`, after backing up and validating the complete active detector application and boot/settings regions. Only the unused second OTA selector sector was updated to activate the new application with rollback enabled. The original `ota_0` detector, first valid OTA selector, bootloader, partition table and NVS were preserved. The deployed model matched the locked model byte for byte. Private backups and device logs are kept under the ignored `artifacts/` directory. See `VALIDATION.md` for hardware checks.
 
+The current development device has the approved unpaired BLE transport and the
+ESP-IDF host-flow-control workaround installed. Five physical recordings saved
+completely on the Mac (1,481 samples total), including a battery-powered session
+after unplugging USB. Their quality reports show no sample sequence or timestamp
+gaps and no sensor read errors. Unplug USB while idle before starting acquisition;
+the observed USB power transition rebooted the board and the receiver reconnected.
+Outdoor/backpack and closed-lid reception still require a field check.
+
 ## Prepare private model inputs
 
 Model binaries and deterministic private replay inputs are intentionally absent from Git. On the existing Mac checkout:
