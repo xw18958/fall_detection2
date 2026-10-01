@@ -5,7 +5,7 @@ The implementation is isolated in `M5BLECollector/`. The existing detector sourc
 | Check | Result |
 |---|---|
 | ESP-IDF 5.5.3 / PlatformIO release firmware build | PASS |
-| Application image size | 1,442,848 bytes; existing OTA slot is 3,997,696 bytes |
+| Application image size | 1,443,696 bytes after BLE diagnostics/stability changes; existing OTA slot is 3,997,696 bytes |
 | Static internal RAM | 52,768 bytes; runtime heap requirements still need physical validation |
 | Exact embedded INT8 model | PASS; model is embedded once, 147,976 bytes |
 | Model SHA-256 | `1553dde844bf34928d360cc5f23e06f353e1c78e7aac6b2271cbc36410920530` |
@@ -36,5 +36,18 @@ Not yet physically verified:
 - Continuous reception with the Mac closed and awake on battery.
 - Battery runtime, button interactions, OTA fallback and return to detection.
 - Sensor mounting/orientation and the existing detector's provisional training-count scale.
+
+BLE troubleshooting update: encrypted model identification and the READY handshake
+have succeeded on the actual M5. Two short setup attempts durably saved 11 and
+40 samples respectively, but neither recording completed. Repeated supervision
+timeouts and GATT discovery timeouts remain unresolved. These interrupted tests
+must not be treated as complete training recordings. The Mac now serializes its
+initial encrypted reads before notification subscription, avoids duplicate
+pending reads, and reports readiness only after the device confirms it. The
+collector radio keeps modem sleep disabled and requests a 30–45 ms interval,
+zero slave latency and a six-second supervision timeout; a physical test showed
+the request accepted (45 ms). These changes have not established sustained BLE
+reliability. Opening the USB diagnostic port was observed to reboot the board;
+do not open serial tools during recording or while samples remain pending.
 
 No claim of validated real-device accuracy or battery duration is made. Pending device samples are buffered in PSRAM and are lost on power loss/reboot; the Mac's synchronized journal is the persistent record.

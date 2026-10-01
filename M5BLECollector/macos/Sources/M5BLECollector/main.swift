@@ -47,6 +47,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     private var timer: DispatchSourceTimer?
     private var signals: [DispatchSourceSignal] = []
     private var subscribed = false, readySent = false, statusReading = false
+    private var infoReading = false, subscriptionsRequested = false, deviceReadyReported = false
     private var writes: [(Data, String)] = []
     private var inFlight: (Data, String)?
     private var writing = false, quitting = false, detecting = false, fatalStorage = false
@@ -118,7 +119,9 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         peripheral = candidate; candidate.delegate = self; central.stopScan(); central.connect(candidate)
     }
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        print("BLE link connected; discovering collector service.")
         characteristics.removeAll(); info = nil; status = nil; subscribed = false; readySent = false
+        infoReading = false; subscriptionsRequested = false; deviceReadyReported = false
         statusReading = false; writing = false; inFlight = nil; writes.removeAll(); assembler.reset()
         peripheral.discoverServices([CBUUID(string: Wire.service)])
     }
@@ -131,6 +134,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     private func reconnect(_ error: Error?) {
         print("Disconnected\(error.map { ": \($0.localizedDescription)" } ?? ""); device retains unacknowledged data in RAM.")
         peripheral = nil; info = nil; status = nil; characteristics.removeAll(); subscribed = false; readySent = false
+        infoReading = false; subscriptionsRequested = false; deviceReadyReported = false
         assembler.reset(); writes.removeAll(); writing = false; inFlight = nil; statusReading = false
         if detecting { close(); return }
         if !fatalStorage { DispatchQueue.main.asyncAfter(deadline: .now()+2) { [weak self] in self?.scan() } }
@@ -142,9 +146,9 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         guard error == nil else { fail("Characteristic discovery failed"); return }
         for characteristic in service.characteristics ?? [] { characteristics[characteristic.uuid.uuidString.uppercased()] = characteristic }
-        guard let information = characteristic(Wire.info), let stream = characteristic(Wire.samples), let state = characteristic(Wire.status), characteristic(Wire.control) != nil else { fail("Missing BLE characteristic"); return }
-        peripheral.readValue(for: information)
-        peripheral.setNotifyValue(true, for: stream); peripheral.setNotifyValue(true, for: state)
+        guard let information = characteristic(Wire.info), characteristic(Wire.samples) != nil, characteristic(Wire.status) != nil, characteristic(Wire.control) != nil else { fail("Missing BLE characteristic"); return }
+        print("Collector service found; reading encrypted device information.")
+        infoReading = true; peripheral.readValue(for: information)
     }
     private func characteristic(_ uuid: String) -> CBCharacteristic? { characteristics[uuid.uppercased()] }
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
@@ -154,7 +158,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     private func handshake() {
         guard info != nil, status != nil, subscribed, !readySent else { return }
         readySent = true; send(Wire.command(5), label: "ready")
-        print("Connected and ready. Recording starts with A or the start command.")
+        print("Pairing complete; waiting for device readiness.")
     }
     private func attach(_ session: UInt64) throws {
         guard session != 0, let info = info else { throw ProtocolError.invalid("Session arrived before device information") }
@@ -166,6 +170,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     }
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if characteristic.uuid == CBUUID(string: Wire.status) { statusReading = false }
+        if characteristic.uuid == CBUUID(string: Wire.info) { infoReading = false }
         guard error == nil, let data = characteristic.value else {
             print("BLE read failed: \(error?.localizedDescription ?? "empty value"). Approve pairing if requested.")
             return
@@ -185,6 +190,15 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
                 handshake()
             case CBUUID(string: Wire.status):
                 status = try DeviceStatus(data)
+                if !subscriptionsRequested, info != nil,
+                   let stream = self.characteristic(Wire.samples), let state = self.characteristic(Wire.status) {
+                    subscriptionsRequested = true
+                    peripheral.setNotifyValue(true, for: stream); peripheral.setNotifyValue(true, for: state)
+                }
+                if status!.flags & 2 != 0, !deviceReadyReported {
+                    deviceReadyReported = true
+                    print("Connected and ready. Recording starts with A or the start command.")
+                }
                 if let state = status, state.session != 0, info != nil {
                     try attach(state.session)
                     if state.complete, finishedSession != state.session, let recorder = recorder {
@@ -230,8 +244,10 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     private func poll() {
         guard !fatalStorage else { return }
         if let peripheral = peripheral, peripheral.state == .connected {
-            if info == nil, let information = characteristic(Wire.info) { peripheral.readValue(for: information) }
-            if !statusReading, let state = characteristic(Wire.status) { statusReading = true; peripheral.readValue(for: state) }
+            if info == nil, !infoReading, let information = characteristic(Wire.info) {
+                infoReading = true; peripheral.readValue(for: information)
+            }
+            if info != nil, !statusReading, let state = characteristic(Wire.status) { statusReading = true; peripheral.readValue(for: state) }
             handshake()
         }
         if Date().timeIntervalSince(lastExport) > 60, let recorder = recorder {
@@ -253,7 +269,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
         switch name {
         case "status": showStatus()
         case "start":
-            guard readySent, let s = status, !s.recording, s.pending == 0 else { print("Wait for a ready connection and finish saving the preceding session."); return }
+            guard readySent, let s = status, s.flags & 2 != 0, !s.recording, s.pending == 0 else { print("Wait for a ready connection and finish saving the preceding session."); return }
             send(Wire.command(1), label: "start")
         case "stop":
             guard let s = status, s.recording else { print("No active recording."); return }

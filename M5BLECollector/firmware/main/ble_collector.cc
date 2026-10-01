@@ -6,6 +6,7 @@
 #include <new>
 #include "esp_heap_caps.h"
 #include "esp_log.h"
+#include "esp_bt.h"
 #include "esp_mac.h"
 #include "esp_random.h"
 #include "esp_timer.h"
@@ -111,18 +112,22 @@ void Advertise() {
 int GapEvent(ble_gap_event* event, void*) {
   switch(event->type) {
     case BLE_GAP_EVENT_CONNECT:
+      ESP_LOGI(kTag,"Connection result=%d handle=%u",event->connect.status,unsigned(event->connect.conn_handle));
       if(event->connect.status==0) {
         g_conn=event->connect.conn_handle; g_ready=false;
-        ble_gap_security_initiate(g_conn);
+        // The Mac starts encryption when reading the encrypted information
+        // characteristic. Do not start a second security procedure here.
       } else Advertise();
       break;
     case BLE_GAP_EVENT_ENC_CHANGE: {
       ble_gap_conn_desc desc{};
+      ESP_LOGI(kTag,"Encryption result=%d handle=%u",event->enc_change.status,unsigned(event->enc_change.conn_handle));
       if(event->enc_change.status || ble_gap_conn_find(event->enc_change.conn_handle,&desc)!=0 || !desc.sec_state.encrypted) {
         ble_gap_terminate(event->enc_change.conn_handle,BLE_ERR_REM_USER_CONN_TERM); break;
       }
       // Bond to the first central used in collection mode; future centrals must match.
       if(g_has_owner && ble_addr_cmp(&g_owner,&desc.peer_id_addr)!=0) {
+        ESP_LOGW(kTag,"Owner identity mismatch: stored=%u/%02x%02x%02x%02x%02x%02x peer=%u/%02x%02x%02x%02x%02x%02x",g_owner.type,g_owner.val[5],g_owner.val[4],g_owner.val[3],g_owner.val[2],g_owner.val[1],g_owner.val[0],desc.peer_id_addr.type,desc.peer_id_addr.val[5],desc.peer_id_addr.val[4],desc.peer_id_addr.val[3],desc.peer_id_addr.val[2],desc.peer_id_addr.val[1],desc.peer_id_addr.val[0]);
         ble_gap_terminate(desc.conn_handle,BLE_ERR_REM_USER_CONN_TERM); break;
       }
       if(!g_has_owner) {
@@ -134,14 +139,27 @@ int GapEvent(ble_gap_event* event, void*) {
         if(err!=ESP_OK) { ble_gap_terminate(desc.conn_handle,BLE_ERR_REM_USER_CONN_TERM); break; }
         g_owner=desc.peer_id_addr; g_has_owner=true;
       }
+      ble_gap_upd_params params{};
+      params.itvl_min=24; params.itvl_max=36; // 30--45 ms, compatible with macOS.
+      params.latency=0; params.supervision_timeout=600;
+      ESP_LOGI(kTag,"Connection parameter request=%d",ble_gap_update_params(desc.conn_handle,&params));
+      break;
+    }
+    case BLE_GAP_EVENT_CONN_UPDATE: {
+      ble_gap_conn_desc desc{};
+      if(ble_gap_conn_find(event->conn_update.conn_handle,&desc)==0)
+        ESP_LOGI(kTag,"Connection update result=%d interval=%u latency=%u timeout=%u",event->conn_update.status,unsigned(desc.conn_itvl),unsigned(desc.conn_latency),unsigned(desc.supervision_timeout));
       break;
     }
     case BLE_GAP_EVENT_DISCONNECT:
+      ESP_LOGW(kTag,"Disconnect reason=%d",event->disconnect.reason);
       g_conn=BLE_HS_CONN_HANDLE_NONE; g_subscribed=false; g_ready=false; Advertise(); break;
     case BLE_GAP_EVENT_SUBSCRIBE:
+      ESP_LOGI(kTag,"Subscription attr=%u notify=%u",unsigned(event->subscribe.attr_handle),unsigned(event->subscribe.cur_notify));
       if(event->subscribe.attr_handle==g_sample_handle) g_subscribed=event->subscribe.cur_notify;
       break;
     case BLE_GAP_EVENT_REPEAT_PAIRING:
+      ESP_LOGW(kTag,"Repeat pairing requested");
       // Do not silently replace an existing bond. Document explicit bond reset.
       return BLE_GAP_REPEAT_PAIRING_IGNORE;
     case BLE_GAP_EVENT_ADV_COMPLETE: Advertise(); break;
@@ -197,6 +215,9 @@ bool Init() {
   if(nvs_open("m5ble",NVS_READWRITE,&h)!=ESP_OK) return false;
   size_t len=sizeof(g_owner); g_has_owner=nvs_get_blob(h,"owner",&g_owner,&len)==ESP_OK && len==sizeof(g_owner); nvs_close(h);
   if(nimble_port_init()!=ESP_OK) return false;
+  // Keep the radio awake during field collection; detector mode never calls Init.
+  ESP_LOGI(kTag,"Radio sleep disabled result=%d",int(esp_bt_sleep_disable()));
+  esp_log_level_set("NimBLE",ESP_LOG_WARN);
   ble_svc_gap_init(); ble_svc_gatt_init();
   const ble_uuid_t* uuids[]={&kInfo.u,&kControl.u,&kSamples.u,&kStatus.u};
   uint16_t flags[]={uint16_t(BLE_GATT_CHR_F_READ|BLE_GATT_CHR_F_READ_ENC),
