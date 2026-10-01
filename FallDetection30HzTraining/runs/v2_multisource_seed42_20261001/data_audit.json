@@ -1,0 +1,115 @@
+{
+  "protocol_version": 2,
+  "seed": 42,
+  "label_policy": "whole fall container positive; every 3-second view inherits its clip label",
+  "sampler_policy": "SSL equal six sources; fine-tune target-weighted source/class/group balancing",
+  "target_fraction": 0.5,
+  "split": {
+    "own": {
+      "train": {
+        "groups": 158,
+        "recordings": 245,
+        "positives": 122
+      },
+      "val": {
+        "groups": 32,
+        "recordings": 53,
+        "positives": 26
+      },
+      "test": {
+        "groups": 32,
+        "recordings": 51,
+        "positives": 26
+      }
+    },
+    "CGU_BES": {
+      "train": {
+        "groups": 9,
+        "recordings": 132,
+        "positives": 44
+      },
+      "val": {
+        "groups": 2,
+        "recordings": 26,
+        "positives": 8
+      },
+      "test": {
+        "groups": 2,
+        "recordings": 25,
+        "positives": 8
+      }
+    },
+    "Cogent": {
+      "train": {
+        "groups": 30,
+        "recordings": 1225,
+        "positives": 308
+      },
+      "val": {
+        "groups": 6,
+        "recordings": 267,
+        "positives": 70
+      },
+      "test": {
+        "groups": 6,
+        "recordings": 266,
+        "positives": 70
+      }
+    },
+    "SFU_IMU": {
+      "train": {
+        "groups": 6,
+        "recordings": 367,
+        "positives": 126
+      },
+      "val": {
+        "groups": 2,
+        "recordings": 119,
+        "positives": 41
+      },
+      "test": {
+        "groups": 2,
+        "recordings": 119,
+        "positives": 41
+      }
+    },
+    "UCI_SimulatedFalls": {
+      "train": {
+        "groups": 10,
+        "recordings": 2388,
+        "positives": 1271
+      },
+      "val": {
+        "groups": 2,
+        "recordings": 523,
+        "positives": 279
+      },
+      "test": {
+        "groups": 2,
+        "recordings": 445,
+        "positives": 243
+      }
+    },
+    "PAMAP2": {
+      "train": {
+        "groups": 5,
+        "recordings": 266,
+        "positives": 0
+      },
+      "val": {
+        "groups": 2,
+        "recordings": 60,
+        "positives": 0
+      },
+      "test": {
+        "groups": 2,
+        "recordings": 56,
+        "positives": 0
+      }
+    }
+  },
+  "group_leakage": false,
+  "test_used_for_training_or_selection": false,
+  "private_eval": "same-person unseen-source-recording evaluation",
+  "pamap_policy": "unlabelled SSL; known activities are negatives in supervised stages"
+}

@@ -1,0 +1,666 @@
+[
+  {
+    "stage": "ssl",
+    "epoch": 1,
+    "loss": 6.114599571228028,
+    "val_ntxent": 2.7035701274871826
+  },
+  {
+    "stage": "ssl",
+    "epoch": 2,
+    "loss": 5.456143732070923,
+    "val_ntxent": 2.4946240186691284
+  },
+  {
+    "stage": "ssl",
+    "epoch": 3,
+    "loss": 5.242972006797791,
+    "val_ntxent": 2.4120476245880127
+  },
+  {
+    "stage": "ssl",
+    "epoch": 4,
+    "loss": 5.1160808944702145,
+    "val_ntxent": 2.3485037684440613
+  },
+  {
+    "stage": "ssl",
+    "epoch": 5,
+    "loss": 5.038075151443482,
+    "val_ntxent": 2.332818329334259
+  },
+  {
+    "stage": "ssl",
+    "epoch": 6,
+    "loss": 4.941515469551087,
+    "val_ntxent": 2.2643606066703796
+  },
+  {
+    "stage": "ssl",
+    "epoch": 7,
+    "loss": 4.883919777870179,
+    "val_ntxent": 2.2451130747795105
+  },
+  {
+    "stage": "ssl",
+    "epoch": 8,
+    "loss": 4.821874899864197,
+    "val_ntxent": 2.2296780347824097
+  },
+  {
+    "stage": "ssl",
+    "epoch": 9,
+    "loss": 4.77012155532837,
+    "val_ntxent": 2.2025532722473145
+  },
+  {
+    "stage": "ssl",
+    "epoch": 10,
+    "loss": 4.7380885410308835,
+    "val_ntxent": 2.166352391242981
+  },
+  {
+    "stage": "ssl",
+    "epoch": 11,
+    "loss": 4.699944424629211,
+    "val_ntxent": 2.1591888666152954
+  },
+  {
+    "stage": "ssl",
+    "epoch": 12,
+    "loss": 4.668923487663269,
+    "val_ntxent": 2.1616641879081726
+  },
+  {
+    "stage": "ssl",
+    "epoch": 13,
+    "loss": 4.617983727455139,
+    "val_ntxent": 2.1740442514419556
+  },
+  {
+    "stage": "ssl",
+    "epoch": 14,
+    "loss": 4.607156925201416,
+    "val_ntxent": 2.1029781699180603
+  },
+  {
+    "stage": "ssl",
+    "epoch": 15,
+    "loss": 4.587596673965454,
+    "val_ntxent": 2.08000385761261
+  },
+  {
+    "stage": "ssl",
+    "epoch": 16,
+    "loss": 4.562933955192566,
+    "val_ntxent": 2.0494788885116577
+  },
+  {
+    "stage": "ssl",
+    "epoch": 17,
+    "loss": 4.536253075599671,
+    "val_ntxent": 2.0485851764678955
+  },
+  {
+    "stage": "ssl",
+    "epoch": 18,
+    "loss": 4.506828398704529,
+    "val_ntxent": 2.0310949087142944
+  },
+  {
+    "stage": "ssl",
+    "epoch": 19,
+    "loss": 4.488239006996155,
+    "val_ntxent": 2.0232024788856506
+  },
+  {
+    "stage": "ssl",
+    "epoch": 20,
+    "loss": 4.487322006225586,
+    "val_ntxent": 2.0214388370513916
+  },
+  {
+    "stage": "head",
+    "epoch": 1,
+    "loss": 1.5310616505146026,
+    "selection_score": 0.9502804755318132,
+    "validation": {
+      "own": {
+        "ap": 0.9520729792366521,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9973416521244597,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.905419407505309,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.8696807832200582,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "head",
+    "epoch": 2,
+    "loss": 1.201273066997528,
+    "selection_score": 0.9961885676014719,
+    "validation": {
+      "own": {
+        "ap": 0.9985754985754984,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9574897736191668,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.989073601202295,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "head",
+    "epoch": 3,
+    "loss": 1.0303392350673675,
+    "selection_score": 0.9961389037013422,
+    "validation": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9285118981429727,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9942661758838712,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 1,
+    "loss": 0.9958290868997574,
+    "selection_score": 0.995506721961968,
+    "validation": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9144078891587292,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.995726550080631,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 2,
+    "loss": 0.9444459789991378,
+    "selection_score": 0.9945404851712615,
+    "validation": {
+      "own": {
+        "ap": 0.9985754985754984,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9174098903292484,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9961918358880038,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 3,
+    "loss": 0.9198488616943359,
+    "selection_score": 0.9932320773318637,
+    "validation": {
+      "own": {
+        "ap": 0.9985754985754984,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 0.9861111111111112,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9022331871076947,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9990892712104911,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 4,
+    "loss": 0.9070848363637924,
+    "selection_score": 0.9955523772706114,
+    "validation": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 0.9861111111111112,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9260459834527678,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9988904508483503,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 5,
+    "loss": 0.8950662952661514,
+    "selection_score": 0.9963800937495371,
+    "validation": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9284312834447831,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9991705915459581,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 6,
+    "loss": 0.8854368340969085,
+    "selection_score": 0.9949919397780426,
+    "validation": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 0.975,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9251495226793691,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9996892728814828,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 7,
+    "loss": 0.8818512791395188,
+    "selection_score": 0.9959570019451164,
+    "validation": {
+      "own": {
+        "ap": 0.9985754985754984,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9427876939635258,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9991443677308254,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 8,
+    "loss": 0.870756766796112,
+    "selection_score": 0.9964715349689199,
+    "validation": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 0.9861111111111112,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9434436100455137,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9998759782217758,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 9,
+    "loss": 0.8722910636663437,
+    "selection_score": 0.9983922965529085,
+    "validation": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9680171911655755,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9998287398925955,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 10,
+    "loss": 0.8756473433971405,
+    "selection_score": 0.9983665849486882,
+    "validation": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9673698290736676,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9999618699000992,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 11,
+    "loss": 0.8695414179563522,
+    "selection_score": 0.9970246570226298,
+    "validation": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 0.9861111111111112,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9543948301607381,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9999871991807475,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 12,
+    "loss": 0.8632365369796753,
+    "selection_score": 0.9981584555500865,
+    "validation": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.963207241101632,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9999618699000992,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 13,
+    "loss": 0.8577059835195542,
+    "selection_score": 0.9979299558378485,
+    "validation": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9586246272864412,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9999744894705289,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 14,
+    "loss": 0.8577466547489166,
+    "selection_score": 0.9969693450245175,
+    "validation": {
+      "own": {
+        "ap": 0.9985754985754984,
+        "recordings": 53
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.9999999999999998,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.962178923282373,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 1.0,
+        "recordings": 523
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 60
+      }
+    }
+  }
+]

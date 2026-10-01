@@ -24,9 +24,10 @@ class Cfg:
     channels:int=24; blocks:int=3; dropout:float=.2; proj_dim:int=64
     batch:int=128; ssl_epochs:int=20; head_epochs:int=3; all_epochs:int=17
     ssl_lr:float=3e-4; head_lr:float=3e-4; all_lr:float=8e-5; wd:float=1e-4
-    supcon_w:float=.2; phase_w:float=.5; ssl_supcon_w:float=.5; ssl_inst_w:float=1.
+    supcon_w:float=.2; phase_w:float=0.; ssl_supcon_w:float=.5; ssl_inst_w:float=1.
     temp:float=.1; max_ssl_per_rec:int=64; max_neg_per_rec:int=24; patience:int=5
-    min_val_recall:float=.70
+    min_val_recall:float=.90
+    label_mode:str="clip"; target_fraction:float=.5; steps_per_epoch:int=100
 
 def seed_all(seed):
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
@@ -36,20 +37,26 @@ def extract(zip_path, work):
     zip_path = Path(zip_path)
     if zip_path.is_dir():
         return zip_path
-    root = work/"data"/"30Hz_processed_clean_v1"
-    if root.exists(): return root
-    root.parent.mkdir(parents=True, exist_ok=True)
+    root = work/"data"/zip_path.stem
+    root.mkdir(parents=True, exist_ok=True)
+    existing=[p for p in [root,*root.glob("*")] if p.is_dir() and (p/"fall").is_dir() and (p/"non-fall").is_dir()]
+    if len(existing)==1: return existing[0]
     with zipfile.ZipFile(zip_path) as z:
         for n in z.namelist():
-            if not n.startswith("__MACOSX/") and "/._" not in n: z.extract(n, root.parent)
-    return root
+            if n.startswith("__MACOSX/") or "/._" in n: continue
+            destination=(root/n).resolve()
+            if not destination.is_relative_to(root.resolve()): raise ValueError("Unsafe archive member: "+n)
+            z.extract(n,root)
+    candidates=[p for p in [root,*root.rglob("*")] if p.is_dir() and (p/"fall").is_dir() and (p/"non-fall").is_dir()]
+    if len(candidates)!=1: raise ValueError("Expected one fall/non-fall dataset root")
+    return candidates[0]
 
 def records(root):
     out=[]
     for name,y in LABELS.items():
         for p in sorted((root/name).glob("*.csv")):
             out.append({"path":p,"rel":str(p.relative_to(root)),"label":y})
-    if len(out)!=229: print("WARNING recordings=",len(out))
+    if not out: raise ValueError(f"No fall/non-fall CSVs under {root}")
     return out
 
 def split_records(rs, path, seed):
@@ -104,10 +111,10 @@ def build_entries(rs,arr,cfg,mode):
     w=int(round(cfg.win_sec*cfg.fs)); pr=cfg.pos_sec*cfg.fs; ar=cfg.amb_sec*cfg.fs
     rng=np.random.default_rng(cfg.seed+(1 if mode=="train" else 2)); out=[]
     for r in rs:
-        x=arr[r["rel"]]; pk=event_peak(x,cfg.fs) if r["label"] else None; loc=[]
+        x=arr[r["rel"]]; pk=event_peak(x,cfg.fs) if r["label"] and cfg.label_mode!="clip" else None; loc=[]
         for s in starts(len(x),w,cfg.fs,cfg.stride_sec):
             c=s+w//2
-            if mode=="ssl":
+            if mode=="ssl" or cfg.label_mode=="clip":
                 loc.append({"key":r["rel"],"start":s,"label":r["label"],"phase":0,"file_label":r["label"]}); continue
             if not r["label"]: y,ph=0,0
             else:
@@ -206,6 +213,8 @@ def ntxent(z1,z2,t=.1):
     s=s.masked_fill(eye,-1e9); y=(torch.arange(2*n,device=z.device)+n)%(2*n); return F.cross_entropy(s,y)
 
 def supcon(z,y,t=.1):
+    known=y>=0; z=z[known]; y=y[known]
+    if len(z)<2: return z.sum()*0
     s=z@z.T/t; eye=torch.eye(len(z),device=z.device,dtype=torch.bool); pos=y[:,None].eq(y[None])&~eye
     s=s.masked_fill(eye,-1e9); lp=s-torch.logsumexp(s,1,keepdim=True); d=pos.sum(1); ok=d>0
     return -(lp.mul(pos).sum(1)[ok]/d[ok]).mean() if ok.any() else z.sum()*0
@@ -291,11 +300,21 @@ def finetune(model,tr,va,cfg,dev,out):
 def save_rows(rows,path): pd.DataFrame(rows).to_csv(path,index=False)
 
 def main():
-    ap=argparse.ArgumentParser(); ap.add_argument("--zip",type=Path,required=False); ap.add_argument("--work",type=Path,default=Path("run"))
+    ap=argparse.ArgumentParser(); ap.add_argument("--zip",type=Path,required=False); ap.add_argument("--work",type=Path,default=Path("run_v2"))
     ap.add_argument("--channels",type=int,default=24); ap.add_argument("--ssl-epochs",type=int,default=20)
     ap.add_argument("--head-epochs",type=int,default=3); ap.add_argument("--all-epochs",type=int,default=17)
     ap.add_argument("--batch",type=int,default=128); ap.add_argument("--seed",type=int,default=42); ap.add_argument("--smoke",action="store_true")
+    ap.add_argument("--public-root",type=Path,help="Root containing the five processed_v2 dataset directories")
+    ap.add_argument("--mode",choices=["train","test","prepare"],default="train")
+    ap.add_argument("--target-fraction",type=float,default=.5,help="Own V2 batch share; public half is balanced across five sources")
+    ap.add_argument("--steps-per-epoch",type=int,default=100)
+    ap.add_argument("--device",default="auto",help="auto, cpu, or cuda:N")
     a=ap.parse_args()
+    if a.zip is None:
+        server_data=Path(__file__).resolve().parent.parent/"fd_datasets"
+        server_own=server_data/"30Hz_processed_clean_v2"
+        if server_own.is_dir(): a.zip=server_own
+        elif server_own.with_suffix(".zip").is_file(): a.zip=server_own.with_suffix(".zip")
     if a.zip is None:
         kaggle_input=Path("/kaggle/input")
         candidates=[]
@@ -308,34 +327,13 @@ def main():
         a.zip=sorted(candidates,key=lambda p: len(str(p)))[0]
         a.work=Path("/kaggle/working/fall_detection_30hz")
         print("Kaggle dataset root:",a.zip,flush=True)
-    cfg=Cfg(seed=a.seed,channels=a.channels,ssl_epochs=a.ssl_epochs,head_epochs=a.head_epochs,all_epochs=a.all_epochs,batch=a.batch)
+    cfg=Cfg(seed=a.seed,channels=a.channels,ssl_epochs=a.ssl_epochs,head_epochs=a.head_epochs,all_epochs=a.all_epochs,batch=a.batch,
+            target_fraction=a.target_fraction,steps_per_epoch=a.steps_per_epoch)
     if a.smoke:
         cfg.channels=min(cfg.channels,8); cfg.ssl_epochs=1; cfg.head_epochs=1; cfg.all_epochs=1; cfg.max_ssl_per_rec=4; cfg.max_neg_per_rec=4
-    seed_all(cfg.seed); w=a.work; w.mkdir(parents=True,exist_ok=True)
-    for d in (w/"checkpoints",w/"results",w/"splits"): d.mkdir(exist_ok=True)
-    root=extract(a.zip,w); rs=records(root); sp=split_records(rs,w/"splits"/f"seed{cfg.seed}.json",cfg.seed)
-    print("split",{k:(len(v),sum(x["label"] for x in v)) for k,v in sp.items()})
-    arr={}
-    for i,r in enumerate(rs,1):
-        arr[r["rel"]]=load_resampled(r["path"],cfg.fs)
-        if i%50==0: print("loaded",i,"/",len(rs))
-    mean,std=fit_norm(sp["train"],arr)
-    (w/"normalization.json").write_text(json.dumps({"mean":mean.tolist(),"std":std.tolist(),"features":FEATURES,"fs":cfg.fs},indent=2))
-    es=build_entries(sp["train"],arr,cfg,"ssl"); et=build_entries(sp["train"],arr,cfg,"train")
-    ev=build_entries(sp["val"],arr,cfg,"eval"); ee=build_entries(sp["test"],arr,cfg,"eval")
-    print("windows",{"ssl":len(es),"train":len(et),"val":len(ev),"test":len(ee)})
-    ds_ssl=IMUDS(es,arr,mean,std,cfg,True,True); ds_tr=IMUDS(et,arr,mean,std,cfg,True)
-    ds_va=IMUDS(ev,arr,mean,std,cfg); ds_te=IMUDS(ee,arr,mean,std,cfg)
-    ld_ssl=loader(ds_ssl,cfg.batch,True); ld_tr=loader(ds_tr,cfg.batch,True,True)
-    ld_va=loader(ds_va,cfg.batch); ld_te=loader(ds_te,cfg.batch)
-    dev=torch.device("cuda" if torch.cuda.is_available() else "cpu"); model=Net(cfg).to(dev)
-    print("device",dev,"params",sum(p.numel() for p in model.parameters()))
-    pretrain(model,ld_ssl,cfg,dev,w/"checkpoints"); th=finetune(model,ld_tr,ld_va,cfg,dev,w/"checkpoints")
-    vr=predict(model,ld_va,dev); tr=predict(model,ld_te,dev); save_rows(vr,w/"results"/"val_windows.csv"); save_rows(tr,w/"results"/"test_windows.csv")
-    _,vy,vp=aggregate(vr); tk,ty,tp=aggregate(tr)
-    out={"threshold":th,"val_recording":metrics(vy,vp,th),"test_recording":metrics(ty,tp,th),
-         "test_window":window_metrics(tr,th),"config":asdict(cfg),"normalization":{"mean":mean.tolist(),"std":std.tolist()}}
-    (w/"results"/"metrics.json").write_text(json.dumps(out,indent=2)); pd.DataFrame({"key":tk,"label":ty,"prob":tp}).to_csv(w/"results"/"test_recordings.csv",index=False)
-    print(json.dumps(out,indent=2))
+        cfg.steps_per_epoch=2; cfg.batch=min(cfg.batch,16)
+    from training_v2 import run
+    import sys
+    return run(a,cfg,sys.modules[__name__])
 
 if __name__=="__main__": main()

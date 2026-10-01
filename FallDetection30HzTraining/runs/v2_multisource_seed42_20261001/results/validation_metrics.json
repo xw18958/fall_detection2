@@ -1,0 +1,43 @@
+{
+  "threshold": 0.42499999999999993,
+  "own": {
+    "threshold": 0.42499999999999993,
+    "n": 53,
+    "tn": 27,
+    "fp": 0,
+    "fn": 0,
+    "tp": 26,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "specificity": 1.0,
+    "f2": 1.0,
+    "mcc": 1.0
+  },
+  "domains": {
+    "own": {
+      "ap": 0.9999999999999999,
+      "recordings": 53
+    },
+    "CGU_BES": {
+      "ap": 1.0,
+      "recordings": 26
+    },
+    "Cogent": {
+      "ap": 0.9999999999999998,
+      "recordings": 267
+    },
+    "SFU_IMU": {
+      "ap": 0.9680171911655755,
+      "recordings": 119
+    },
+    "UCI_SimulatedFalls": {
+      "ap": 0.9998287398925955,
+      "recordings": 523
+    },
+    "PAMAP2": {
+      "ap": null,
+      "recordings": 60
+    }
+  }
+}

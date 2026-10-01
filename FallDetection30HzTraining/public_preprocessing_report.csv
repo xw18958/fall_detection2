@@ -1,0 +1,6 @@
+dataset,source_records,fall_files,nonfall_files,ssl_files,quarantine_files,verified_files
+CGU_BES,195,60,123,0,121,304
+Cogent,42,448,1310,0,1735,3493
+SFU_IMU,600,208,397,0,424,1029
+UCI_SimulatedFalls,3326,1793,1563,0,3627,6983
+PAMAP2,14,0,0,382,441,823

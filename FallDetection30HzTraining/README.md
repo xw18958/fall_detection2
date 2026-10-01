@@ -2,6 +2,21 @@
 
 Compact six-axis IMU fall-detection training pipeline plus a reusable preprocessing pipeline for labelled fall recordings that contain surrounding non-fall activity.
 
+## Current six-source V2 training
+
+`train.py` now trains from private V2 fall containers and five processed public
+datasets: CGU_BES, Cogent, SFU_IMU, UCI_SimulatedFalls and PAMAP2. Random
+3-second crops inherit the complete container label, including non-fall motion;
+training does not estimate fall timing again. SSL balances all six sources.
+Fine-tuning assigns 50% to private V2 and 10% to each public source.
+
+See [the training protocol](README_V2_TRAINING.md),
+[public preprocessing](README_PUBLIC_V2.md), and
+[the completed seed-42 report](runs/v2_multisource_seed42_20261001/REPORT.md).
+The held-out private test detected all 26 falls, with 3 false positives among
+25 negative recordings. Its scope is unseen recordings from the existing person.
+Public tests hold out participant groups; no zero-shot claim is made.
+
 ## Repository structure
 
 ```text
@@ -75,20 +90,23 @@ The input files are first resampled to true 30 Hz because the original timestamp
 
 ## Detector training method
 
-- Recording-level 70/15/15 stratified split before any window generation.
-- True 30 Hz processing with 3 s windows (`90 x 6`) and 0.75 s stride.
+- Grouped approximately 70/15/15 splits before window generation: public
+  participant groups and linked private source recordings remain together.
+- True 30 Hz processing with random 3 s training crops (`90 x 6`); deterministic
+  validation/test views use 0.75 s stride and at most 32 views per recording.
 - Normalization fitted on training recordings only.
 - SSL pretraining with instance contrastive + supervised contrastive objectives.
 - Dual-stream accelerometer/gyroscope TCN with attention pooling.
-- Fine-tuning with classification + supervised contrastive + phase objectives.
+- Fine-tuning with classification + supervised contrastive objectives;
+  pseudo-phase supervision is disabled.
 - Balanced supervised sampler and validation-only threshold selection.
 - Compact C24 model: 40,561 parameters.
 
 ### Legacy V1 supervision note
 
-The currently committed `train.py` and reported seed-42 results below were produced with the original V1 dataset. For V1, fall location is estimated inside each recording using an IMU impact score based on acceleration magnitude, gyroscope magnitude, and acceleration jerk. Windows close to that estimated event are positive and an ambiguity band is excluded. This is pseudo-event supervision.
+The historical trainer and seed-42 results below were produced with the original V1 dataset. For V1, fall location is estimated inside each recording using an IMU impact score based on acceleration magnitude, gyroscope magnitude, and acceleration jerk. Windows close to that estimated event are positive and an ambiguity band is excluded. This is pseudo-event supervision.
 
-The new V2 preprocessing is intended to clean the recording-level labels before future training. The V1 results below should therefore not be presented as V2 results.
+The current trainer uses cleaned V2 containers directly. The V1 results below are historical and should not be presented as V2 results.
 
 ## Dataset layout
 
@@ -114,22 +132,21 @@ The dataset itself is not committed to this repository.
 
 ## Local training run
 
-Legacy V1 training:
-
 ```bash
 pip install -r requirements.txt
-python train.py --zip /path/to/30Hz_processed_clean_v1.zip --work run
+python -m unittest -v test_training_v2 test_preprocess_public_v2
+python train.py --zip /path/to/30Hz_processed_clean_v2 \
+  --public-root /path/to/processed_v2 --work runs/v2_multisource
+python train.py --mode test --zip /path/to/30Hz_processed_clean_v2 \
+  --public-root /path/to/processed_v2 --work runs/v2_multisource
 ```
 
-Short smoke test:
-
-```bash
-python train.py --zip /path/to/30Hz_processed_clean_v1.zip --work smoke_run --smoke
-```
+Use `--smoke` with a separate work directory for a short end-to-end check.
+The current trainer rejects V1 input without a V2 audit.
 
 ## Kaggle
 
-The training script auto-detects a mounted dataset containing `fall/` and `non-fall/`, writes outputs under `/kaggle/working/fall_detection_30hz`, and runs the full configuration by default. `kaggle/kernel-metadata.json` records the private kernel configuration used for the final V1 run.
+The training script auto-detects a mounted V2 dataset containing `fall/` and `non-fall/`, writes outputs under `/kaggle/working/fall_detection_30hz`, and runs the full configuration by default. `kaggle/kernel-metadata.json` records the private kernel configuration used for the final V1 run.
 
 Final V1 configuration: seed 42, C24, 20 SSL epochs, 3 head epochs, up to 17 full fine-tuning epochs with patience 5. Fine-tuning stopped early after epoch 13.
 
