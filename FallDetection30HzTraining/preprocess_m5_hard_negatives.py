@@ -6,6 +6,7 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 from collections import Counter
 from pathlib import Path
 
@@ -35,7 +36,7 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def verify_and_convert(session: Path, out: Path) -> dict:
+def verify_and_convert(session: Path, out: Path, units='legacy_counts') -> dict:
     meta_path = session/'metadata.json'
     sample_path = session/'samples.csv'
     journal_path = session/'.recovery/journal.jsonl'
@@ -47,8 +48,12 @@ def verify_and_convert(session: Path, out: Path) -> dict:
         raise ValueError(f'{session.name}: transfer is incomplete')
     if int(device.get('rate_hz', 0)) != 30:
         raise ValueError(f'{session.name}: expected 30 Hz collector')
-    accel = float(device['accel_g_per_lsb'])*16384.0
-    gyro = float(device['gyro_dps_per_lsb'])*16.4
+    if units not in {'legacy_counts', 'si'}:
+        raise ValueError('Unknown conversion convention')
+    accel = float(device['accel_g_per_lsb'])*(9.80665 if units == 'si' else 16384.0)
+    gyro = float(device['gyro_dps_per_lsb'])*(math.pi/180 if units == 'si' else 16.4)
+    if not all(math.isfinite(v) and v > 0 for v in (accel, gyro)):
+        raise ValueError('Invalid documented sensor scales')
 
     raw = []
     flags = []
@@ -92,8 +97,10 @@ def verify_and_convert(session: Path, out: Path) -> dict:
         raise ValueError(f'{session.name}: observed timestamp gap count disagrees with metadata')
     x[:, :3] *= accel
     x[:, 3:] *= gyro
-    clipped_acceleration = (x[:, :3] < -32768.0) | (x[:, :3] > 32767.0)
-    np.clip(x, -32768, 32767, out=x)
+    clipped_acceleration = np.zeros_like(x[:, :3], dtype=bool)
+    if units == 'legacy_counts':
+        clipped_acceleration = (x[:, :3] < -32768.0) | (x[:, :3] > 32767.0)
+        np.clip(x, -32768, 32767, out=x)
     sampled, grid = resample(t, x, 30.0, 30.0)
     if len(sampled) < 90:
         raise ValueError(f'{session.name}: fewer than one complete 3-second window')
@@ -117,7 +124,10 @@ def verify_and_convert(session: Path, out: Path) -> dict:
         'duration_seconds': round(float(t[-1]), 6), 'fs_hz': 30,
         'read_errors': flag_counts['read_error'], 'timing_gap_flags': flag_counts['timing_gap'],
         'saturated_samples': flag_counts['saturated'],
-        'accel_scale_to_training_counts': accel, 'gyro_scale_to_training_counts': gyro,
+        'conversion_convention': units,
+        'acceleration_unit': 'm/s^2' if units == 'si' else 'provisional_private_counts',
+        'gyroscope_unit': 'rad/s' if units == 'si' else 'provisional_private_counts',
+        'accel_scale_per_raw_count': accel, 'gyro_scale_per_raw_count': gyro,
         'acceleration_rows_clipped': int(np.any(clipped_acceleration, axis=1).sum()),
         'participant': metadata.get('profile', {}).get('participant', 'unspecified'),
         'placement': metadata.get('profile', {}).get('placement', 'unspecified'),
@@ -127,12 +137,14 @@ def verify_and_convert(session: Path, out: Path) -> dict:
     }
 
 
-def process(raw_root: Path, output_root: Path) -> dict:
+def process(raw_root: Path, output_root: Path, units='legacy_counts') -> dict:
     sessions = sorted(p for p in raw_root.iterdir() if p.is_dir() and (p/'metadata.json').is_file())
     if len(sessions) != len(SESSION_SPLITS) or {p.name for p in sessions} != set(SESSION_SPLITS):
         raise ValueError('Expected exactly the seven inventoried M5 sessions')
     processed_root = output_root/'processed_v2'
-    manifest = [verify_and_convert(p, processed_root) for p in sessions]
+    if processed_root.exists():
+        raise FileExistsError('Use a new output directory to preserve earlier preprocessing')
+    manifest = [verify_and_convert(p, processed_root, units) for p in sessions]
     groups = {}
     for row in manifest:
         groups.setdefault(row['split_group_id'], set()).add(row['split'])
@@ -161,6 +173,9 @@ def process(raw_root: Path, output_root: Path) -> dict:
         'quality_totals': {k: sum(r[k] for r in manifest) for k in
                            ('read_errors', 'timing_gap_flags', 'saturated_samples', 'acceleration_rows_clipped')},
         'label_source': 'user explicitly designated all seven sessions non-fall',
+        'conversion_convention': units, 'software_clipping': units == 'legacy_counts',
+        'units': {'acceleration': 'm/s^2', 'gyroscope': 'rad/s'} if units == 'si' else
+                 {'acceleration': 'provisional_private_counts', 'gyroscope': 'provisional_private_counts'},
     }
     (processed_root/'verification.json').write_text(json.dumps(summary, indent=2)+'\n')
     return summary
@@ -170,8 +185,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, required=True,
                         help='M5_hard_negatives_20261002 directory containing raw/')
+    parser.add_argument('--output-root', type=Path, help='New directory for the processed version')
+    parser.add_argument('--units', choices=['legacy_counts', 'si'], default='si',
+                        help='SI preserves full range; legacy_counts only reproduces old experiments')
     args = parser.parse_args()
-    print(json.dumps(process(args.root/'raw', args.root), indent=2))
+    print(json.dumps(process(args.root/'raw', args.output_root or args.root, args.units), indent=2))
 
 
 if __name__ == '__main__':

@@ -39,10 +39,12 @@ ARCHIVES = {
     'PAMAP2': 'PAMAP2/PAMAP2_Dataset.zip',
 }
 UNITS = {
-    'CGU_BES': {'acceleration': 'source_exported', 'gyroscope': 'source_exported',
-                'status': 'exported_units_not_documented; no guessed conversion'},
-    'Cogent': {'acceleration': 'source_exported', 'gyroscope': 'source_exported',
-               'status': 'exported_units_not_documented; no guessed conversion'},
+    'CGU_BES': {'acceleration': 'g', 'gyroscope': 'rad/s',
+                'status': 'Wang et al. 2018 Figure 1; original decimal exports corroborated',
+                'source': 'https://doi.org/10.1088/1361-6579/aae0eb'},
+    'Cogent': {'acceleration': 'g', 'gyroscope': 'deg/s',
+               'status': 'Ojetola 2013 Appendix A.1; original CSV excerpt corroborated',
+               'source': 'https://pure.coventry.ac.uk/ws/portalfiles/portal/40391885/Ojetola_2013.pdf'},
     'SFU_IMU': {'acceleration': 'm/s^2', 'gyroscope': 'rad/s', 'status': 'README'},
     'UCI_SimulatedFalls': {'acceleration': 'm/s^2', 'gyroscope': 'rad/s',
                           'status': 'Xsens MTw calibrated export'},

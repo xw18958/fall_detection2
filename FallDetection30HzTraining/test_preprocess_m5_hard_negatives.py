@@ -1,5 +1,6 @@
 import csv
 import json
+import math
 import tempfile
 import unittest
 from pathlib import Path
@@ -25,7 +26,7 @@ class M5PreprocessingTests(unittest.TestCase):
                     writer = csv.writer(f)
                     writer.writerow(['seq', 'device_timestamp_us', *RAW])
                     for i in range(90):
-                        values = [8192 if i == 0 else 0, 0, 4096, 0, 20, -20]
+                        values = [16384 if i == 0 else 0, 0, 4096, 0, 20, -20]
                         flags = 4 if i == 0 else 0
                         row = [i, 1000000+i*33334, *values]
                         writer.writerow(row)
@@ -59,6 +60,18 @@ class M5PreprocessingTests(unittest.TestCase):
             train_boots = {r['split_group_id'] for r in manifest if r['split'] == 'train'}
             self.assertTrue(any(sum(r['split_group_id'] == g for r in manifest) == 3 for g in train_boots))
             self.assertTrue(all((raw_root/name/'.recovery/journal.jsonl').is_file() for name in SESSION_SPLITS))
+            physical = root/'full_range_si'
+            si = process(raw_root, physical, units='si')
+            self.assertFalse(si['software_clipping'])
+            self.assertEqual(si['quality_totals']['acceleration_rows_clipped'], 0)
+            self.assertEqual(si['quality_totals']['saturated_samples'], 7)
+            with (physical/'processed_v2'/manifest[0]['output_file']).open() as f:
+                first = next(csv.DictReader(f))
+            self.assertAlmostEqual(float(first['Acc_X']), 4*9.80665, places=5)
+            self.assertAlmostEqual(float(first['Acc_Z']), 9.80665, places=5)
+            self.assertAlmostEqual(float(first['Gyro_Y']), 20*2000/32768*math.pi/180, places=6)
+            with self.assertRaises(FileExistsError):
+                process(raw_root, physical, units='si')
 
 
 if __name__ == '__main__':

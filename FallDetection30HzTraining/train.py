@@ -28,6 +28,7 @@ class Cfg:
     temp:float=.1; max_ssl_per_rec:int=64; max_neg_per_rec:int=24; patience:int=5
     min_val_recall:float=.90
     label_mode:str="clip"; target_fraction:float=.25; m5_fraction:float=.25; steps_per_epoch:int=100
+    ssl_min_epochs:int=10; ssl_patience:int=8; min_full_epochs:int=10; lr_patience:int=4
 
 def seed_all(seed):
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
@@ -315,6 +316,13 @@ def main():
     ap.add_argument("--normalization-from",type=Path,help="Locked checkpoint supplying frozen train-only normalization")
     ap.add_argument("--baseline-checkpoint",type=Path,help="Locked checkpoint used for validation recall gates and comparison")
     ap.add_argument("--steps-per-epoch",type=int,default=100)
+    ap.add_argument("--experiment-v4",action="store_true",help="Fixed inherited splits, full-range M5, seven-source weighted selection")
+    ap.add_argument("--split-from",type=Path,help="Original six-source group_splits.json; required for v4")
+    ap.add_argument("--legacy-m5-root",type=Path,help="Original M5 conversion used only to evaluate the historical baseline")
+    ap.add_argument("--ssl-min-epochs",type=int,default=10)
+    ap.add_argument("--ssl-patience",type=int,default=8)
+    ap.add_argument("--min-full-epochs",type=int,default=10)
+    ap.add_argument("--patience",type=int,default=10)
     ap.add_argument("--device",default="auto",help="auto, cpu, or cuda:N")
     a=ap.parse_args()
     if a.zip is None:
@@ -336,13 +344,20 @@ def main():
         print("Kaggle dataset root:",a.zip,flush=True)
     cfg=Cfg(seed=a.seed,channels=a.channels,ssl_epochs=a.ssl_epochs,head_epochs=a.head_epochs,all_epochs=a.all_epochs,batch=a.batch,
             target_fraction=a.target_fraction,m5_fraction=a.m5_fraction,
-            steps_per_epoch=a.steps_per_epoch,stride_sec=a.stride_sec)
+            steps_per_epoch=a.steps_per_epoch,stride_sec=a.stride_sec,
+            ssl_min_epochs=a.ssl_min_epochs,ssl_patience=a.ssl_patience,
+            min_full_epochs=a.min_full_epochs,patience=a.patience)
     if a.smoke:
         if a.init_ssl is None:
             cfg.channels=min(cfg.channels,8)
         cfg.ssl_epochs=1; cfg.head_epochs=1; cfg.all_epochs=1; cfg.max_ssl_per_rec=4; cfg.max_neg_per_rec=4
         cfg.steps_per_epoch=2; cfg.batch=min(cfg.batch,16)
-    from training_v2 import run
+    if a.experiment_v4:
+        if a.split_from is None or a.legacy_m5_root is None:
+            ap.error("v4 requires --split-from and --legacy-m5-root")
+        from training_v4 import run
+    else:
+        from training_v2 import run
     import sys
     return run(a,cfg,sys.modules[__name__])
 
