@@ -26,6 +26,9 @@
 #include "nvs.h"
 #include "esp_system.h"
 #include "model_v2_config.h"
+#include "input_pipeline.h"
+#include "model_identity.h"
+#include "mbedtls/sha256.h"
 #include "model_v2_replay.h"
 #include "inference_profiler.h"
 #include "tensorflow/lite/c/common.h"
@@ -254,6 +257,13 @@ bool InitModel() {
   ESP_LOGI(kTag, "Embedded TFLite model: %u bytes",
            static_cast<unsigned>(model_size));
 
+  unsigned char digest[32];
+  char hex[65];
+  if (mbedtls_sha256(model_tflite_start, model_size, digest, 0) != 0) return false;
+  for (int i = 0; i < 32; ++i) std::snprintf(hex + 2*i, 3, "%02x", digest[i]);
+  if (std::strcmp(hex, m5ble::kModelSha256) != 0) return false;
+  ESP_LOGI(kTag, "Verified model=%s checkpoint=%s threshold=%.9f", hex,
+           fall_v2::kCheckpointSha256, fall_v2::kThreshold);
   const tflite::Model* model = tflite::GetModel(model_tflite_start);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     ESP_LOGE(kTag, "TFLite schema mismatch: model=%d runtime=%d",
@@ -315,7 +325,7 @@ bool InitModel() {
   if (g_input->dims->size != 3 || g_input->dims->data[0] != 1 ||
       g_input->dims->data[1] != kTimesteps ||
       g_input->dims->data[2] != kChannels) {
-    ESP_LOGE(kTag, "Unexpected model input shape; expected [1,60,6]");
+    ESP_LOGE(kTag, "Unexpected model input shape; expected [1,90,6]");
     return false;
   }
   if (g_output->dims->size != 2 || g_output->dims->data[0] != 1 ||
@@ -323,29 +333,21 @@ bool InitModel() {
     ESP_LOGE(kTag, "Unexpected model output shape; expected [1,2]");
     return false;
   }
+  if (g_input->type != kTfLiteInt8 || g_output->type != kTfLiteInt8 ||
+      g_input->params.scale != fall_v2::kInputScale || g_input->params.zero_point != fall_v2::kInputZero ||
+      g_output->params.scale != fall_v2::kOutputScale || g_output->params.zero_point != fall_v2::kOutputZero) return false;
   return true;
 }
 
 inline float Normalize(int channel, float value) {
-  return (value - kMean[channel]) / (kSigma[channel] + 1.0e-6f);
+  return fall_v2::NormalizeM5(channel, value);
 }
 
 void PushSample(const RawImu& imu) {
-  // Map calibrated MPU units to the private dataset's exported count scale.
-  // The MPU range (8 g / 2000 dps) is independent of the collection scale.
-  const float physical[kChannels] = {
-      imu.ax_g * fall_v2::kTrainingAccelCountsPerG,
-      imu.ay_g * fall_v2::kTrainingAccelCountsPerG,
-      imu.az_g * fall_v2::kTrainingAccelCountsPerG,
-      imu.gx_dps * fall_v2::kTrainingGyroCountsPerDps,
-      imu.gy_dps * fall_v2::kTrainingGyroCountsPerDps,
-      imu.gz_dps * fall_v2::kTrainingGyroCountsPerDps,
-  };
-
+  // Full MPU range -> SI units -> this checkpoint's M5 normalization.
   portENTER_CRITICAL(&g_ring_lock);
   for (int c = 0; c < kChannels; ++c) {
-    const float count = std::max(-32768.0f, std::min(32767.0f, physical[c]));
-    g_ring[g_ring_pos][c] = Normalize(c, count);
+    g_ring[g_ring_pos][c] = Normalize(c, fall_v2::PhysicalValue(c, imu.counts[c]));
   }
   g_ring_pos = (g_ring_pos + 1) % kTimesteps;
   if (g_ring_count < kTimesteps) ++g_ring_count;
@@ -384,10 +386,8 @@ bool FillModelInput() {
     for (int t = 0; t < kTimesteps; ++t) {
       for (int c = 0; c < kChannels; ++c) {
         const float x = g_window[t][c];
-        int32_t q = static_cast<int32_t>(std::lround(x / g_input->params.scale)) +
-                    g_input->params.zero_point;
-        q = std::max<int32_t>(-128, std::min<int32_t>(127, q));
-        dst[t * kChannels + c] = static_cast<int8_t>(q);
+        dst[t * kChannels + c] = fall_v2::QuantizeInput(
+            x, g_input->params.scale, g_input->params.zero_point);
       }
     }
     return true;
@@ -399,7 +399,14 @@ bool FillModelInput() {
 
 bool ModelReplaySelfTest() {
   if (g_input->type != kTfLiteInt8 || g_output->type != kTfLiteInt8) return false;
-  for (int i = 0; i < 2; ++i) {
+  for (int i = 0; i < fall_v2::kPreprocessCount; ++i) {
+    for (int c = 0; c < kChannels; ++c) {
+      const float normalized = Normalize(c, fall_v2::PhysicalValue(c, fall_v2::kPreprocessCounts[i][c]));
+      if (fall_v2::QuantizeInput(normalized, g_input->params.scale, g_input->params.zero_point) !=
+          fall_v2::kPreprocessExpected[i][c]) return false;
+    }
+  }
+  for (int i = 0; i < fall_v2::kReplayCount; ++i) {
     std::memcpy(g_input->data.int8, fall_v2::kReplayInputs[i], 540);
     g_profiler.Reset();
     if (g_interpreter->Invoke() != kTfLiteOk) return false;
@@ -505,6 +512,7 @@ void Softmax2(const float logits[2], float probs[2]) {
 }
 
 void RunInference() {
+  const int64_t path_begin_us = esp_timer_get_time();
   if (!FillModelInput()) return;
   static bool profile_once = true;
   if (profile_once) g_profiler.Reset();
@@ -525,6 +533,23 @@ void RunInference() {
   float probs[2] = {};
   Softmax2(logits, probs);
 
+  const int64_t path_us = esp_timer_get_time() - path_begin_us;
+  static int64_t latency[128], path_latency[128], worst_us = 0, worst_path_us = 0;
+  static unsigned measured = 0;
+  latency[measured % 128] = elapsed_us; path_latency[measured % 128] = path_us;
+  worst_us = std::max(worst_us, elapsed_us); worst_path_us = std::max(worst_path_us, path_us);
+  ++measured;
+  if (measured % 128 == 0) {
+    int64_t sorted[128], path_sorted[128];
+    std::memcpy(sorted, latency, sizeof(sorted)); std::memcpy(path_sorted, path_latency, sizeof(path_sorted));
+    std::sort(sorted, sorted + 128); std::sort(path_sorted, path_sorted + 128);
+    ESP_LOGI(kTag, "latency n=%u rolling128 invoke median=%lld p95=%lld p99=%lld worst=%lld us | input-to-prob median=%lld p95=%lld p99=%lld worst=%lld us | arena=%u free_internal=%u free_psram=%u",
+        measured, (sorted[63]+sorted[64])/2, sorted[121], sorted[126], worst_us,
+        (path_sorted[63]+path_sorted[64])/2, path_sorted[121], path_sorted[126], worst_path_us,
+        static_cast<unsigned>(g_interpreter->arena_used_bytes()),
+        static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL)),
+        static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_SPIRAM)));
+  }
   const bool fall_triggered = probs[1] >= kPrototypeFallThreshold;
   static int64_t last_beep_us = -kFallAlertCooldownUs;
   int64_t now_us = esp_timer_get_time();
@@ -559,6 +584,8 @@ void RunInference() {
            static_cast<long long>(elapsed_us), logits[0], logits[1], probs[0],
            probs[1], static_cast<unsigned long long>(sample_count),
            beep_now ? " | beep" : "");
+  ESP_LOGI(kTag, "complete_path=%lld us cadence_budget=%lld us",
+      esp_timer_get_time() - path_begin_us, fall_v2::kInferencePeriodUs);
 }
 
 
@@ -676,8 +703,8 @@ extern "C" void app_main(void) {
 
   ESP_LOGI(kTag, "Recovery update: connect to FallDetector-OTA and open http://192.168.4.1/");
   ESP_LOGI(kTag, "Ready. Collecting MPU6886 at 30 Hz on a separate sampling task");
-  ESP_LOGI(kTag, "Collection mapping: accel=%g counts/g, gyro=%g counts/dps (inferred)",
-           fall_v2::kTrainingAccelCountsPerG, fall_v2::kTrainingGyroCountsPerDps);
+  ESP_LOGI(kTag, "DETECT input: full-range m/s^2 and rad/s, checkpoint M5 normalization; cadence=%lld us",
+           fall_v2::kInferencePeriodUs);
   m5_battery::Start();
   int64_t next_inference = esp_timer_get_time();
   Button button_a, button_b, button_c;

@@ -1,0 +1,25 @@
+arena_used_bytes=101600
+RAW_COUNTS_TO_INT8_PASS
+replay=0 channel=0 actual=18 expected=18
+replay=0 channel=1 actual=-31 expected=-31
+replay=1 channel=0 actual=17 expected=17
+replay=1 channel=1 actual=-30 expected=-30
+replay=2 channel=0 actual=21 expected=21
+replay=2 channel=1 actual=-32 expected=-32
+replay=3 channel=0 actual=22 expected=22
+replay=3 channel=1 actual=-36 expected=-36
+replay=4 channel=0 actual=56 expected=56
+replay=4 channel=1 actual=-63 expected=-63
+replay=5 channel=0 actual=-48 expected=-48
+replay=5 channel=1 actual=34 expected=34
+replay=6 channel=0 actual=44 expected=44
+replay=6 channel=1 actual=-63 expected=-63
+replay=7 channel=0 actual=1 expected=1
+replay=7 channel=1 actual=-9 expected=-9
+replay=8 channel=0 actual=-1 expected=-1
+replay=8 channel=1 actual=-8 expected=-8
+replay=9 channel=0 actual=2 expected=2
+replay=9 channel=1 actual=-12 expected=-12
+replay=10 channel=0 actual=2 expected=2
+replay=10 channel=1 actual=-14 expected=-14
+TFLM_REPLAY_PASS

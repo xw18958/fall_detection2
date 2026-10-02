@@ -1,0 +1,221 @@
+{
+  "case_policy": "4 calibration examples; zero, static extreme, alternating extreme signed counts; 4 joint-validation windows nearest threshold",
+  "calibration_indices": [
+    1391,
+    1263,
+    1337,
+    1403
+  ],
+  "validation_cases": [
+    {
+      "file": "validation_PAMAP2_outputs.npz",
+      "index": 17870
+    },
+    {
+      "file": "validation_PAMAP2_outputs.npz",
+      "index": 17650
+    },
+    {
+      "file": "validation_PAMAP2_outputs.npz",
+      "index": 17755
+    },
+    {
+      "file": "validation_UCI_SimulatedFalls_outputs.npz",
+      "index": 12769
+    }
+  ],
+  "probabilities": [
+    0.03655068948864937,
+    0.03407484292984009,
+    0.031761180609464645,
+    0.029599793255329132,
+    0.0001878950570244342,
+    0.9974318146705627,
+    0.0004179792304057628,
+    0.26543673872947693,
+    0.26543673872947693,
+    0.26543673872947693,
+    0.26543673872947693
+  ],
+  "outputs": [
+    [
+      18,
+      -31
+    ],
+    [
+      17,
+      -30
+    ],
+    [
+      21,
+      -32
+    ],
+    [
+      22,
+      -36
+    ],
+    [
+      56,
+      -63
+    ],
+    [
+      -48,
+      34
+    ],
+    [
+      44,
+      -63
+    ],
+    [
+      1,
+      -9
+    ],
+    [
+      -1,
+      -8
+    ],
+    [
+      2,
+      -12
+    ],
+    [
+      2,
+      -14
+    ]
+  ],
+  "desktop_outputs": [
+    [
+      16,
+      -29
+    ],
+    [
+      16,
+      -30
+    ],
+    [
+      18,
+      -29
+    ],
+    [
+      17,
+      -31
+    ],
+    [
+      55,
+      -63
+    ],
+    [
+      -48,
+      34
+    ],
+    [
+      44,
+      -63
+    ],
+    [
+      3,
+      -11
+    ],
+    [
+      3,
+      -11
+    ],
+    [
+      2,
+      -12
+    ],
+    [
+      1,
+      -13
+    ]
+  ],
+  "native_reference_used": true,
+  "synthetic_preprocessing_counts": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      -32768,
+      32767,
+      -32768,
+      32767,
+      -32768,
+      32767
+    ],
+    [
+      32767,
+      -32768,
+      32767,
+      -32768,
+      32767,
+      -32768
+    ],
+    [
+      1,
+      -1,
+      1,
+      -1,
+      1,
+      -1
+    ],
+    [
+      12345,
+      -12345,
+      29999,
+      -29999,
+      10000,
+      -10000
+    ]
+  ],
+  "synthetic_preprocessing_expected": [
+    [
+      9,
+      6,
+      10,
+      9,
+      9,
+      9
+    ],
+    [
+      -31,
+      40,
+      -25,
+      46,
+      -15,
+      51
+    ],
+    [
+      49,
+      -28,
+      44,
+      -28,
+      33,
+      -33
+    ],
+    [
+      9,
+      6,
+      10,
+      9,
+      9,
+      9
+    ],
+    [
+      24,
+      -7,
+      41,
+      -25,
+      16,
+      -4
+    ]
+  ],
+  "model_sha256": "ddac71cffd5e10f85d9e9122fe5334a3dbabf3717da41b598231ef4a69a720bc",
+  "micro_runner_stdout": "arena_used_bytes=101600\nTFLM_WINDOWS_PASS=11\n",
+  "micro_runner_sha256": "e8b439936f1faeb5d12c86b0bbdaa87b9a0d6b0a4098557bd580c4d7482f22be",
+  "desktop_micro_max_lsb_error": 5
+}

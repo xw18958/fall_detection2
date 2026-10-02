@@ -1,0 +1,166 @@
+{
+  "diagnostic": "training calibration replay 0",
+  "first_differences": [
+    {
+      "op_index": 9,
+      "operator": "CONV_2D",
+      "tensor_index": 138,
+      "values": 720,
+      "differing": 2,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 10,
+      "operator": "RESHAPE",
+      "tensor_index": 139,
+      "values": 720,
+      "differing": 2,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 18,
+      "operator": "CONV_2D",
+      "tensor_index": 147,
+      "values": 720,
+      "differing": 4,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 19,
+      "operator": "RESHAPE",
+      "tensor_index": 148,
+      "values": 720,
+      "differing": 4,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 20,
+      "operator": "GELU",
+      "tensor_index": 149,
+      "values": 720,
+      "differing": 2,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 21,
+      "operator": "RESHAPE",
+      "tensor_index": 150,
+      "values": 720,
+      "differing": 2,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 22,
+      "operator": "CONV_2D",
+      "tensor_index": 151,
+      "values": 720,
+      "differing": 11,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 23,
+      "operator": "RESHAPE",
+      "tensor_index": 152,
+      "values": 720,
+      "differing": 11,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 24,
+      "operator": "ADD",
+      "tensor_index": 153,
+      "values": 720,
+      "differing": 1,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 27,
+      "operator": "CONV_2D",
+      "tensor_index": 156,
+      "values": 720,
+      "differing": 2,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 28,
+      "operator": "RESHAPE",
+      "tensor_index": 157,
+      "values": 720,
+      "differing": 2,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 29,
+      "operator": "GELU",
+      "tensor_index": 158,
+      "values": 720,
+      "differing": 1,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 30,
+      "operator": "RESHAPE",
+      "tensor_index": 159,
+      "values": 720,
+      "differing": 1,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 31,
+      "operator": "CONV_2D",
+      "tensor_index": 160,
+      "values": 720,
+      "differing": 6,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 32,
+      "operator": "RESHAPE",
+      "tensor_index": 161,
+      "values": 720,
+      "differing": 6,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 45,
+      "operator": "SUM",
+      "tensor_index": 174,
+      "values": 24,
+      "differing": 5,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 48,
+      "operator": "CONV_2D",
+      "tensor_index": 177,
+      "values": 2160,
+      "differing": 8,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 49,
+      "operator": "RESHAPE",
+      "tensor_index": 178,
+      "values": 2160,
+      "differing": 8,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 50,
+      "operator": "GELU",
+      "tensor_index": 179,
+      "values": 2160,
+      "differing": 4,
+      "max_quantized_error": 1
+    },
+    {
+      "op_index": 51,
+      "operator": "RESHAPE",
+      "tensor_index": 180,
+      "values": 2160,
+      "differing": 4,
+      "max_quantized_error": 1
+    }
+  ],
+  "differing_operator_outputs": 427
+}

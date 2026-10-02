@@ -1,0 +1,501 @@
+{
+  "threshold": 0.2602156102657318,
+  "unit": "3-second windows, overlapping 0.25-second grid",
+  "domains": {
+    "CGU_BES": {
+      "float": {
+        "windows": 967,
+        "positive_windows": 72,
+        "negative_windows": 895,
+        "tp": 72,
+        "fn": 0,
+        "fp": 25,
+        "tn": 870,
+        "precision": 0.7422680412371134,
+        "recall": 1.0,
+        "f1": 0.8520710059171598,
+        "specificity": 0.9720670391061452,
+        "negative_window_fpr": 0.027932960893854747,
+        "accuracy": 0.9741468459152016
+      },
+      "desktop_int8": {
+        "windows": 967,
+        "positive_windows": 72,
+        "negative_windows": 895,
+        "tp": 72,
+        "fn": 0,
+        "fp": 34,
+        "tn": 861,
+        "precision": 0.6792452830188679,
+        "recall": 1.0,
+        "f1": 0.8089887640449438,
+        "specificity": 0.9620111731843576,
+        "negative_window_fpr": 0.03798882681564246,
+        "accuracy": 0.9648397104446742
+      },
+      "micro_reference": {
+        "windows": 967,
+        "positive_windows": 72,
+        "negative_windows": 895,
+        "tp": 72,
+        "fn": 0,
+        "fp": 35,
+        "tn": 860,
+        "precision": 0.6728971962616822,
+        "recall": 1.0,
+        "f1": 0.8044692737430168,
+        "specificity": 0.9608938547486033,
+        "negative_window_fpr": 0.03910614525139665,
+        "accuracy": 0.9638055842812823
+      },
+      "desktop_micro_decision_disagreements": 3,
+      "desktop_micro_probability_error": {
+        "mean": 0.0017562489956617355,
+        "max": 0.1550246626138687,
+        "p99": 0.05268527567386627
+      },
+      "desktop_micro_max_output_lsb_error": 12,
+      "float_micro_probability_error": {
+        "mean": 0.017765771597623825,
+        "p99": 0.6124507188796997,
+        "max": 0.8959434032440186
+      },
+      "float_micro_logit_error": {
+        "mean": 0.49062901735305786,
+        "p99": 1.9154936075210571,
+        "max": 4.25615119934082
+      }
+    },
+    "Cogent": {
+      "float": {
+        "windows": 10942,
+        "positive_windows": 630,
+        "negative_windows": 10312,
+        "tp": 620,
+        "fn": 10,
+        "fp": 7,
+        "tn": 10305,
+        "precision": 0.988835725677831,
+        "recall": 0.9841269841269841,
+        "f1": 0.9864757358790772,
+        "specificity": 0.9993211792086889,
+        "negative_window_fpr": 0.0006788207913110939,
+        "accuracy": 0.9984463535002742
+      },
+      "desktop_int8": {
+        "windows": 10942,
+        "positive_windows": 630,
+        "negative_windows": 10312,
+        "tp": 622,
+        "fn": 8,
+        "fp": 6,
+        "tn": 10306,
+        "precision": 0.9904458598726115,
+        "recall": 0.9873015873015873,
+        "f1": 0.9888712241653418,
+        "specificity": 0.9994181536074477,
+        "negative_window_fpr": 0.0005818463925523662,
+        "accuracy": 0.9987205264119905
+      },
+      "micro_reference": {
+        "windows": 10942,
+        "positive_windows": 630,
+        "negative_windows": 10312,
+        "tp": 621,
+        "fn": 9,
+        "fp": 4,
+        "tn": 10308,
+        "precision": 0.9936,
+        "recall": 0.9857142857142858,
+        "f1": 0.9896414342629483,
+        "specificity": 0.9996121024049651,
+        "negative_window_fpr": 0.0003878975950349108,
+        "accuracy": 0.9988119173825626
+      },
+      "desktop_micro_decision_disagreements": 3,
+      "desktop_micro_probability_error": {
+        "mean": 0.0006589011172764003,
+        "max": 0.18607479333877563,
+        "p99": 0.009042217396199703
+      },
+      "desktop_micro_max_output_lsb_error": 12,
+      "float_micro_probability_error": {
+        "mean": 0.002776598557829857,
+        "p99": 0.034505363553762436,
+        "max": 0.6530404090881348
+      },
+      "float_micro_logit_error": {
+        "mean": 0.427350789308548,
+        "p99": 1.546680212020874,
+        "max": 2.4293313026428223
+      }
+    },
+    "PAMAP2": {
+      "float": {
+        "windows": 16835,
+        "positive_windows": 0,
+        "negative_windows": 16835,
+        "tp": 0,
+        "fn": 0,
+        "fp": 111,
+        "tn": 16724,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.9934065934065934,
+        "negative_window_fpr": 0.006593406593406593,
+        "accuracy": 0.9934065934065934
+      },
+      "desktop_int8": {
+        "windows": 16835,
+        "positive_windows": 0,
+        "negative_windows": 16835,
+        "tp": 0,
+        "fn": 0,
+        "fp": 103,
+        "tn": 16732,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.9938817938817939,
+        "negative_window_fpr": 0.006118206118206118,
+        "accuracy": 0.9938817938817939
+      },
+      "micro_reference": {
+        "windows": 16835,
+        "positive_windows": 0,
+        "negative_windows": 16835,
+        "tp": 0,
+        "fn": 0,
+        "fp": 109,
+        "tn": 16726,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.9935253935253935,
+        "negative_window_fpr": 0.006474606474606475,
+        "accuracy": 0.9935253935253935
+      },
+      "desktop_micro_decision_disagreements": 14,
+      "desktop_micro_probability_error": {
+        "mean": 0.0006563229253515601,
+        "max": 0.5183157920837402,
+        "p99": 0.014042689464986324
+      },
+      "desktop_micro_max_output_lsb_error": 18,
+      "float_micro_probability_error": {
+        "mean": 0.0017179216956719756,
+        "p99": 0.027177494019269943,
+        "max": 0.8186075091362
+      },
+      "float_micro_logit_error": {
+        "mean": 0.5235611796379089,
+        "p99": 1.6112651824951172,
+        "max": 3.110980987548828
+      }
+    },
+    "SFU_IMU": {
+      "float": {
+        "windows": 4509,
+        "positive_windows": 369,
+        "negative_windows": 4140,
+        "tp": 349,
+        "fn": 20,
+        "fp": 21,
+        "tn": 4119,
+        "precision": 0.9432432432432433,
+        "recall": 0.94579945799458,
+        "f1": 0.9445196211096076,
+        "specificity": 0.994927536231884,
+        "negative_window_fpr": 0.005072463768115942,
+        "accuracy": 0.9909070747394101
+      },
+      "desktop_int8": {
+        "windows": 4509,
+        "positive_windows": 369,
+        "negative_windows": 4140,
+        "tp": 347,
+        "fn": 22,
+        "fp": 28,
+        "tn": 4112,
+        "precision": 0.9253333333333333,
+        "recall": 0.940379403794038,
+        "f1": 0.9327956989247311,
+        "specificity": 0.9932367149758454,
+        "negative_window_fpr": 0.00676328502415459,
+        "accuracy": 0.9889110667553781
+      },
+      "micro_reference": {
+        "windows": 4509,
+        "positive_windows": 369,
+        "negative_windows": 4140,
+        "tp": 346,
+        "fn": 23,
+        "fp": 25,
+        "tn": 4115,
+        "precision": 0.9326145552560647,
+        "recall": 0.9376693766937669,
+        "f1": 0.9351351351351351,
+        "specificity": 0.9939613526570048,
+        "negative_window_fpr": 0.006038647342995169,
+        "accuracy": 0.9893546240851631
+      },
+      "desktop_micro_decision_disagreements": 4,
+      "desktop_micro_probability_error": {
+        "mean": 0.0013339075958356261,
+        "max": 0.5991900563240051,
+        "p99": 0.035909295082092285
+      },
+      "desktop_micro_max_output_lsb_error": 36,
+      "float_micro_probability_error": {
+        "mean": 0.003350699320435524,
+        "p99": 0.09339579194784164,
+        "max": 0.7790754437446594
+      },
+      "float_micro_logit_error": {
+        "mean": 0.5511572957038879,
+        "p99": 1.7518566846847534,
+        "max": 2.576580047607422
+      }
+    },
+    "UCI_SimulatedFalls": {
+      "float": {
+        "windows": 16588,
+        "positive_windows": 2187,
+        "negative_windows": 14401,
+        "tp": 2177,
+        "fn": 10,
+        "fp": 0,
+        "tn": 14401,
+        "precision": 1.0,
+        "recall": 0.9954275262917238,
+        "f1": 0.9977085242896425,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9993971545695683
+      },
+      "desktop_int8": {
+        "windows": 16588,
+        "positive_windows": 2187,
+        "negative_windows": 14401,
+        "tp": 2177,
+        "fn": 10,
+        "fp": 1,
+        "tn": 14400,
+        "precision": 0.9995408631772268,
+        "recall": 0.9954275262917238,
+        "f1": 0.9974799541809851,
+        "specificity": 0.9999305603777515,
+        "negative_window_fpr": 6.943962224845496e-05,
+        "accuracy": 0.9993368700265252
+      },
+      "micro_reference": {
+        "windows": 16588,
+        "positive_windows": 2187,
+        "negative_windows": 14401,
+        "tp": 2177,
+        "fn": 10,
+        "fp": 0,
+        "tn": 14401,
+        "precision": 1.0,
+        "recall": 0.9954275262917238,
+        "f1": 0.9977085242896425,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9993971545695683
+      },
+      "desktop_micro_decision_disagreements": 1,
+      "desktop_micro_probability_error": {
+        "mean": 0.00020933736232109368,
+        "max": 0.277641236782074,
+        "p99": 0.0015107316430658102
+      },
+      "desktop_micro_max_output_lsb_error": 22,
+      "float_micro_probability_error": {
+        "mean": 0.0009504776098765433,
+        "p99": 0.004194176755845547,
+        "max": 0.9135803580284119
+      },
+      "float_micro_logit_error": {
+        "mean": 0.5064075589179993,
+        "p99": 1.459558367729187,
+        "max": 4.260281562805176
+      }
+    },
+    "m5_hard_negatives": {
+      "float": {
+        "windows": 1082,
+        "positive_windows": 0,
+        "negative_windows": 1082,
+        "tp": 0,
+        "fn": 0,
+        "fp": 67,
+        "tn": 1015,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.9380776340110906,
+        "negative_window_fpr": 0.06192236598890943,
+        "accuracy": 0.9380776340110906
+      },
+      "desktop_int8": {
+        "windows": 1082,
+        "positive_windows": 0,
+        "negative_windows": 1082,
+        "tp": 0,
+        "fn": 0,
+        "fp": 67,
+        "tn": 1015,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.9380776340110906,
+        "negative_window_fpr": 0.06192236598890943,
+        "accuracy": 0.9380776340110906
+      },
+      "micro_reference": {
+        "windows": 1082,
+        "positive_windows": 0,
+        "negative_windows": 1082,
+        "tp": 0,
+        "fn": 0,
+        "fp": 69,
+        "tn": 1013,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.9362292051756007,
+        "negative_window_fpr": 0.06377079482439926,
+        "accuracy": 0.9362292051756007
+      },
+      "desktop_micro_decision_disagreements": 2,
+      "desktop_micro_probability_error": {
+        "mean": 0.0021296425256878138,
+        "max": 0.11536654829978943,
+        "p99": 0.05291445180773735
+      },
+      "desktop_micro_max_output_lsb_error": 8,
+      "float_micro_probability_error": {
+        "mean": 0.004850475583225489,
+        "p99": 0.09820911288261414,
+        "max": 0.28039097785949707
+      },
+      "float_micro_logit_error": {
+        "mean": 0.5449255704879761,
+        "p99": 1.8351541757583618,
+        "max": 2.188605785369873
+      }
+    },
+    "own": {
+      "float": {
+        "windows": 15616,
+        "positive_windows": 162,
+        "negative_windows": 15454,
+        "tp": 158,
+        "fn": 4,
+        "fp": 19,
+        "tn": 15435,
+        "precision": 0.8926553672316384,
+        "recall": 0.9753086419753086,
+        "f1": 0.9321533923303835,
+        "specificity": 0.9987705448427592,
+        "negative_window_fpr": 0.0012294551572408438,
+        "accuracy": 0.9985271516393442
+      },
+      "desktop_int8": {
+        "windows": 15616,
+        "positive_windows": 162,
+        "negative_windows": 15454,
+        "tp": 157,
+        "fn": 5,
+        "fp": 33,
+        "tn": 15421,
+        "precision": 0.8263157894736842,
+        "recall": 0.9691358024691358,
+        "f1": 0.8920454545454546,
+        "specificity": 0.9978646305163712,
+        "negative_window_fpr": 0.002135369483628834,
+        "accuracy": 0.9975665983606558
+      },
+      "micro_reference": {
+        "windows": 15616,
+        "positive_windows": 162,
+        "negative_windows": 15454,
+        "tp": 157,
+        "fn": 5,
+        "fp": 35,
+        "tn": 15419,
+        "precision": 0.8177083333333334,
+        "recall": 0.9691358024691358,
+        "f1": 0.8870056497175142,
+        "specificity": 0.99773521418403,
+        "negative_window_fpr": 0.0022647858159699752,
+        "accuracy": 0.9974385245901639
+      },
+      "desktop_micro_decision_disagreements": 6,
+      "desktop_micro_probability_error": {
+        "mean": 0.0002497472451068461,
+        "max": 0.42215847969055176,
+        "p99": 0.0003728760057128966
+      },
+      "desktop_micro_max_output_lsb_error": 23,
+      "float_micro_probability_error": {
+        "mean": 0.0008811709121800959,
+        "p99": 0.0012914196122437716,
+        "max": 0.826525866985321
+      },
+      "float_micro_logit_error": {
+        "mean": 0.6548321843147278,
+        "p99": 1.9026598930358887,
+        "max": 2.917482852935791
+      }
+    },
+    "pooled": {
+      "float": {
+        "windows": 66539,
+        "positive_windows": 3420,
+        "negative_windows": 63119,
+        "tp": 3376,
+        "fn": 44,
+        "fp": 250,
+        "tn": 62869,
+        "precision": 0.9310535024820739,
+        "recall": 0.9871345029239766,
+        "f1": 0.9582741981265966,
+        "specificity": 0.9960392274909299,
+        "negative_window_fpr": 0.003960772509070169,
+        "accuracy": 0.9955815386465081
+      },
+      "desktop_int8": {
+        "windows": 66539,
+        "positive_windows": 3420,
+        "negative_windows": 63119,
+        "tp": 3375,
+        "fn": 45,
+        "fp": 272,
+        "tn": 62847,
+        "precision": 0.9254181519056759,
+        "recall": 0.9868421052631579,
+        "f1": 0.9551436253006934,
+        "specificity": 0.9956906795101317,
+        "negative_window_fpr": 0.004309320489868344,
+        "accuracy": 0.9952358767038879
+      },
+      "micro_reference": {
+        "windows": 66539,
+        "positive_windows": 3420,
+        "negative_windows": 63119,
+        "tp": 3373,
+        "fn": 47,
+        "fp": 277,
+        "tn": 62842,
+        "precision": 0.9241095890410959,
+        "recall": 0.9862573099415205,
+        "f1": 0.9541725601131542,
+        "specificity": 0.9956114640599503,
+        "negative_window_fpr": 0.004388535940049747,
+        "accuracy": 0.9951306752430905
+      }
+    }
+  }
+}

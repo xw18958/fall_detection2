@@ -60,7 +60,6 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
     private var finishedSession: UInt64 = 0
     private var assertion: IOPMAssertionID = 0
     private var selected: UUID?
-    private let lockedHash = "1553dde844bf34928d360cc5f23e06f353e1c78e7aac6b2271cbc36410920530"
 
     init(options: Options) {
         self.options = options; profile = options.profile
@@ -200,7 +199,7 @@ final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate 
             switch characteristic.uuid {
             case CBUUID(string: Wire.info):
                 let incoming = try JSONDecoder().decode(DeviceInfo.self, from: data); try incoming.validate()
-                guard incoming.model_sha256 == lockedHash else { throw ProtocolError.invalid("Device model differs from the locked detector baseline") }
+                try TrustedModels.validate(incoming.model_sha256)
                 if let wanted = options.device, UUID(uuidString: wanted) == nil, wanted != incoming.device_id.lowercased() {
                     throw ProtocolError.invalid("Connected device does not match --device")
                 }

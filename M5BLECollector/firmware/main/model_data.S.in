@@ -1,0 +1,7 @@
+.section .rodata.embedded,"a",@progbits
+.balign 16
+.global _binary_model_tflite_start
+_binary_model_tflite_start:
+.incbin "@CMAKE_CURRENT_LIST_DIR@/model.tflite"
+.global _binary_model_tflite_end
+_binary_model_tflite_end:

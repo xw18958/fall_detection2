@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
-project(v2_micro_replay CXX)
+project(v4_micro_replay C CXX)
+option(FALL_ESP_NN_PORTABLE "Use the ESP32 firmware's portable ESP-NN FC/softmax path" ON)
 set(CMAKE_CXX_STANDARD 17)
 get_filename_component(ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../firmware" ABSOLUTE)
 set(T "${ROOT}/managed_components/espressif__esp-tflite-micro")
@@ -9,6 +10,10 @@ file(GLOB ALLOC "${T}/tensorflow/lite/micro/arena_allocator/*.cc" "${T}/tensorfl
 file(GLOB COMMON "${T}/tensorflow/lite/micro/kernels/*_common.cc")
 set(KERNELS)
 foreach(NAME if neg add concatenation conv dequantize div elementwise fully_connected kernel_util mul pack quantize reduce reshape softmax squared_difference strided_slice sub transpose)
+ if(FALL_ESP_NN_PORTABLE AND (NAME STREQUAL "fully_connected" OR NAME STREQUAL "softmax"))
+  list(APPEND KERNELS "${T}/tensorflow/lite/micro/kernels/esp_nn/${NAME}.cc")
+  continue()
+ endif()
  list(APPEND KERNELS "${T}/tensorflow/lite/micro/kernels/${NAME}.cc")
 endforeach()
 add_executable(replay replay.cc ${CORE} ${ALLOC} ${COMMON} ${KERNELS}
@@ -30,3 +35,12 @@ add_executable(replay replay.cc ${CORE} ${ALLOC} ${COMMON} ${KERNELS}
 target_include_directories(replay PRIVATE "${ROOT}/main" "${T}" "${T}/third_party/gemmlowp" "${T}/third_party/flatbuffers/include" "${T}/third_party/ruy")
 target_compile_definitions(replay PRIVATE TF_LITE_STATIC_MEMORY TF_LITE_DISABLE_X86_NEON)
 target_compile_options(replay PRIVATE -O2 -ffunction-sections -fdata-sections)
+if(FALL_ESP_NN_PORTABLE)
+ set(NN "${ROOT}/managed_components/espressif__esp-nn")
+ target_sources(replay PRIVATE
+  "${NN}/src/fully_connected/esp_nn_fully_connected_ansi.c"
+  "${NN}/src/softmax/esp_nn_softmax_ansi.c"
+  "${NN}/src/softmax/esp_nn_softmax_opt.c")
+ target_include_directories(replay PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/stubs" "${NN}/include" "${NN}/src/common")
+ target_compile_definitions(replay PRIVATE ESP_NN=1 CONFIG_NN_OPTIMIZED=1 CONFIG_IDF_TARGET_ESP32=1)
+endif()
