@@ -1,0 +1,8 @@
+{
+  "train.py": "bfe40b61dfd53e9c81f665e762183227108e15b08a2ce5eaf721d6bfcfdb7e4c",
+  "training_v2.py": "43788198b2a9110214cd8f86acca0a488c6417dd8a9ee1076b6a2c95442f501a",
+  "preprocess_m5_hard_negatives.py": "254db69b613db7dd0298deb60c7a959bf6ea4b61d3eaa0fcb9e933786d6c45fb",
+  "test_training_v2.py": "04d9b6c3eadbc0df29f6c684aa4b69cfcc6f9fa04415565d9e94cce23ea6650a",
+  "test_preprocess_m5_hard_negatives.py": "f324e694134403f0d5579cba69aa603d30440ad248a1eb8135af0495e50377e7",
+  "checkpoints/locked_model.pt": "7212fb582cd2849e13ce49db512b417c2d1718f3fa2caa3c1cb41a9229c253fe"
+}

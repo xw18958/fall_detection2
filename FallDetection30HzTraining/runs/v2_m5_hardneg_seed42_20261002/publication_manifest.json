@@ -1,0 +1,209 @@
+{
+  "publication": "audited experimental results; public generalization claims invalid due to warm-start partition overlap",
+  "files": {
+    "FallDetection30HzTraining/README_V2_TRAINING.md": {
+      "bytes": 7879,
+      "sha256": "69c190d720b0bb559997e38894c012f245a974a48418631d4964d369d89b5959"
+    },
+    "FallDetection30HzTraining/preprocess_m5_hard_negatives.py": {
+      "bytes": 8788,
+      "sha256": "254db69b613db7dd0298deb60c7a959bf6ea4b61d3eaa0fcb9e933786d6c45fb"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/REPORT.md": {
+      "bytes": 768,
+      "sha256": "b1b1aa47f8d38cde8753d097e311d249ad9c53233388c7855e64c317aff69275"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/checkpoints/locked_model.pt": {
+      "bytes": 198695,
+      "sha256": "242d9824d09bdad0b288c829d1e58ad9f9f802ceb488adb113d1ded98c962eff"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/data_audit.json": {
+      "bytes": 2785,
+      "sha256": "eed4bf35951257c411acd1e2b00a1f7c968c869db31c7fbab91751fa65915bb9"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/progress.json": {
+      "bytes": 198,
+      "sha256": "7d3bedb643c001ac67a4d0152b8fe4052f02f5a5dda964cfac654537f8c68ae8"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/results/CGU_BES_test_recordings.csv": {
+      "bytes": 2183,
+      "sha256": "ae29eee2a60b8d807b80006d3a273eb2705a10f669a391d78b61a0c990c83274"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/results/Cogent_test_recordings.csv": {
+      "bytes": 23238,
+      "sha256": "59433916d5094d4ff45f4127fec8e63f95e8307cc14a69631d1eca3065758d00"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/results/PAMAP2_test_recordings.csv": {
+      "bytes": 4814,
+      "sha256": "24d0fa3c01f468e3fd7649c298a8e540823413636c3cf672603d64b787c7215d"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/results/SFU_IMU_test_recordings.csv": {
+      "bytes": 10219,
+      "sha256": "84460bbcc5f22c6c871454f4bfd093843a399487cca01ab1dc90202e312e0c44"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/results/UCI_SimulatedFalls_test_recordings.csv": {
+      "bytes": 54919,
+      "sha256": "60f64ee1cd9ef10a23bbe5685b73e82405fc8bc2bb8a130ca8e4c36f68375ec9"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/results/final_test_metrics.json": {
+      "bytes": 5371,
+      "sha256": "83cd1182c418218a1f1044142ea49f89a43a340b7a038a11e4545b5f464da80d"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/results/m5_hard_negatives_test_recordings.csv": {
+      "bytes": 115,
+      "sha256": "0ceea0d35add387aac7e95ee2b9d1b6afddadab2240a4818b42a5fc8c6b70718"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/results/m5_hard_negatives_test_windows.csv": {
+      "bytes": 108143,
+      "sha256": "c057891d9a3f1661e488cd6da2208dc5d1f88b3c30a012442eb1b2d2d64a3108"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/results/own_test_recordings.csv": {
+      "bytes": 2537,
+      "sha256": "fa365deaf0aa72a2dd104b08e02ae15c8d8e6130ca9c2bd0bb8af1578497dd73"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/results/test_summary.csv": {
+      "bytes": 926,
+      "sha256": "790ce0ba1042fff57b1a3eb4495c12562051e8d8ddafeed13c08d068ae8587bd"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_baseline_comparison_seed42_20261002/splits/group_splits.json": {
+      "bytes": 531838,
+      "sha256": "4eab0860e2c0bf42fe74a6b6a2c5c22068a968bca02ef9f5ae5cd6adac36a759"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/REPORT.md": {
+      "bytes": 14239,
+      "sha256": "80983108cbf6b8ea29ca0e1f777894f25bf39dcbe303e80c33dd9659eb667fad"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/checkpoints/locked_model.pt": {
+      "bytes": 199079,
+      "sha256": "7212fb582cd2849e13ce49db512b417c2d1718f3fa2caa3c1cb41a9229c253fe"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/checkpoints/ssl_pretrained.pt": {
+      "bytes": 196879,
+      "sha256": "e472fb43f8399cc522a1139c4bb11aebada021698f5f108f4d8ef64ca76778cb"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/code_hashes.json": {
+      "bytes": 582,
+      "sha256": "2cce35cf02c124bca167df1d9e85b377f10e99412bd80fc09631a22c90dec381"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/comparison.csv": {
+      "bytes": 1047,
+      "sha256": "3c7a7450239f774dc04ce700b15560c88af4646215873b3510849219b0882fc5"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/comparison.json": {
+      "bytes": 12178,
+      "sha256": "28ae4c816e0c36b53bb8cbe38b7be3b5ae411bfc00231dedc03543ed8796f678"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/data_audit.json": {
+      "bytes": 2785,
+      "sha256": "eed4bf35951257c411acd1e2b00a1f7c968c869db31c7fbab91751fa65915bb9"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/m5_preprocessing_verification.json": {
+      "bytes": 594,
+      "sha256": "2f5eb4bb68dd928478496bd361d79062e671f2ec858d1b80401ea2b7760d1c9d"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/normalization.json": {
+      "bytes": 2586,
+      "sha256": "87203d9a255bff4cde9c5079cfbcb703d0807af691840fea53570e027b251033"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/progress.json": {
+      "bytes": 186,
+      "sha256": "d863d1a9e4be95222246a2fc394b6599672cb24eda119b739178d392b92fed04"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/CGU_BES_test_recordings.csv": {
+      "bytes": 2169,
+      "sha256": "e71ee03532f327fa836edf764d03c8573cfa6cc181de2bc2ede8aa2afddce79c"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/Cogent_test_recordings.csv": {
+      "bytes": 22927,
+      "sha256": "e93f92ecc3d5daa9499e8badac225a9199e1fd71f6f906b681c73851bacfff69"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/PAMAP2_test_recordings.csv": {
+      "bytes": 4749,
+      "sha256": "e281bf5e6536c02ee260b1dbb5fa8e8784ec273dd96cd8d2c9dd873bb030ec16"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/SFU_IMU_test_recordings.csv": {
+      "bytes": 10131,
+      "sha256": "f948cc1279552179aacd2766145b364c2dc3a046e6124b0aa09084e3cf608331"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/UCI_SimulatedFalls_test_recordings.csv": {
+      "bytes": 54656,
+      "sha256": "7f43d61927581850f2cf6e300a754dd23403c976a4d2bbc3111b81a01d4cbb04"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/final_test_metrics.json": {
+      "bytes": 5479,
+      "sha256": "5239ca541078657879ca047d837dfb21801311432eb06c4ab2030fb05fae8c85"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/m5_hard_negatives_test_recordings.csv": {
+      "bytes": 115,
+      "sha256": "0e1bac95d70490a703d37250e8ec047f91a6b5e78bc3e0ff2696d9106aea561b"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/m5_hard_negatives_test_windows.csv": {
+      "bytes": 108674,
+      "sha256": "92369f6305f7c6f0d8da3d93f6b50b2c75e1b4f1293bc96ba37ef8620fd7b7ec"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/m5_hard_negatives_val_windows.csv": {
+      "bytes": 109523,
+      "sha256": "e3b5d557f0c756f84bad0161623c754e108be21bb0ed776992455e0764aeaa73"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/own_test_recordings.csv": {
+      "bytes": 2508,
+      "sha256": "e7428b37b2579167c68a55a7d12de995da2a12f7da12cdb727d8680c8d82c955"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/test_summary.csv": {
+      "bytes": 951,
+      "sha256": "04dc0277402cd0049bb147f9fa88b6d3784dd78df9d1c9b21a960f04476407f2"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/results/validation_metrics.json": {
+      "bytes": 1213,
+      "sha256": "e0738a77c794b2a2d7244e7f1aecfd16e791504b142ead380fd5abfc7756253c"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/run_analysis.json": {
+      "bytes": 800,
+      "sha256": "e9043ed5c599757b2b7a2fdc1236fd994fc5265d70d12f976e33e726cd126e45"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/run_config.json": {
+      "bytes": 655,
+      "sha256": "3096da259383fe02fda6354727861a561688884b00a604371c0e79599c8800f3"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/splits/group_splits.json": {
+      "bytes": 531838,
+      "sha256": "4eab0860e2c0bf42fe74a6b6a2c5c22068a968bca02ef9f5ae5cd6adac36a759"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/train.log": {
+      "bytes": 10531,
+      "sha256": "f2b0fba1fb23dec52c63958ba30e0f4356637957d35cc66732f2f0738bedd535"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/training_history.json": {
+      "bytes": 10385,
+      "sha256": "37b898969a751865f26021613192bc51115a8fbe0f60d32d26ef7e0b765d549b"
+    },
+    "FallDetection30HzTraining/runs/v2_m5_hardneg_seed42_20261002/warm_start_audit.json": {
+      "bytes": 3997,
+      "sha256": "1b32d6a0b18e4affea6a0d88e876601ed66f38e9f8d358760af655abdeb9dc7d"
+    },
+    "FallDetection30HzTraining/runs/v2_multisource_seed42_20261001/checkpoints/locked_model.pt": {
+      "bytes": 198375,
+      "sha256": "477aefa99826dfaa1bc23117a78c812247ad4135886caff7ffcab92c57c23138"
+    },
+    "FallDetection30HzTraining/runs/v2_multisource_seed42_20261001/checkpoints/ssl_pretrained.pt": {
+      "bytes": 196815,
+      "sha256": "67fdeef799f91cf828bf2cff51d4dc3da31b7935bdcfd294296f9a9ed015b6ff"
+    },
+    "FallDetection30HzTraining/test_preprocess_m5_hard_negatives.py": {
+      "bytes": 3668,
+      "sha256": "f324e694134403f0d5579cba69aa603d30440ad248a1eb8135af0495e50377e7"
+    },
+    "FallDetection30HzTraining/test_training_v2.py": {
+      "bytes": 10581,
+      "sha256": "04d9b6c3eadbc0df29f6c684aa4b69cfcc6f9fa04415565d9e94cce23ea6650a"
+    },
+    "FallDetection30HzTraining/train.py": {
+      "bytes": 18788,
+      "sha256": "bfe40b61dfd53e9c81f665e762183227108e15b08a2ce5eaf721d6bfcfdb7e4c"
+    },
+    "FallDetection30HzTraining/training_v2.py": {
+      "bytes": 43558,
+      "sha256": "43788198b2a9110214cd8f86acca0a488c6417dd8a9ee1076b6a2c95442f501a"
+    }
+  }
+}

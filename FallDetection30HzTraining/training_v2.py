@@ -1,4 +1,4 @@
-"""V2 clip supervision, grouped evaluation and six-source target adaptation.
+"""V2 clip supervision, grouped evaluation and seven-source target adaptation.
 
 The network remains in train.py. This module owns the data protocol and execution;
 no peaks or pseudo-event labels are computed here.
@@ -25,9 +25,11 @@ from sklearn.metrics import average_precision_score
 from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 
 PUBLIC = ['CGU_BES', 'Cogent', 'SFU_IMU', 'UCI_SimulatedFalls', 'PAMAP2']
-DOMAINS = ['own', *PUBLIC]
+M5 = 'm5_hard_negatives'
+NORMALIZATION_DOMAINS = ['own', *PUBLIC]
+DOMAINS = ['own', M5, *PUBLIC]
 FEATURES = ['Acc_X', 'Acc_Y', 'Acc_Z', 'Gyro_X', 'Gyro_Y', 'Gyro_Z']
-PROTOCOL_VERSION = 2
+PROTOCOL_VERSION = 3
 
 
 class Signal:
@@ -116,6 +118,31 @@ def own_records(root):
     return rs
 
 
+def m5_records(root):
+    root = Path(root)
+    summary_path = root/'processed_v2/verification.json'
+    manifest_path = root/'processed_v2/manifest.csv'
+    if not summary_path.is_file() or not manifest_path.is_file():
+        raise ValueError('Verified M5 hard-negative preprocessing is required: '+str(root))
+    summary = json.loads(summary_path.read_text())
+    if summary.get('status') != 'passed' or summary.get('raw_sessions') != 7:
+        raise ValueError('M5 preprocessing verification did not pass')
+    rs = []
+    for row in pd.read_csv(manifest_path).fillna('').to_dict('records'):
+        if row['label'] != 'non-fall' or row['split'] not in {'train', 'val', 'test'}:
+            raise ValueError('Invalid M5 label or fixed split')
+        p = root/'processed_v2'/row['output_file']
+        if not p.is_file() or (row.get('output_sha256') and hashlib.sha256(p.read_bytes()).hexdigest() != row['output_sha256']):
+            raise ValueError('M5 processed file missing or checksum mismatch: '+str(p))
+        rs.append({'path': p, 'key': M5+'/'+row['output_file'], 'domain': M5,
+                   'normalization_domain': 'own', 'label': 0, 'ssl_label': 0,
+                   'group': str(row['split_group_id']), 'fixed_split': str(row['split']),
+                   'train_only': False})
+    if len(rs) != 7:
+        raise ValueError(f'Expected seven verified M5 recordings, got {len(rs)}')
+    return rs
+
+
 def public_records(root):
     rs = []
     for domain in PUBLIC:
@@ -143,7 +170,7 @@ def public_records(root):
 
 
 def fingerprint(rs):
-    rows = [(r['key'], r['group'], r['label'], r['train_only'],
+    rows = [(r['key'], r['group'], r['label'], r['train_only'], r.get('fixed_split'),
              r['path'].stat().st_size, r['path'].stat().st_mtime_ns) for r in rs]
     return hashlib.sha256(json.dumps(sorted(rows)).encode()).hexdigest()
 
@@ -198,11 +225,24 @@ def split_all(rs, path, seed):
     else:
         splits = {role: [] for role in ['train', 'val', 'test']}
         for index, domain in enumerate(DOMAINS):
-            part = partition([r for r in rs if r['domain'] == domain], seed+index*1009)
+            source = [r for r in rs if r['domain'] == domain]
+            if source and any(r.get('fixed_split') for r in source):
+                if not all(r.get('fixed_split') in splits for r in source):
+                    raise ValueError(f'Incomplete fixed split for {domain}')
+                by_group = defaultdict(set)
+                for r in source:
+                    by_group[r['group']].add(r['fixed_split'])
+                if any(len(roles) != 1 for roles in by_group.values()):
+                    raise ValueError(f'Group leakage in fixed {domain} split')
+                part = {role: [r for r in source if r['fixed_split'] == role] for role in splits}
+                if any(not part[role] for role in splits):
+                    raise ValueError(f'Fixed {domain} split must include train/val/test')
+            else:
+                part = partition(source, seed+index*1009)
             for role in splits:
                 splits[role].extend(part[role])
         data = {'seed': seed, 'fingerprint': fp, 'protocol_version': PROTOCOL_VERSION,
-                'atomic_unit': 'private source recording or public participant; duplicate groups linked',
+                'atomic_unit': 'private source recording or public participant; duplicate groups linked; M5 boot groups kept intact',
                 'splits': {role: sorted(r['key'] for r in rr) for role, rr in splits.items()}}
         write_json(path, data)
     keys = [set(r['key'] for r in splits[role]) for role in ['train', 'val', 'test']]
@@ -278,10 +318,10 @@ def arrays(rs, cache):
 
 def fit_normalization(rs, arr):
     stats = {}
-    for domain in DOMAINS:
+    for domain in NORMALIZATION_DOMAINS:
         parts = []
         for r in rs:
-            if r['domain'] == domain:
+            if r.get('normalization_domain', r['domain']) == domain:
                 x = arr[r['key']]
                 parts.append(x[np.linspace(0, len(x)-1, min(len(x), 3000)).astype(int)])
         z = np.concatenate(parts).astype(np.float64)
@@ -290,12 +330,21 @@ def fit_normalization(rs, arr):
     return stats
 
 
-def record_weights(rs, target_fraction=None):
+def record_weights(rs, target_fraction=None, m5_fraction=0.25):
     """Balance source, class and participant/source-recording, never duration."""
     present = sorted({r['domain'] for r in rs})
     masses = {d: 1/len(present) for d in present}
     if target_fraction is not None and 'own' in present and len(present) > 1:
-        masses = {d: (target_fraction if d == 'own' else (1-target_fraction)/(len(present)-1)) for d in present}
+        if M5 in present:
+            if target_fraction <= 0 or m5_fraction <= 0 or target_fraction+m5_fraction >= 1:
+                raise ValueError('Private/M5 shares must be positive and leave a public-data share')
+            public = [d for d in present if d not in {'own', M5}]
+            if not public:
+                raise ValueError('At least one public source is required')
+            masses = {'own': target_fraction, M5: m5_fraction}
+            masses.update({d: (1-target_fraction-m5_fraction)/len(public) for d in public})
+        else:
+            masses = {d: (target_fraction if d == 'own' else (1-target_fraction)/(len(present)-1)) for d in present}
     domain_classes = {d: {r['label'] for r in rs if r['domain'] == d} for d in present}
     class_groups = defaultdict(set)
     sizes = Counter()
@@ -308,6 +357,15 @@ def record_weights(rs, target_fraction=None):
                      sizes[(r['domain'], r['label'], r['group'])] for r in rs], np.float64)
 
 
+def class_loss_weights(rs, source_weights):
+    """Normalize the expected class contribution implied by the source sampler."""
+    proportions = [sum(float(w) for r, w in zip(rs, source_weights) if r['label'] == y)
+                   for y in (0, 1)]
+    if min(proportions) <= 0:
+        raise ValueError('Fine-tuning requires fall and non-fall examples')
+    return np.asarray([1/(2*p) for p in proportions], np.float32)
+
+
 def small_rotation():
     axis = np.random.normal(size=3)
     axis /= np.linalg.norm(axis)+1e-12
@@ -315,6 +373,17 @@ def small_rotation():
     a, b, c = axis
     skew = np.array([[0, -c, b], [c, 0, -a], [-b, a, 0]])
     return np.eye(3)+np.sin(angle)*skew+(1-np.cos(angle))*(skew@skew)
+
+
+def evaluation_starts(lo, hi, window, fs, stride_sec):
+    """Round the cumulative time grid, retaining the final complete window."""
+    if not math.isfinite(stride_sec) or stride_sec <= 0:
+        raise ValueError('Evaluation stride must be finite and positive')
+    last = hi-window
+    if last < lo:
+        return np.empty(0, np.int64)
+    offsets = np.rint(np.arange(0, last-lo+1e-9, max(1., stride_sec*fs))).astype(np.int64)
+    return np.unique(np.r_[np.clip(lo+offsets, lo, last), last])
 
 
 class Clips(Dataset):
@@ -328,12 +397,11 @@ class Clips(Dataset):
             self.entries = [(i, -1) for i in range(len(rs))]
         else:
             for i, r in enumerate(rs):
-                ss = np.concatenate([np.unique(np.r_[np.arange(lo, hi-self.w+1, max(1, round(cfg.stride_sec*cfg.fs))), hi-self.w])
+                ss = np.concatenate([evaluation_starts(lo, hi, self.w, cfg.fs, cfg.stride_sec)
                                      for lo, hi in signal_ranges(arr[r['key']])])
-                # Fixed validation sampling; test runs use the full window grid.
-                limit = 4 if smoke else 32
-                if len(ss) > limit:
-                    ss = ss[np.linspace(0, len(ss)-1, limit).round().astype(int)]
+                # Production validation/test cover every start; only smoke tests subsample.
+                if smoke and len(ss) > 4:
+                    ss = ss[np.linspace(0, len(ss)-1, 4).round().astype(int)]
                 self.entries.extend((i, int(s)) for s in ss)
 
     def __len__(self):
@@ -357,7 +425,7 @@ class Clips(Dataset):
                 x[:, 3:] = x[:, 3:]@rotation.T
             x[:, :3] *= np.random.uniform(.9, 1.1)
             x[:, 3:] *= np.random.uniform(.9, 1.1)
-        mean, std = self.stats[r['domain']]
+        mean, std = self.stats[r.get('normalization_domain', r['domain'])]
         x = ((x-mean)/std).astype(np.float32)
         if augment:
             x += np.random.normal(0, .015, x.shape).astype(np.float32)
@@ -379,7 +447,8 @@ class Clips(Dataset):
 
 
 def train_loader(ds, cfg, ssl=False):
-    sampler = WeightedRandomSampler(record_weights(ds.rs, None if ssl else cfg.target_fraction),
+    sampler = WeightedRandomSampler(record_weights(ds.rs, None if ssl else cfg.target_fraction,
+                                                   getattr(cfg, 'm5_fraction', 0.25)),
                                     cfg.batch*cfg.steps_per_epoch, replacement=True)
     return DataLoader(ds, batch_size=cfg.batch, sampler=sampler, num_workers=0,
                       pin_memory=torch.cuda.is_available())
@@ -411,11 +480,37 @@ def validation(model, ds, cfg, dev, base):
     return result, details
 
 
-def selection_score(metrics):
-    own = metrics['own']['ap']
-    public = [v['ap'] for d, v in metrics.items() if d != 'own' and v['ap'] is not None]
-    # Target first; public macro-AP is a small regularizer/tie breaker.
-    return .8*own+.2*float(np.mean(public)) if public else own
+def selection_score(metrics, threshold, minimum_private_recall, public_recall_floor):
+    """Prefer fewer device false-positive windows subject to validation recall gates."""
+    own = metrics['details']['own']
+    private = metrics['details'][M5]
+    own_rows, own_y, own_p = own[0], own[2], own[3]
+    m5_rows = private[0]
+    own_recall = float(np.sum((np.asarray(own_p) >= threshold) & (np.asarray(own_y) == 1)) /
+                       max(1, int(np.sum(np.asarray(own_y) == 1))))
+    pub_recall = []
+    for domain in PUBLIC:
+        if domain == 'PAMAP2':
+            continue
+        _, _, y, p = metrics['details'][domain]
+        positives = np.asarray(y) == 1
+        pub_recall.append(float(np.mean(np.asarray(p)[positives] >= threshold)) if positives.any() else 1.)
+    own_neg = [r for r in own_rows if r['label'] == 0]
+    m5_neg = [r for r in m5_rows if r['label'] == 0]
+    if not own_neg or not m5_neg:
+        raise ValueError('Validation needs Private V2 and M5 negative windows')
+    own_fpr = sum(r['prob'] >= threshold for r in own_neg)/len(own_neg)
+    m5_fpr = sum(r['prob'] >= threshold for r in m5_neg)/len(m5_neg)
+    valid = own_recall + 1e-12 >= minimum_private_recall and (
+        not pub_recall or min(pub_recall) + 1e-12 >= public_recall_floor)
+    public_ap = [v['ap'] for d, v in metrics['domains'].items()
+                 if d in PUBLIC and v['ap'] is not None]
+    return (int(valid), -(own_fpr+m5_fpr)/2, metrics['domains']['own']['ap'],
+            float(np.mean(public_ap)) if public_ap else 0.), {
+                'private_val_recall': own_recall, 'private_negative_window_fpr': own_fpr,
+                'm5_negative_window_fpr': m5_fpr,
+                'public_val_macro_recall': float(np.mean(pub_recall)) if pub_recall else None,
+                'valid_under_recall_gates': valid}
 
 
 def amp_context(dev):
@@ -475,8 +570,35 @@ def ssl_train(model, ds, valds, cfg, dev, base, work, history, started, total_ep
 
 def supervised_train(model, ds, valds, cfg, dev, base, work, history, started, total_epochs):
     ld = train_loader(ds, cfg)
-    best, best_score, best_metrics = None, -float('inf'), None
+    baseline = torch.load(ds.baseline_checkpoint, map_location='cpu', weights_only=False)
+    baseline_model = base.Net(cfg).to(dev)
+    baseline_model.load_state_dict(baseline['model'])
+    baseline_model.eval()
+    minimum_private_recall = 1.0
+    initial_threshold, baseline_domains, baseline_details, _, _ = validation_candidate(
+        baseline_model, valds, cfg, dev, base, baseline['threshold'])
+    _, _, own_y, own_p = baseline_details['own']
+    minimum_private_recall = float(base.metrics(own_y, own_p, initial_threshold)['recall'])
+    public_recalls = []
+    for domain in PUBLIC:
+        if domain == 'PAMAP2' or domain not in baseline_details:
+            continue
+        _, _, y, p = baseline_details[domain]
+        positive = np.asarray(y) == 1
+        if positive.any():
+            public_recalls.append(float(np.mean(np.asarray(p)[positive] >= initial_threshold)))
+    public_recall_floor = max(0., min(public_recalls)-.02) if public_recalls else 0.
+    baseline_score, baseline_gates = selection_score(
+        {'domains': baseline_domains, 'details': baseline_details}, initial_threshold,
+        minimum_private_recall, public_recall_floor)
+    best, best_score, best_threshold = baseline['model'], baseline_score, initial_threshold
+    best_metrics = {'domains': baseline_domains, 'selection': baseline_gates,
+                    'baseline_fallback': True, 'threshold': initial_threshold}
+    baseline_model.to('cpu')
+    del baseline_model
     bad = 0; done = cfg.ssl_epochs
+    source_weights = record_weights(ds.rs, cfg.target_fraction, cfg.m5_fraction)
+    class_weights = torch.as_tensor(class_loss_weights(ds.rs, source_weights), dtype=torch.float32, device=dev)
     for stage, epochs, lr, encoder in [('head', cfg.head_epochs, cfg.head_lr, False), ('all', cfg.all_epochs, cfg.all_lr, True)]:
         for parameter in list(model.acc.parameters())+list(model.gyr.parameters()):
             parameter.requires_grad = encoder
@@ -490,21 +612,26 @@ def supervised_train(model, ds, valds, cfg, dev, base, work, history, started, t
                 y = batch['label'].to(dev)
                 with amp_context(dev):
                     o = model(*base.batch_x(batch, dev))
-                    ce = F.cross_entropy(o['logits'], y)
+                    ce = F.cross_entropy(o['logits'], y, weight=class_weights, reduction='none').mean()
                 loss = ce.float()+cfg.supcon_w*base.supcon(o['proj'].float(), y, cfg.temp)
                 if not torch.isfinite(loss):
                     raise FloatingPointError('Nonfinite classification loss')
                 optimizer.zero_grad(set_to_none=True); loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.)
                 optimizer.step(); losses.append(float(loss.detach()))
-            met, _ = validation(model, valds, cfg, dev, base)
-            score = selection_score(met)
-            if score > best_score+1e-5:
-                best_score, best, best_metrics, bad = score, cpu_state(model), met, 0
+            th, domains, _, score, selection = validation_candidate(
+                model, valds, cfg, dev, base,
+                minimum_private_recall=minimum_private_recall,
+                public_recall_floor=public_recall_floor)
+            score = tuple(score)
+            if score > tuple(best_score):
+                best_score, best, best_threshold, best_metrics, bad = score, cpu_state(model), th, {
+                    'domains': domains, 'selection': selection, 'baseline_fallback': False,
+                    'threshold': th}, 0
             else:
                 bad += 1
-            row = {'stage': stage, 'epoch': epoch+1, 'loss': float(np.mean(losses)), 'selection_score': score,
-                   'validation': met}
+            row = {'stage': stage, 'epoch': epoch+1, 'loss': float(np.mean(losses)), 'selection_score': list(score),
+                   'validation': domains, 'selection': selection, 'threshold': th}
             history.append(row); done += 1
             progress(work, stage, epoch+1, epochs, started, done, total_epochs, row)
             if stage == 'all' and cfg.patience and bad >= cfg.patience:
@@ -514,6 +641,8 @@ def supervised_train(model, ds, valds, cfg, dev, base, work, history, started, t
     if best is None:
         raise ValueError('At least one supervised epoch is required')
     model.load_state_dict(best)
+    torch.save({'model': best, 'config': asdict(cfg), 'threshold': best_threshold,
+                'checkpoint_selection': best_metrics}, work/'checkpoints/best_model.pt')
     return best_metrics
 
 
@@ -550,26 +679,46 @@ def input_paths(args, work, base):
         own = own.with_suffix('.zip')
     root = base.extract(own, work)
     public = args.public_root or Path(base.__file__).resolve().parent.parent/'fd_datasets/processed_v2'
-    return root, Path(public)
+    m5 = args.m5_root or Path(base.__file__).resolve().parent.parent/'fd_datasets/M5_hard_negatives_20261002'
+    return root, Path(public), Path(m5)
+
+
+def validation_candidate(model, valds, cfg, dev, base, threshold=None,
+                         minimum_private_recall=0., public_recall_floor=0.):
+    domains, details = validation(model, valds, cfg, dev, base)
+    if 'own' not in details or M5 not in details:
+        raise ValueError('Validation requires Private V2 and M5 records')
+    if threshold is None:
+        _, _, y, p = details['own']
+        threshold, _ = base.tune(y, p, minimum_private_recall)
+    score, gates = selection_score({'domains': domains, 'details': details}, threshold,
+                                   minimum_private_recall, public_recall_floor)
+    return float(threshold), domains, details, score, gates
 
 
 def run(args, cfg, base):
     if cfg.fs != 30 or cfg.win_sec != 3 or cfg.label_mode != 'clip':
         raise ValueError('V2 protocol requires 30 Hz / 3-second / clip labels')
-    if not 0 < cfg.target_fraction < 1 or cfg.steps_per_epoch < 1 or cfg.batch < 2:
+    if not math.isfinite(cfg.stride_sec) or cfg.stride_sec <= 0:
+        raise ValueError('Evaluation stride must be finite and positive')
+    if (cfg.target_fraction <= 0 or cfg.m5_fraction <= 0 or
+            cfg.target_fraction+cfg.m5_fraction >= 1 or cfg.steps_per_epoch < 1 or cfg.batch < 2):
         raise ValueError('Invalid sampler configuration')
     base.seed_all(cfg.seed)
     torch.set_num_threads(4)
     work = args.work.resolve(); work.mkdir(parents=True, exist_ok=True)
     for folder in ['checkpoints', 'results', 'splits', 'cache']:
         (work/folder).mkdir(exist_ok=True)
-    own, public = input_paths(args, work, base)
-    rs = own_records(own)+public_records(public)
+    cache_root = Path(args.cache_root).resolve() if getattr(args, 'cache_root', None) else work/'cache'
+    cache_root.mkdir(parents=True, exist_ok=True)
+    own, public, m5 = input_paths(args, work, base)
+    rs = own_records(own)+m5_records(m5)+public_records(public)
     splits, splitmeta = split_all(rs, work/'splits/group_splits.json', cfg.seed)
     audit = {'protocol_version': PROTOCOL_VERSION, 'seed': cfg.seed,
              'label_policy': 'whole fall container positive; every 3-second view inherits its clip label',
-             'sampler_policy': 'SSL equal six sources; fine-tune target-weighted source/class/group balancing',
-             'target_fraction': cfg.target_fraction, 'split': {}, 'group_leakage': False,
+             'sampler_policy': 'SSL equal seven sources; fine-tune 25% Private V2, 25% M5 hard negatives, 10% per public source; class/group balanced',
+             'target_fraction': cfg.target_fraction, 'm5_fraction': cfg.m5_fraction,
+             'split': {}, 'group_leakage': False,
              'test_used_for_training_or_selection': False, 'private_eval': 'same-person unseen-source-recording evaluation',
              'pamap_policy': 'unlabelled SSL; known activities are negatives in supervised stages'}
     for domain in DOMAINS:
@@ -580,7 +729,7 @@ def run(args, cfg, base):
     write_json(work/'data_audit.json', audit)
     print('GROUPED DATA AUDIT', json.dumps(audit['split']), flush=True)
     if args.mode == 'prepare':
-        arr = arrays(splits['train']+splits['val'], work/'cache')
+        arr = arrays(splits['train']+splits['val'], cache_root)
         write_json(work/'normalization.json', fit_normalization(splits['train'], arr))
         print('PREPARATION AND LEAKAGE CHECKS PASSED', flush=True)
         return
@@ -596,7 +745,7 @@ def run(args, cfg, base):
         if any(s['fit_partition'] != 'train' for s in stats.values()):
             raise ValueError('Invalid normalization provenance')
         model = base.Net(cfg).to(dev); model.load_state_dict(checkpoint['model'])
-        arr = arrays(splits['test'], work/'cache')
+        arr = arrays(splits['test'], cache_root)
         selected = evaluation_records(splits['test'], args.smoke)
         testds = Clips(selected, arr, stats, cfg, smoke=args.smoke)
         _, detail = validation(model, testds, cfg, dev, base)
@@ -614,7 +763,7 @@ def run(args, cfg, base):
             pd.DataFrame(rows).to_csv(work/f'results/{domain}_test_windows.csv', index=False)
             pd.DataFrame({'key': keys, 'label': y, 'probability': p}).to_csv(work/f'results/{domain}_test_recordings.csv', index=False)
         gallery_records = evaluation_records([r for r in splits['train'] if r['domain'] == 'own'], args.smoke)
-        gallery_arr = arrays(gallery_records, work/'cache')
+        gallery_arr = arrays(gallery_records, cache_root)
         gallery = Clips(gallery_records, gallery_arr, stats, cfg, smoke=args.smoke)
         query = Clips([r for r in selected if r['domain'] == 'own'], arr, stats, cfg, smoke=args.smoke)
         result['own_class_retrieval'] = retrieval(model, gallery, query, cfg, dev, base)
@@ -625,18 +774,38 @@ def run(args, cfg, base):
         return
     if (work/'checkpoints/locked_model.pt').exists():
         raise FileExistsError('A locked model exists; use a new work directory for another training run')
-    arr = arrays(splits['train']+splits['val'], work/'cache')
-    stats = fit_normalization(splits['train'], arr)
+    arr = arrays(splits['train']+splits['val'], cache_root)
+    if not args.normalization_from or not args.init_ssl or not args.baseline_checkpoint:
+        raise ValueError('Adaptation requires --normalization-from, --init-ssl, and --baseline-checkpoint')
+    normalization_checkpoint = torch.load(args.normalization_from, map_location='cpu', weights_only=False)
+    stats = normalization_checkpoint['normalization']
+    if any(stats.get(d, {}).get('fit_partition') != 'train' for d in NORMALIZATION_DOMAINS):
+        raise ValueError('Warm-start normalization must be train-only for all six model input domains')
+    init_checkpoint = torch.load(args.init_ssl, map_location='cpu', weights_only=False)
     write_json(work/'normalization.json', stats); write_json(work/'run_config.json', asdict(cfg))
     trainrs = splits['train']
     valrs = evaluation_records(splits['val'], args.smoke)
+    if not any(r['domain'] == 'own' and r['label'] == 1 for r in trainrs) or not any(r['domain'] == M5 for r in trainrs):
+        raise ValueError('Training needs Private V2 falls and M5 hard negatives')
     train_ds = Clips(trainrs, arr, stats, cfg, random_crop=True)
+    train_ds.baseline_checkpoint = args.baseline_checkpoint
     ssl_ds = Clips(trainrs, arr, stats, cfg, random_crop=True, two=True)
     valds = Clips(valrs, arr, stats, cfg, smoke=args.smoke)
     # A small fixed set of held-out clips is sufficient for SSL validation loss.
     ssl_val = evaluation_records(splits['val'], True)
     ssl_val_ds = Clips(ssl_val, arr, stats, cfg, two=True, smoke=True)
     model = base.Net(cfg).to(dev)
+    init_config = init_checkpoint.get('config', {})
+    if init_config.get('channels') != cfg.channels or init_config.get('blocks') != cfg.blocks:
+        raise ValueError('SSL initialization model shape differs from the requested model')
+    model.load_state_dict(init_checkpoint['model'])
+    print('INITIALIZATION', str(args.init_ssl), 'normalization', str(args.normalization_from), flush=True)
+    class_w = class_loss_weights(trainrs, record_weights(trainrs, cfg.target_fraction, cfg.m5_fraction))
+    audit['expected_class_share'] = {
+        'non_fall': float(sum(w for r, w in zip(trainrs, record_weights(trainrs, cfg.target_fraction, cfg.m5_fraction)) if r['label'] == 0)),
+        'fall': float(sum(w for r, w in zip(trainrs, record_weights(trainrs, cfg.target_fraction, cfg.m5_fraction)) if r['label'] == 1)),
+        'loss_weights_non_fall_fall': class_w.tolist()}
+    write_json(work/'data_audit.json', audit)
     print('MODEL', dev, 'parameters', sum(p.numel() for p in model.parameters()), 'batch', cfg.batch, flush=True)
     history = []; started = time.monotonic()
     epochs = cfg.ssl_epochs+cfg.head_epochs+cfg.all_epochs
@@ -644,10 +813,14 @@ def run(args, cfg, base):
     chosen = supervised_train(model, train_ds, valds, cfg, dev, base, work, history, started, epochs)
     _, details = validation(model, valds, cfg, dev, base)
     _, _, y, p = details['own']
-    threshold, vm = base.tune(y, p, cfg.min_val_recall)
+    threshold = float(chosen['threshold'])
+    vm = base.metrics(y, p, threshold)
+    selected = chosen['selection']
     checkpoint = {'model': cpu_state(model), 'config': asdict(cfg), 'threshold': threshold,
                   'normalization': stats, 'split_fingerprint': splitmeta['fingerprint'],
                   'checkpoint_selection': chosen, 'label_policy': audit['label_policy'],
+                  'initialization': str(args.init_ssl), 'normalization_source': str(args.normalization_from),
+                  'selection_threshold_gates': selected,
                   'feature_context': 'fixed temporal thirds; no peak finding or pseudo-phase labels',
                   'smoke': args.smoke}
     torch.save(checkpoint, work/'checkpoints/locked_model.pt')

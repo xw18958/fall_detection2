@@ -1,0 +1,155 @@
+{
+  "status": "failed_public_warm_start_independence",
+  "reason": "Adding M5 ahead of public domains changed domain-index-based split seeds while reusing six-source SSL weights and normalization.",
+  "previous_run": "v2_multisource_seed42_20261001",
+  "current_run": "v2_m5_hardneg_seed42_20261002",
+  "previous_split_fingerprint": "1acdbc06272d0c5db612d22a959fe57b209d9829da4bc8d4148f406cb9513bd3",
+  "current_split_fingerprint": "91ae94227ac1ba60d7eddf9d2d388fe81fa0e0f50c62ecb75c4e47ca4357f46a",
+  "by_domain": {
+    "own": {
+      "train": {
+        "recordings": 245,
+        "previous_train": 245,
+        "previous_val": 0,
+        "previous_test": 0
+      },
+      "val": {
+        "recordings": 53,
+        "previous_train": 0,
+        "previous_val": 53,
+        "previous_test": 0
+      },
+      "test": {
+        "recordings": 51,
+        "previous_train": 0,
+        "previous_val": 0,
+        "previous_test": 51
+      }
+    },
+    "m5_hard_negatives": {
+      "train": {
+        "recordings": 5,
+        "previous_train": 0,
+        "previous_val": 0,
+        "previous_test": 0
+      },
+      "val": {
+        "recordings": 1,
+        "previous_train": 0,
+        "previous_val": 0,
+        "previous_test": 0
+      },
+      "test": {
+        "recordings": 1,
+        "previous_train": 0,
+        "previous_val": 0,
+        "previous_test": 0
+      }
+    },
+    "CGU_BES": {
+      "train": {
+        "recordings": 132,
+        "previous_train": 120,
+        "previous_val": 0,
+        "previous_test": 12
+      },
+      "val": {
+        "recordings": 26,
+        "previous_train": 0,
+        "previous_val": 13,
+        "previous_test": 13
+      },
+      "test": {
+        "recordings": 25,
+        "previous_train": 12,
+        "previous_val": 13,
+        "previous_test": 0
+      }
+    },
+    "Cogent": {
+      "train": {
+        "recordings": 1225,
+        "previous_train": 957,
+        "previous_val": 57,
+        "previous_test": 211
+      },
+      "val": {
+        "recordings": 267,
+        "previous_train": 108,
+        "previous_val": 104,
+        "previous_test": 55
+      },
+      "test": {
+        "recordings": 266,
+        "previous_train": 160,
+        "previous_val": 106,
+        "previous_test": 0
+      }
+    },
+    "SFU_IMU": {
+      "train": {
+        "recordings": 367,
+        "previous_train": 307,
+        "previous_val": 0,
+        "previous_test": 60
+      },
+      "val": {
+        "recordings": 119,
+        "previous_train": 60,
+        "previous_val": 0,
+        "previous_test": 59
+      },
+      "test": {
+        "recordings": 119,
+        "previous_train": 0,
+        "previous_val": 119,
+        "previous_test": 0
+      }
+    },
+    "UCI_SimulatedFalls": {
+      "train": {
+        "recordings": 2386,
+        "previous_train": 1991,
+        "previous_val": 178,
+        "previous_test": 217
+      },
+      "val": {
+        "recordings": 445,
+        "previous_train": 217,
+        "previous_val": 0,
+        "previous_test": 228
+      },
+      "test": {
+        "recordings": 525,
+        "previous_train": 180,
+        "previous_val": 345,
+        "previous_test": 0
+      }
+    },
+    "PAMAP2": {
+      "train": {
+        "recordings": 266,
+        "previous_train": 219,
+        "previous_val": 47,
+        "previous_test": 0
+      },
+      "val": {
+        "recordings": 56,
+        "previous_train": 0,
+        "previous_val": 0,
+        "previous_test": 56
+      },
+      "test": {
+        "recordings": 60,
+        "previous_train": 47,
+        "previous_val": 13,
+        "previous_test": 0
+      }
+    }
+  },
+  "public_test_recordings": 995,
+  "public_test_seen_in_previous_training": 399,
+  "public_test_used_for_previous_validation": 596,
+  "previous_public_test_now_in_adaptation_training": 500,
+  "interpretation": "Private V2 split is unchanged; M5 is new. Public scores are diagnostic only and do not establish held-out participant generalization. Current-run disjointness checks do not establish warm-start independence."
+}

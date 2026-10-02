@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "protocol": "full-length M5 hard negatives; no event crop or peak relabeling",
+  "source_root": "../fd_datasets/M5_hard_negatives_20261002/raw",
+  "raw_sessions": 7,
+  "raw_samples": 36351,
+  "processed_samples": 36345,
+  "duration_seconds": 1211.466664,
+  "split_sessions": {
+    "train": 5,
+    "val": 1,
+    "test": 1
+  },
+  "split_groups": 5,
+  "quality_totals": {
+    "read_errors": 0,
+    "timing_gap_flags": 0,
+    "saturated_samples": 159,
+    "acceleration_rows_clipped": 1527
+  },
+  "label_source": "user explicitly designated all seven sessions non-fall"
+}

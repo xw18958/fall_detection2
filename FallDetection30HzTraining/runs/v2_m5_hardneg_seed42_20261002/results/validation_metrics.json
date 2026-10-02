@@ -1,0 +1,58 @@
+{
+  "threshold": 0.3449999999999999,
+  "own": {
+    "threshold": 0.3449999999999999,
+    "n": 53,
+    "tn": 27,
+    "fp": 0,
+    "fn": 0,
+    "tp": 26,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "specificity": 1.0,
+    "f2": 1.0,
+    "mcc": 1.0
+  },
+  "domains": {
+    "domains": {
+      "own": {
+        "ap": 0.9999999999999999,
+        "recordings": 53
+      },
+      "m5_hard_negatives": {
+        "ap": null,
+        "recordings": 1
+      },
+      "CGU_BES": {
+        "ap": 1.0,
+        "recordings": 26
+      },
+      "Cogent": {
+        "ap": 0.999798792756539,
+        "recordings": 267
+      },
+      "SFU_IMU": {
+        "ap": 0.9923570783326883,
+        "recordings": 119
+      },
+      "UCI_SimulatedFalls": {
+        "ap": 0.9988605443059356,
+        "recordings": 445
+      },
+      "PAMAP2": {
+        "ap": null,
+        "recordings": 56
+      }
+    },
+    "selection": {
+      "private_val_recall": 1.0,
+      "private_negative_window_fpr": 0.0,
+      "m5_negative_window_fpr": 0.03234750462107209,
+      "public_val_macro_recall": 0.9989539748953975,
+      "valid_under_recall_gates": true
+    },
+    "baseline_fallback": false,
+    "threshold": 0.3449999999999999
+  }
+}

@@ -19,7 +19,7 @@ LABELS = {"fall":1, "non-fall":0}
 
 @dataclass
 class Cfg:
-    seed:int=42; fs:float=30.; win_sec:float=3.; stride_sec:float=.75
+    seed:int=42; fs:float=30.; win_sec:float=3.; stride_sec:float=.25
     pos_sec:float=.75; amb_sec:float=1.5; impact_sec:float=.7; ctx_sec:float=1.
     channels:int=24; blocks:int=3; dropout:float=.2; proj_dim:int=64
     batch:int=128; ssl_epochs:int=20; head_epochs:int=3; all_epochs:int=17
@@ -27,7 +27,7 @@ class Cfg:
     supcon_w:float=.2; phase_w:float=0.; ssl_supcon_w:float=.5; ssl_inst_w:float=1.
     temp:float=.1; max_ssl_per_rec:int=64; max_neg_per_rec:int=24; patience:int=5
     min_val_recall:float=.90
-    label_mode:str="clip"; target_fraction:float=.5; steps_per_epoch:int=100
+    label_mode:str="clip"; target_fraction:float=.25; m5_fraction:float=.25; steps_per_epoch:int=100
 
 def seed_all(seed):
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
@@ -306,7 +306,14 @@ def main():
     ap.add_argument("--batch",type=int,default=128); ap.add_argument("--seed",type=int,default=42); ap.add_argument("--smoke",action="store_true")
     ap.add_argument("--public-root",type=Path,help="Root containing the five processed_v2 dataset directories")
     ap.add_argument("--mode",choices=["train","test","prepare"],default="train")
-    ap.add_argument("--target-fraction",type=float,default=.5,help="Own V2 batch share; public half is balanced across five sources")
+    ap.add_argument("--stride-sec",type=float,default=.25,help="Validation stride for new runs; locked testing uses the saved checkpoint setting")
+    ap.add_argument("--target-fraction",type=float,default=.25,help="Private V2 fine-tuning share (default 25%%)")
+    ap.add_argument("--m5-fraction",type=float,default=.25,help="M5 hard-negative fine-tuning share (default 25%%)")
+    ap.add_argument("--m5-root",type=Path,help="Root containing raw/ and processed_v2/ for M5 hard negatives")
+    ap.add_argument("--cache-root",type=Path,help="Reusable signal-cache directory shared by smoke, train, and test runs")
+    ap.add_argument("--init-ssl",type=Path,help="Optional prior SSL checkpoint used to warm-start adaptation")
+    ap.add_argument("--normalization-from",type=Path,help="Locked checkpoint supplying frozen train-only normalization")
+    ap.add_argument("--baseline-checkpoint",type=Path,help="Locked checkpoint used for validation recall gates and comparison")
     ap.add_argument("--steps-per-epoch",type=int,default=100)
     ap.add_argument("--device",default="auto",help="auto, cpu, or cuda:N")
     a=ap.parse_args()
@@ -328,9 +335,12 @@ def main():
         a.work=Path("/kaggle/working/fall_detection_30hz")
         print("Kaggle dataset root:",a.zip,flush=True)
     cfg=Cfg(seed=a.seed,channels=a.channels,ssl_epochs=a.ssl_epochs,head_epochs=a.head_epochs,all_epochs=a.all_epochs,batch=a.batch,
-            target_fraction=a.target_fraction,steps_per_epoch=a.steps_per_epoch)
+            target_fraction=a.target_fraction,m5_fraction=a.m5_fraction,
+            steps_per_epoch=a.steps_per_epoch,stride_sec=a.stride_sec)
     if a.smoke:
-        cfg.channels=min(cfg.channels,8); cfg.ssl_epochs=1; cfg.head_epochs=1; cfg.all_epochs=1; cfg.max_ssl_per_rec=4; cfg.max_neg_per_rec=4
+        if a.init_ssl is None:
+            cfg.channels=min(cfg.channels,8)
+        cfg.ssl_epochs=1; cfg.head_epochs=1; cfg.all_epochs=1; cfg.max_ssl_per_rec=4; cfg.max_neg_per_rec=4
         cfg.steps_per_epoch=2; cfg.batch=min(cfg.batch,16)
     from training_v2 import run
     import sys

@@ -1,0 +1,23 @@
+{
+  "run": "v2_m5_hardneg_seed42_20261002",
+  "training_epochs_completed": {
+    "ssl": 5,
+    "head": 3,
+    "all": 6
+  },
+  "selected_epoch": {
+    "stage": "all",
+    "epoch": 1
+  },
+  "selected_threshold": 0.3449999999999999,
+  "baseline_fallback": false,
+  "full_model_maximum_epochs": 20,
+  "early_stopping_patience": 5,
+  "training_loop_elapsed_seconds_approx": 73,
+  "total_training_crop_draws": 179200,
+  "supervised_crop_draws": 115200,
+  "training_crop_note": "Random sampling with replacement; these are presentations, not unique examples or guaranteed exhaustive temporal coverage.",
+  "publication_status": "experimental_candidate_not_recommended_for_deployment",
+  "public_generalization_status": "invalid_due_to_warm_start_partition_overlap",
+  "zero_shot_results_available": false
+}

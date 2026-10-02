@@ -8,7 +8,8 @@ import pandas as pd
 import torch
 
 import train
-from training_v2 import (Clips, DOMAINS, FEATURES, fit_normalization, own_records, read_array,
+from training_v2 import (Clips, DOMAINS, M5, NORMALIZATION_DOMAINS, FEATURES, class_loss_weights,
+                         evaluation_starts, fit_normalization, own_records, read_array,
                          partition, record_weights, selection_score, split_all)
 
 
@@ -33,12 +34,15 @@ class TrainingV2Tests(unittest.TestCase):
         rs = []
         for i, d in enumerate(DOMAINS):
             rr = self.records(d, 10+i*10)
-            if d == 'PAMAP2': rr = [r for r in rr if r['label'] == 0]
+            if d in {'PAMAP2', M5}: rr = [r for r in rr if r['label'] == 0]
             rs.extend(rr)
-        w = record_weights(rs, .5)
+        w = record_weights(rs, .25, .25)
         for d in DOMAINS:
-            self.assertAlmostEqual(sum(v for r, v in zip(rs, w) if r['domain'] == d), .5 if d == 'own' else .1)
+            expected = .25 if d in {'own', M5} else .1
+            self.assertAlmostEqual(sum(v for r, v in zip(rs, w) if r['domain'] == d), expected)
         self.assertAlmostEqual(w.sum(), 1)
+        cw = class_loss_weights(rs, w)
+        self.assertAlmostEqual(float(cw[1]/cw[0]), .675/.325, places=5)
 
     def test_clip_randomization_preserves_positive_label_without_peak_estimation(self):
         cfg = train.Cfg()
@@ -59,6 +63,32 @@ class TrainingV2Tests(unittest.TestCase):
         ds = Clips([r], arr, {'own': {'mean': [0]*6, 'std': [1]*6}}, cfg)
         self.assertTrue(torch.equal(ds[0]['full'], ds[0]['full']))
         self.assertTrue(all(ds[i]['label'] == 1 for i in range(len(ds))))
+
+    def test_quarter_second_evaluation_covers_long_recordings_without_cap(self):
+        cfg = train.Cfg(stride_sec=.25)
+        r = self.records(n=1)[0]
+        arr = {r['key']: np.zeros((8192, 6), np.float32)}
+        stats = {'own': {'mean': [0]*6, 'std': [1]*6}}
+        ds = Clips([r], arr, stats, cfg)
+        starts = np.array([s for _, s in ds.entries])
+        self.assertGreater(len(starts), 1000)
+        self.assertEqual(starts[:9].tolist(), [0, 8, 15, 22, 30, 38, 45, 52, 60])
+        self.assertEqual(starts[-1], 8192-90)
+        self.assertTrue(set(np.diff(starts[:-1])).issubset({7, 8}))
+        self.assertLessEqual(np.abs(starts[:-1]-np.arange(len(starts)-1)*7.5).max(), .5)
+        covered = np.zeros(8192, bool)
+        for start in starts:
+            covered[start:start+90] = True
+        self.assertTrue(covered.all())
+        self.assertEqual(len(Clips([r], arr, stats, cfg, smoke=True)), 4)
+
+    def test_evaluation_grid_is_relative_to_each_valid_segment(self):
+        self.assertEqual(evaluation_starts(101, 191, 90, 30, .25).tolist(), [101])
+        self.assertEqual(evaluation_starts(101, 221, 90, 30, .25).tolist(), [101, 109, 116, 123, 131])
+        self.assertEqual(evaluation_starts(0, 89, 90, 30, .25).size, 0)
+        for stride in [0, -.25, float('nan'), float('inf')]:
+            with self.assertRaises(ValueError):
+                evaluation_starts(0, 150, 90, 30, stride)
 
     def test_original_private_negatives_resample_jitter_without_label_changes(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -95,12 +125,41 @@ class TrainingV2Tests(unittest.TestCase):
 
     def test_normalization_excludes_held_out_recordings(self):
         rs = []; arr = {}
-        for d in DOMAINS:
+        for d in NORMALIZATION_DOMAINS:
             r = self.records(d, 1)[0]; rs.append(r)
             arr[r['key']] = np.ones((100, 6))*3
             arr[d+'/heldout'] = np.ones((100, 6))*1e9
         stats = fit_normalization(rs, arr)
         self.assertTrue(all(s['mean'] == [3]*6 and s['fit_recordings'] == 1 for s in stats.values()))
+
+    def test_m5_uses_private_device_normalization(self):
+        cfg = train.Cfg()
+        r = {'key': f'{M5}/session.csv', 'domain': M5, 'normalization_domain': 'own',
+             'group': 'M5BLE:boot', 'label': 0, 'ssl_label': 0, 'train_only': False}
+        arr = {r['key']: np.full((90, 6), 12., np.float32)}
+        stats = {'own': {'mean': [2]*6, 'std': [2]*6}}
+        sample = Clips([r], arr, stats, cfg)[0]
+        self.assertTrue(torch.allclose(sample['full'], torch.full((90, 6), 5.)))
+
+    def test_checkpoint_gate_computes_private_recall_over_fall_recordings(self):
+        details = {
+            'own': ([{'label': 0, 'prob': .1}, {'label': 1, 'prob': .9},
+                     {'label': 1, 'prob': .4}, {'label': 1, 'prob': .9}],
+                    ['n','p1','p2','p3'], [0,1,1,1], [.1,.9,.4,.9]),
+            M5: ([{'label': 0, 'prob': .2}, {'label': 0, 'prob': .7}],
+                 ['m1','m2'], [0,0], [.2,.7]),
+        }
+        domains = {'own': {'ap': .9}}
+        for d in ('CGU_BES','Cogent','SFU_IMU','UCI_SimulatedFalls'):
+            details[d] = ([{'label': 1, 'prob': .8}], [d], [1], [.8])
+            domains[d] = {'ap': .9}
+        details['PAMAP2'] = ([{'label': 0, 'prob': .1}], ['pamap'], [0], [.1])
+        domains['PAMAP2'] = {'ap': None}
+        score, gates = selection_score({'domains': domains, 'details': details}, .5, .6, .7)
+        self.assertEqual(score[0], 1)
+        self.assertAlmostEqual(gates['private_val_recall'], 2/3)
+        self.assertAlmostEqual(gates['private_negative_window_fpr'], 0.)
+        self.assertAlmostEqual(gates['m5_negative_window_fpr'], .5)
 
     def test_private_audit_links_negatives_duplicates_and_padding(self):
         with tempfile.TemporaryDirectory() as directory:
