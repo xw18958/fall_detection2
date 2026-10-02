@@ -1,16 +1,16 @@
 {
-  "source": "V4 seed42 QAT epoch5; validation-locked, fused normalization; collector and local recovery unchanged",
-  "model_sha256": "7a649721e02ab88e85594dd67efe415a0d5a777d9215df03d903dd0de748cf57",
+  "source": "V4 seed42 PTQ; collection/UI/OTA protections inherited unchanged from 6a75163",
+  "model_sha256": "ddac71cffd5e10f85d9e9122fe5334a3dbabf3717da41b598231ef4a69a720bc",
   "source_sha256": {
     "main/main.cc": "163f84d738631dedce4c7ee9474462084709241289f4bced3d9f281b46412934",
     "main/gelu_kernel.cc": "4c0d4eaba62faf47d49551749275a328ef68c73fcc8935dd500805bdcaef555a",
     "main/gelu_kernel.h": "c966be4081b9511fafacd1861b2e60c79a3a44d0bbfb833e917c7f5d70d7d71d",
     "main/fast_conv1d.cc": "4203afadb44dc5b222ada2371c71d971ae489f531ba49087a3218467f8c683dc",
     "main/fast_conv1d.h": "97d0263856f1e1764669026d726587f2ae9e92ea8263d8853b71998a40d2e8cb",
-    "main/fall_op_resolver.cc": "5cd14389fd11c9f6896c680466413ae5cf9ce6694e757c768beca1036dd1e655",
-    "main/fall_op_resolver.h": "20c5efeaf8d7dd11b89587460625620f4a6257c4ed8da0923a8f38c6c63c8c81",
+    "main/fall_op_resolver.cc": "be6fe8e9eb84cb7f3866cf639eb2fab83499454ca51a49562423d50f032c7014",
+    "main/fall_op_resolver.h": "e6fe1778dfd0b7455606cc88eb814ad7555ed2fa34b97b8bb72b5520e4433e40",
     "main/inference_profiler.h": "93304210796db2f6005b4c8b17766e98fc7d86778f1d5e45b4df7c153d4b59f2",
-    "main/model_v2_config.h": "50bce50ed3f4214167d0c25962078a0956df67a08e8d6761d72e66ad4b804768",
+    "main/model_v2_config.h": "5f6b828076fa538934ddd31ffdf4d9092a0852a7a62e231ff90bb75d666656f3",
     "main/simple_display.h": "7a90ab9c976c1939b0118022597904ef4f25f6d06d560abc3db67248634dbb14",
     "main/wifi_ota.cc": "6e2689523ddfcd59670970d9097fd935d120da03eb13918c9606b47771c07495",
     "main/wifi_ota.h": "faa44bc99e41d7de1441a1b0d0008fa2dd61df1c0ebcf6d2f39301265e7739ac",
@@ -19,11 +19,8 @@
     "CMakeLists.txt": "9850c410b06b9a5d62490a21d423b0047fcd88866fe08750b639f7b1111a1b70",
     "sdkconfig.defaults": "4d8bda7dc94a90c286d8dd3bb712cb9de2637808b8f6db9815a73341eba34b07",
     "main/input_pipeline.h": "c79b986a0cb526f3a17a4ded1d8e924de7a0b1a911c5cc08a695f554fd8fc82b",
-    "main/CMakeLists.txt": "e456cc5bf14d3179823b3a29e35573dbababd4b0aec7c576ccdf3ca05b2b055b",
-    "main/model_data.S.in": "477634b04eadc5c9bd18a338e6fc19726fc68a216c8a3754deb3cb7560f867c4",
-    "main/layer_norm_v4.cc": "b57debc904ec9bc3433c6d4843cc4dc96628abc0446a2bb76a356d5e02464b3f",
-    "main/layer_norm_v4.h": "007726baefcd8995857b19e01fddcf605d66e493476b98655bbc0ebc40c58684",
-    "main/layer_norm_math.h": "c2ba9e986bc5544efba5014c1405d106e913fe56b7e002a5d7d1ffa0c245ebf7"
+    "main/CMakeLists.txt": "e1d1bd536703010f779c5ad4b2b9b837b2b5e362bdb93ae15f868bae47e8a37e",
+    "main/model_data.S.in": "477634b04eadc5c9bd18a338e6fc19726fc68a216c8a3754deb3cb7560f867c4"
   },
   "detector_functions_sha256": {
     "InitMpu6886": "c5a9a4a85979d0f8b16c16495c3316e40c5f756b9dcf905090c6481c321f567f",
@@ -36,8 +33,8 @@
     "RunInference": "d4e7bd5184f6ae3e07483ecc645e87dc93d3633eea69a2317f8cc922dfc38ea6",
     "InitModel": "e7f05ede4d795d638d4c8c9f17460c3df05bfc89e130d216a704de42c4238c9b"
   },
-  "replay_sha256": "81246d0faf2b9f346614d8cc007715cd0d45cf3ebec069de28093b02cda21c45",
-  "checkpoint_sha256": "d12ba0f0915859ae6ae4056b21d8ab2730142dfc5b3299cbaaabe71c98529866",
+  "replay_sha256": "31b911b2b3360ace914823a2e80f03c54e77c78268b83fd15b6c48ba358d2466",
+  "checkpoint_sha256": "3c92a68f6e1440a83880665d6634b01e7cb5724374a7e3f7a3eb76892e210b2e",
   "authorized_pin_updates": {
     "base_commit": "6a7516315f249e39ae653ac67a303c2456d1b391",
     "functions": [
@@ -57,21 +54,5 @@
     "reason": "Exact V4 model, full-range M5 SI preprocessing, startup hash/scale/replay checks, latency telemetry",
     "replay": "11 calibration, synthetic range, joint-validation cases; expected outputs from actual Micro+ESP-NN portable path; existing 4-LSB startup tolerance retained",
     "alignment": "Explicit balign 16 because installed IDF does not parse target_add_binary_data ALIGN; no memory-copy startup burden"
-  },
-  "firmware_version": "1.3.1-v4-qat",
-  "original_checkpoint_sha256": "3c92a68f6e1440a83880665d6634b01e7cb5724374a7e3f7a3eb76892e210b2e",
-  "qat_authorized_pin_updates": {
-    "base_commit": "be4defed7055f7301daa245a504d84de64d190ba",
-    "files": [
-      "main/model_v2_config.h",
-      "main/CMakeLists.txt",
-      "main/fall_op_resolver.cc",
-      "main/fall_op_resolver.h",
-      "main/layer_norm_v4.cc",
-      "main/layer_norm_v4.h",
-      "main/layer_norm_math.h"
-    ],
-    "functions": [],
-    "reason": "New QAT model/config/replay and custom normalization numerical lowering; INT8 tensors, int64 statistics, float32 sqrt; inference architecture and collection unchanged"
   }
 }

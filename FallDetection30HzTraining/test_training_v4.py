@@ -98,6 +98,26 @@ class RevisedProtocolTests(unittest.TestCase):
                                       {'CGU_BES':{'recall':1.,'specificity':1.}})
         self.assertFalse(impossible['valid_under_constraints'])
 
+    def test_window_floor_counts_every_positive_window(self):
+        records, details = self.fixture(public_negative=.1)
+        rows, keys, labels, probs = details['own']
+        rows.append({'key': keys[1], 'label': 1, 'file_label': 1, 'prob': .2, 'start': 1})
+        result = select_threshold(details, records, source_masses(train.Cfg()),
+                                  window_recall_floors={'own': 1.}, deployment_thresholds=True)
+        self.assertTrue(result['valid_under_constraints'])
+        self.assertLess(result['threshold'], .2)
+        self.assertEqual(result['window_recalls']['own'], 1.)
+        self.assertEqual(result['threshold'], float(np.float32(result['threshold'])))
+
+    def test_window_floor_conflict_is_reported(self):
+        records, details = self.fixture()
+        rows, keys, labels, probs = details['own']
+        rows.append({'key': keys[1], 'label': 1, 'file_label': 1, 'prob': .05, 'start': 1})
+        result = select_threshold(details, records, source_masses(train.Cfg()),
+                                  {'own': {'negative_window_fpr': 0.}},
+                                  window_recall_floors={'own': 1.}, deployment_thresholds=True)
+        self.assertFalse(result['valid_under_constraints'])
+
     def test_long_negative_recording_does_not_dominate_group_average(self):
         records, details = self.fixture()
         d = v2.M5

@@ -26,7 +26,7 @@ def prepare(source: Path) -> None:
     (target / "model_identity.h").write_text(
         '#pragma once\nnamespace m5ble {\n'
         f'constexpr char kModelSha256[] = "{digest}";\n'
-        'constexpr char kFirmwareVersion[] = "1.3.0-v4-ptq";\n}\n'
+        f'constexpr char kFirmwareVersion[] = "{baseline.get("firmware_version", "1.3.0-v4-ptq")}";\n}}\n'
     )
     report = {"model_sha256": digest, "bytes": len(inputs["model.tflite"]),
               "replay_sha256": hashlib.sha256(inputs["model_v2_replay.h"]).hexdigest()}
