@@ -181,6 +181,7 @@ final class CollectorTests {
 
 @main struct SmokeRunner {
     static func main() throws {
+        try testTrustedModelIdentities()
         let tests = CollectorTests()
         try tests.testSmallMTUFragmentationAndDuplicateReplay()
         try tests.testDisconnectDropsPartialBatchAndNewBatchReassembles()

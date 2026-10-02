@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copy private inputs without modifying or converting the existing detector."""
+"""Prepare only the exact verified V4 package pinned by detector_baseline.json."""
 import argparse
 import hashlib
 import json
@@ -21,12 +21,12 @@ def prepare(source: Path) -> None:
     if config_digest != baseline["source_sha256"]["main/model_v2_config.h"]:
         raise ValueError("Normalization/threshold configuration differs. Nothing was copied.")
     target = ROOT / "firmware/main"
-    for name in names[:2]:
+    for name in names:
         (target / name).write_bytes(inputs[name])
     (target / "model_identity.h").write_text(
         '#pragma once\nnamespace m5ble {\n'
         f'constexpr char kModelSha256[] = "{digest}";\n'
-        'constexpr char kFirmwareVersion[] = "1.2.0-ble.1";\n}\n'
+        'constexpr char kFirmwareVersion[] = "1.3.0-v4-ptq";\n}\n'
     )
     report = {"model_sha256": digest, "bytes": len(inputs["model.tflite"]),
               "replay_sha256": hashlib.sha256(inputs["model_v2_replay.h"]).hexdigest()}

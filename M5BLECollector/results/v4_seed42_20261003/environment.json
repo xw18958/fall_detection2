@@ -1,0 +1,9 @@
+{
+  "python": "3.13.1 | packaged by Anaconda, Inc. | (main, Dec 11 2024, 16:29:23) [GCC 11.2.0]",
+  "torch": "2.11.0+cu128",
+  "tensorflow": "2.20.0",
+  "numpy": "2.5.3",
+  "scipy": "1.15.1",
+  "sklearn": "1.6.1",
+  "pandas": "2.2.3"
+}

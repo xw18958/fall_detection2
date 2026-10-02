@@ -1,0 +1,14 @@
+{
+  "float_checkpoint_retrieval": {
+    "task": "binary-class retrieval, not event-instance retrieval",
+    "gallery_recordings": 245,
+    "query_recordings": 51,
+    "precision_at_1": 1.0,
+    "hit_rate_at_5": 1.0,
+    "mAP": 0.9999746819042967
+  },
+  "int8_retrieval": null,
+  "reason": "Deployment graph exports two classification logits, not retrieval embeddings; no quantized retrieval claim",
+  "zero_shot": null,
+  "zero_shot_reason": "All seven sources contribute training data; no unseen-source test is claimed"
+}

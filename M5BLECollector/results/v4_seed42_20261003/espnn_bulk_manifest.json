@@ -1,0 +1,54 @@
+{
+  "host_elapsed_seconds": 95.17365537499427,
+  "device_timing": null,
+  "parts": [
+    {
+      "role": "validation",
+      "part": 0,
+      "windows": 15421,
+      "output": "arena_used_bytes=101600\nTFLM_WINDOWS_PASS=15421\n"
+    },
+    {
+      "role": "validation",
+      "part": 1,
+      "windows": 15422,
+      "output": "arena_used_bytes=101600\nTFLM_WINDOWS_PASS=15422\n"
+    },
+    {
+      "role": "validation",
+      "part": 2,
+      "windows": 15421,
+      "output": "arena_used_bytes=101600\nTFLM_WINDOWS_PASS=15421\n"
+    },
+    {
+      "role": "validation",
+      "part": 3,
+      "windows": 15422,
+      "output": "arena_used_bytes=101600\nTFLM_WINDOWS_PASS=15422\n"
+    },
+    {
+      "role": "test",
+      "part": 0,
+      "windows": 16634,
+      "output": "arena_used_bytes=101600\nTFLM_WINDOWS_PASS=16634\n"
+    },
+    {
+      "role": "test",
+      "part": 1,
+      "windows": 16635,
+      "output": "arena_used_bytes=101600\nTFLM_WINDOWS_PASS=16635\n"
+    },
+    {
+      "role": "test",
+      "part": 2,
+      "windows": 16635,
+      "output": "arena_used_bytes=101600\nTFLM_WINDOWS_PASS=16635\n"
+    },
+    {
+      "role": "test",
+      "part": 3,
+      "windows": 16635,
+      "output": "arena_used_bytes=101600\nTFLM_WINDOWS_PASS=16635\n"
+    }
+  ]
+}

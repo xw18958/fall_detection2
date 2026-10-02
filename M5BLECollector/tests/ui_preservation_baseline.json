@@ -12,18 +12,24 @@
     "M5BLECollector/firmware/sdkconfig.defaults": "b617f439fe89c31a17ee675dd71dcf4b25044c63432c645cf8570d4b8a1fe473",
     "M5BLECollector/macos/Sources/M5BLECollectorCore/Recorder.swift": "b3b2f98961780be732809d970f7156e828b05d7031cb94ebb75d24e3f3da6688",
     "M5BLECollector/macos/Sources/M5BLECollectorCore/Protocol.swift": "af3d6454906b8a726cf2252f1d48cb9b46bcaa4d3f476cd3994ed1d39d084e3e",
-    "M5BLECollector/macos/Sources/M5BLECollector/main.swift": "cc30a9e9d810dbffb0d01f3928e28fc64a34b320a8d0d31b0489951c77ff8b11",
-    "M5BLECollector/macos/Tests/M5BLECollectorCoreTests/CollectorTests.swift": "a4952194512e55de1cae0b924284cb87a07de2bc0019d23c82e5ee15e74a79ca",
+    "M5BLECollector/macos/Sources/M5BLECollector/main.swift": "1cbbf31fa4774284b0d5412b36a1cb0553e130fac34edc4a5664440bc36efc31",
+    "M5BLECollector/macos/Tests/M5BLECollectorCoreTests/CollectorTests.swift": "a8cf1ba69cc4cd99858f89aae34e8c363eea2bd4f079266caf6dd06f4f6208af",
     "M5BLECollector/firmware/main/wifi_ota.cc": "0e982f57d020fe09abdeb3fe842d556bb9a7e37a2ae7608798c508d041414c25",
     "M5BLECollector/firmware/main/recording_buffer.h": "191448405c2102bf06a53f88c8e7889b0f0380a437e5c71aa8dd53dd66663d77",
     "M5BLECollector/firmware/main/wifi_ota.h": "faa44bc99e41d7de1441a1b0d0008fa2dd61df1c0ebcf6d2f39301265e7739ac",
     "M5BLECollector/firmware/main/ble_collector.h": "d928efa70b7d018a3c6938276a42d93ab78a087b83ae9cf2cae96981781ee46d",
-    "M5BLECollector/firmware/main/ble_collector.cc": "cde3172de3757a40f9d6d0e225ba2ab608e67ec0b0740ba0d4e1b1e3ed22341f"
+    "M5BLECollector/firmware/main/ble_collector.cc": "cde3172de3757a40f9d6d0e225ba2ab608e67ec0b0740ba0d4e1b1e3ed22341f",
+    "M5BLECollector/macos/Sources/M5BLECollectorCore/TrustedModels.swift": "5de545691b4b6f47ed6408e901a10042172d84a6ddf146211abe44bd912b402f"
   },
   "regions": {
     "buttons": "cf10e1b7eb6a6ac4a644f5d80b9632021d2ee206f0cbe75f01e43179c7817be1",
     "commands_and_wake": "eb79f1e7373ac29e5062568a6d6be54e832b15cc0eceed7c6dbedf972ecb6044",
     "sleep": "9316e7de4bc64c59a2fdc3710d606014e6bf62bb6878688f88e0a86544b70976"
   },
-  "base_commit": "ef48bcfd8e956f8960f633296e110dc9c6a9723a"
+  "base_commit": "ef48bcfd8e956f8960f633296e110dc9c6a9723a",
+  "authorized_pin_updates": {
+    "base_commit": "6a7516315f249e39ae653ac67a303c2456d1b391",
+    "reason": "Replace single exact hash check with two exact trusted hashes; retain all other collector/UI pins",
+    "test_extension": "Invoke exact old/new identity checks before all unchanged journal/protocol tests"
+  }
 }

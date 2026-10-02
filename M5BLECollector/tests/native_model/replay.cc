@@ -10,6 +10,7 @@
 #include "tensorflow/lite/kernels/internal/reference/integer_ops/conv.h"
 #include "fall_op_resolver.h"
 #include "model_v2_replay.h"
+#include "input_pipeline.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 int KernelChecks() {
@@ -46,16 +47,31 @@ int KernelChecks() {
 }
 int main(int argc, char** argv) {
  if (argc==2 && std::strcmp(argv[1],"--kernel-test")==0) return KernelChecks();
- if (argc != 2 && argc != 4) return 2;
+ const bool dump = argc == 5 && std::strcmp(argv[4], "--dump-tensors") == 0;
+ if (argc != 2 && argc != 4 && !dump) return 2;
  std::ifstream file(argv[1], std::ios::binary);
  std::vector<unsigned char> model_bytes((std::istreambuf_iterator<char>(file)), {});
  if (model_bytes.empty()) return 3;
- alignas(16) static unsigned char arena[256*1024];
+ alignas(16) static unsigned char arena[8*1024*1024];
  fall_tflm::FallOpResolver resolver;
  const auto* model = tflite::GetModel(model_bytes.data());
- tflite::MicroInterpreter interpreter(model, resolver, arena, sizeof(arena));
+ tflite::MicroInterpreter interpreter(model, resolver, arena, dump ? sizeof(arena) : 256*1024,
+                                      nullptr, nullptr, dump);
  if (interpreter.AllocateTensors() != kTfLiteOk) return 4;
  std::cout << "arena_used_bytes=" << interpreter.arena_used_bytes() << "\n";
+ if (dump) {
+  std::ifstream inputs(argv[2], std::ios::binary);
+  if (!inputs.read(reinterpret_cast<char*>(interpreter.input(0)->data.int8),540)) return 7;
+  if (interpreter.Invoke() != kTfLiteOk) return 5;
+  for (unsigned i=0;i<model->subgraphs()->Get(0)->tensors()->size();++i) {
+   auto* t=interpreter.GetTensor(i); int size=1;
+   for (int j=0;j<t->dims->size;++j) size*=t->dims->data[j];
+   size*=t->type==kTfLiteInt32 ? 4 : 1;
+   std::ofstream output(std::string(argv[3])+"/"+std::to_string(i)+".bin",std::ios::binary);
+   output.write(reinterpret_cast<const char*>(t->data.raw),size);
+  }
+  return 0;
+ }
  if (argc == 4) {
   std::ifstream inputs(argv[2], std::ios::binary);
   std::ofstream outputs(argv[3], std::ios::binary);
@@ -68,7 +84,12 @@ int main(int argc, char** argv) {
   std::cout << "TFLM_WINDOWS_PASS=" << windows << "\n";
   return windows>0 ? 0 : 7;
  }
- for (int i=0;i<2;++i) {
+ for (int i=0;i<fall_v2::kPreprocessCount;++i) for (int c=0;c<6;++c) {
+  const float z=fall_v2::NormalizeM5(c,fall_v2::PhysicalValue(c,fall_v2::kPreprocessCounts[i][c]));
+  if (fall_v2::QuantizeInput(z,interpreter.input(0)->params.scale,interpreter.input(0)->params.zero_point)!=fall_v2::kPreprocessExpected[i][c]) return 9;
+ }
+ std::cout << "RAW_COUNTS_TO_INT8_PASS\n";
+ for (int i=0;i<fall_v2::kReplayCount;++i) {
   std::memcpy(interpreter.input(0)->data.int8, fall_v2::kReplayInputs[i], 540);
   if (interpreter.Invoke() != kTfLiteOk) return 5;
   for (int c=0;c<2;++c) {

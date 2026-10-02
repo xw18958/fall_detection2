@@ -1,0 +1,586 @@
+{
+  "unit": "complete 3-second windows; exhaustive cumulative 0.25-second grid plus final window; overlaps correlated",
+  "threshold": 0.2602156102657318,
+  "float_threshold": 0.2602156102657318,
+  "domains": {
+    "own": {
+      "float": {
+        "windows": 2862,
+        "tp": 128,
+        "fn": 10,
+        "fp": 3,
+        "tn": 2721,
+        "precision": 0.9770992366412213,
+        "recall": 0.927536231884058,
+        "f1": 0.9516728624535316,
+        "specificity": 0.998898678414097,
+        "negative_window_fpr": 0.0011013215859030838,
+        "accuracy": 0.9954577218728162
+      },
+      "int8_unchanged_threshold": {
+        "windows": 2862,
+        "tp": 127,
+        "fn": 11,
+        "fp": 2,
+        "tn": 2722,
+        "precision": 0.9844961240310077,
+        "recall": 0.9202898550724637,
+        "f1": 0.951310861423221,
+        "specificity": 0.9992657856093979,
+        "negative_window_fpr": 0.0007342143906020558,
+        "accuracy": 0.9954577218728162
+      },
+      "int8_locked_threshold": {
+        "windows": 2862,
+        "tp": 127,
+        "fn": 11,
+        "fp": 2,
+        "tn": 2722,
+        "precision": 0.9844961240310077,
+        "recall": 0.9202898550724637,
+        "f1": 0.951310861423221,
+        "specificity": 0.9992657856093979,
+        "negative_window_fpr": 0.0007342143906020558,
+        "accuracy": 0.9954577218728162
+      },
+      "logit_error": {
+        "mean_absolute": 0.5010834336280823,
+        "p99_absolute": 1.51460599899292,
+        "max_absolute": 2.454549789428711
+      },
+      "probability_error": {
+        "mean_absolute": 0.0009912177920341492,
+        "p99_absolute": 0.008366294205188751,
+        "max_absolute": 0.4259776473045349
+      },
+      "input_saturated_values": 0,
+      "input_values": 1545480,
+      "windows_with_saturation": 0,
+      "elapsed_seconds": 0.6794754389848094
+    },
+    "m5_hard_negatives": {
+      "float": {
+        "windows": 1082,
+        "tp": 0,
+        "fn": 0,
+        "fp": 0,
+        "tn": 1082,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 1.0
+      },
+      "int8_unchanged_threshold": {
+        "windows": 1082,
+        "tp": 0,
+        "fn": 0,
+        "fp": 0,
+        "tn": 1082,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 1.0
+      },
+      "int8_locked_threshold": {
+        "windows": 1082,
+        "tp": 0,
+        "fn": 0,
+        "fp": 0,
+        "tn": 1082,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 1.0
+      },
+      "logit_error": {
+        "mean_absolute": 0.8848325610160828,
+        "p99_absolute": 2.1500000953674316,
+        "max_absolute": 2.623387336730957
+      },
+      "probability_error": {
+        "mean_absolute": 0.000519183580763638,
+        "p99_absolute": 0.010673511773347855,
+        "max_absolute": 0.09134499728679657
+      },
+      "input_saturated_values": 0,
+      "input_values": 584280,
+      "windows_with_saturation": 0,
+      "elapsed_seconds": 0.25827329099411145
+    },
+    "CGU_BES": {
+      "float": {
+        "windows": 955,
+        "tp": 72,
+        "fn": 0,
+        "fp": 0,
+        "tn": 883,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 1.0
+      },
+      "int8_unchanged_threshold": {
+        "windows": 955,
+        "tp": 72,
+        "fn": 0,
+        "fp": 0,
+        "tn": 883,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 1.0
+      },
+      "int8_locked_threshold": {
+        "windows": 955,
+        "tp": 72,
+        "fn": 0,
+        "fp": 0,
+        "tn": 883,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 1.0
+      },
+      "logit_error": {
+        "mean_absolute": 0.5211612582206726,
+        "p99_absolute": 1.8805187940597534,
+        "max_absolute": 2.6337332725524902
+      },
+      "probability_error": {
+        "mean_absolute": 0.0003437921986915171,
+        "p99_absolute": 0.0019526558462530375,
+        "max_absolute": 0.0766141414642334
+      },
+      "input_saturated_values": 0,
+      "input_values": 515700,
+      "windows_with_saturation": 0,
+      "elapsed_seconds": 0.2286893549899105
+    },
+    "Cogent": {
+      "float": {
+        "windows": 12171,
+        "tp": 629,
+        "fn": 1,
+        "fp": 1,
+        "tn": 11540,
+        "precision": 0.9984126984126984,
+        "recall": 0.9984126984126984,
+        "f1": 0.9984126984126984,
+        "specificity": 0.9999133523958063,
+        "negative_window_fpr": 8.664760419374404e-05,
+        "accuracy": 0.999835674965081
+      },
+      "int8_unchanged_threshold": {
+        "windows": 12171,
+        "tp": 629,
+        "fn": 1,
+        "fp": 0,
+        "tn": 11541,
+        "precision": 1.0,
+        "recall": 0.9984126984126984,
+        "f1": 0.9992057188244639,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9999178374825405
+      },
+      "int8_locked_threshold": {
+        "windows": 12171,
+        "tp": 629,
+        "fn": 1,
+        "fp": 0,
+        "tn": 11541,
+        "precision": 1.0,
+        "recall": 0.9984126984126984,
+        "f1": 0.9992057188244639,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9999178374825405
+      },
+      "logit_error": {
+        "mean_absolute": 0.5287111401557922,
+        "p99_absolute": 1.7712610960006714,
+        "max_absolute": 2.9180502891540527
+      },
+      "probability_error": {
+        "mean_absolute": 0.003675475949421525,
+        "p99_absolute": 0.07475137710571289,
+        "max_absolute": 0.21506750583648682
+      },
+      "input_saturated_values": 0,
+      "input_values": 6572340,
+      "windows_with_saturation": 0,
+      "elapsed_seconds": 2.86315554601606
+    },
+    "SFU_IMU": {
+      "float": {
+        "windows": 4509,
+        "tp": 362,
+        "fn": 7,
+        "fp": 40,
+        "tn": 4100,
+        "precision": 0.900497512437811,
+        "recall": 0.981029810298103,
+        "f1": 0.9390402075226978,
+        "specificity": 0.9903381642512077,
+        "negative_window_fpr": 0.00966183574879227,
+        "accuracy": 0.9895764027500554
+      },
+      "int8_unchanged_threshold": {
+        "windows": 4509,
+        "tp": 360,
+        "fn": 9,
+        "fp": 42,
+        "tn": 4098,
+        "precision": 0.8955223880597015,
+        "recall": 0.975609756097561,
+        "f1": 0.933852140077821,
+        "specificity": 0.9898550724637681,
+        "negative_window_fpr": 0.010144927536231883,
+        "accuracy": 0.9886892880904857
+      },
+      "int8_locked_threshold": {
+        "windows": 4509,
+        "tp": 360,
+        "fn": 9,
+        "fp": 42,
+        "tn": 4098,
+        "precision": 0.8955223880597015,
+        "recall": 0.975609756097561,
+        "f1": 0.933852140077821,
+        "specificity": 0.9898550724637681,
+        "negative_window_fpr": 0.010144927536231883,
+        "accuracy": 0.9886892880904857
+      },
+      "logit_error": {
+        "mean_absolute": 0.5801365971565247,
+        "p99_absolute": 1.7517375946044922,
+        "max_absolute": 2.9480018615722656
+      },
+      "probability_error": {
+        "mean_absolute": 0.0027981025632470846,
+        "p99_absolute": 0.06998740881681442,
+        "max_absolute": 0.6331489682197571
+      },
+      "input_saturated_values": 0,
+      "input_values": 2434860,
+      "windows_with_saturation": 0,
+      "elapsed_seconds": 1.0675904900126625
+    },
+    "UCI_SimulatedFalls": {
+      "float": {
+        "windows": 17714,
+        "tp": 2510,
+        "fn": 1,
+        "fp": 4,
+        "tn": 15199,
+        "precision": 0.9984089101034208,
+        "recall": 0.9996017522899243,
+        "f1": 0.9990049751243781,
+        "specificity": 0.9997368940340722,
+        "negative_window_fpr": 0.0002631059659277774,
+        "accuracy": 0.999717737382861
+      },
+      "int8_unchanged_threshold": {
+        "windows": 17714,
+        "tp": 2510,
+        "fn": 1,
+        "fp": 8,
+        "tn": 15195,
+        "precision": 0.9968228752978554,
+        "recall": 0.9996017522899243,
+        "f1": 0.9982103797971764,
+        "specificity": 0.9994737880681445,
+        "negative_window_fpr": 0.0005262119318555548,
+        "accuracy": 0.9994919272891498
+      },
+      "int8_locked_threshold": {
+        "windows": 17714,
+        "tp": 2510,
+        "fn": 1,
+        "fp": 8,
+        "tn": 15195,
+        "precision": 0.9968228752978554,
+        "recall": 0.9996017522899243,
+        "f1": 0.9982103797971764,
+        "specificity": 0.9994737880681445,
+        "negative_window_fpr": 0.0005262119318555548,
+        "accuracy": 0.9994919272891498
+      },
+      "logit_error": {
+        "mean_absolute": 0.4563785791397095,
+        "p99_absolute": 1.4984495639801025,
+        "max_absolute": 3.6444451808929443
+      },
+      "probability_error": {
+        "mean_absolute": 0.0009011064539663494,
+        "p99_absolute": 0.00745641952380538,
+        "max_absolute": 0.7533870339393616
+      },
+      "input_saturated_values": 0,
+      "input_values": 9565560,
+      "windows_with_saturation": 0,
+      "elapsed_seconds": 4.175196866999613
+    },
+    "PAMAP2": {
+      "float": {
+        "windows": 22393,
+        "tp": 0,
+        "fn": 0,
+        "fp": 156,
+        "tn": 22237,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.99303353726611,
+        "negative_window_fpr": 0.006966462733890055,
+        "accuracy": 0.99303353726611
+      },
+      "int8_unchanged_threshold": {
+        "windows": 22393,
+        "tp": 0,
+        "fn": 0,
+        "fp": 155,
+        "tn": 22238,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.9930781940785067,
+        "negative_window_fpr": 0.006921805921493324,
+        "accuracy": 0.9930781940785067
+      },
+      "int8_locked_threshold": {
+        "windows": 22393,
+        "tp": 0,
+        "fn": 0,
+        "fp": 155,
+        "tn": 22238,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.9930781940785067,
+        "negative_window_fpr": 0.006921805921493324,
+        "accuracy": 0.9930781940785067
+      },
+      "logit_error": {
+        "mean_absolute": 0.5240688323974609,
+        "p99_absolute": 1.5519729852676392,
+        "max_absolute": 2.877129554748535
+      },
+      "probability_error": {
+        "mean_absolute": 0.0013493235455825925,
+        "p99_absolute": 0.02216963842511177,
+        "max_absolute": 0.6931862235069275
+      },
+      "input_saturated_values": 0,
+      "input_values": 12092220,
+      "windows_with_saturation": 0,
+      "elapsed_seconds": 5.257955785986269
+    },
+    "pooled": {
+      "float": {
+        "windows": 61686,
+        "tp": 3701,
+        "fn": 19,
+        "fp": 204,
+        "tn": 57762,
+        "precision": 0.9477592829705506,
+        "recall": 0.9948924731182796,
+        "f1": 0.9707540983606557,
+        "specificity": 0.9964806955801677,
+        "negative_window_fpr": 0.0035193044198323156,
+        "accuracy": 0.9963849171611062
+      },
+      "int8_locked_threshold": {
+        "windows": 61686,
+        "tp": 3698,
+        "fn": 22,
+        "fp": 207,
+        "tn": 57759,
+        "precision": 0.9469910371318822,
+        "recall": 0.9940860215053764,
+        "f1": 0.9699672131147541,
+        "specificity": 0.9964289411034054,
+        "negative_window_fpr": 0.0035710588965945553,
+        "accuracy": 0.996287650358266
+      }
+    }
+  },
+  "unchanged_threshold_selection": {
+    "threshold": 0.2602156102657318,
+    "weighted_error": 0.0017077905360709201,
+    "valid_under_constraints": false,
+    "threshold_candidates": 1,
+    "threshold_policy": "seven_source_group_macro_v4",
+    "source_weights": {
+      "own": 0.25,
+      "m5_hard_negatives": 0.25,
+      "CGU_BES": 0.1,
+      "Cogent": 0.1,
+      "SFU_IMU": 0.1,
+      "UCI_SimulatedFalls": 0.1,
+      "PAMAP2": 0.1
+    },
+    "domains": {
+      "own": {
+        "recall": 1.0,
+        "specificity": 0.925,
+        "negative_window_fpr": 0.004833333333333261,
+        "error": 0.0024166666666666304
+      },
+      "m5_hard_negatives": {
+        "recall": null,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.0
+      },
+      "CGU_BES": {
+        "recall": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.0
+      },
+      "Cogent": {
+        "recall": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.0
+      },
+      "SFU_IMU": {
+        "recall": 1.0,
+        "specificity": 0.8589743589743593,
+        "negative_window_fpr": 0.010769230769229672,
+        "error": 0.005384615384614836
+      },
+      "UCI_SimulatedFalls": {
+        "recall": 1.0,
+        "specificity": 0.9749520521672421,
+        "negative_window_fpr": 0.0008286283885034793,
+        "error": 0.00041431419425173963
+      },
+      "PAMAP2": {
+        "recall": null,
+        "specificity": 0.8911620294599019,
+        "negative_window_fpr": 0.005237309115176049,
+        "error": 0.005237309115176049
+      }
+    }
+  },
+  "validation_only_optimum": {
+    "threshold": 0.46371036767959595,
+    "weighted_error": 0.001446875384298693,
+    "threshold_candidates": 1098,
+    "threshold_policy": "seven_source_group_macro_v4",
+    "source_weights": {
+      "own": 0.25,
+      "m5_hard_negatives": 0.25,
+      "CGU_BES": 0.1,
+      "Cogent": 0.1,
+      "SFU_IMU": 0.1,
+      "UCI_SimulatedFalls": 0.1,
+      "PAMAP2": 0.1
+    },
+    "domains": {
+      "own": {
+        "recall": 1.0,
+        "specificity": 0.925,
+        "negative_window_fpr": 0.004833333333333261,
+        "error": 0.0024166666666666304
+      },
+      "m5_hard_negatives": {
+        "recall": null,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.0
+      },
+      "CGU_BES": {
+        "recall": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.0
+      },
+      "Cogent": {
+        "recall": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.0
+      },
+      "SFU_IMU": {
+        "recall": 1.0,
+        "specificity": 0.871794871794872,
+        "negative_window_fpr": 0.0084615384615376,
+        "error": 0.0042307692307688
+      },
+      "UCI_SimulatedFalls": {
+        "recall": 1.0,
+        "specificity": 0.9936708860759494,
+        "negative_window_fpr": 0.0001834525775087302,
+        "error": 9.17262887543651e-05
+      },
+      "PAMAP2": {
+        "recall": null,
+        "specificity": 0.8911620294599019,
+        "negative_window_fpr": 0.004104591656797187,
+        "error": 0.004104591656797187
+      }
+    },
+    "policy_note": "Unconstrained seven-source diagnostic computed before final test; never applied to deployment threshold"
+  },
+  "original_validation_gate_audit": {
+    "constraints": {
+      "own": {
+        "recall": 1.0
+      },
+      "CGU_BES": {
+        "recall": 0.98,
+        "specificity": 0.9244444444444445
+      },
+      "Cogent": {
+        "recall": 0.98,
+        "specificity": 0.9759349593495935
+      },
+      "SFU_IMU": {
+        "recall": 0.98,
+        "specificity": 0.8646153846153848
+      },
+      "UCI_SimulatedFalls": {
+        "recall": 0.9716666666666667,
+        "specificity": 0.98
+      },
+      "PAMAP2": {
+        "negative_window_fpr": 0.009693319678046639
+      },
+      "m5_hard_negatives": {
+        "negative_window_fpr": 0.19408502772643288
+      }
+    },
+    "failed": [
+      {
+        "source": "SFU_IMU",
+        "metric": "specificity",
+        "floor_or_ceiling": 0.8646153846153848,
+        "actual": 0.8589743589743593
+      },
+      {
+        "source": "UCI_SimulatedFalls",
+        "metric": "specificity",
+        "floor_or_ceiling": 0.98,
+        "actual": 0.9749520521672421
+      }
+    ],
+    "accepted": false,
+    "unit": "source group macro; fall-recording recall, negative-recording specificity and negative-window FPR"
+  },
+  "threshold_decision": "Float threshold unchanged; strict inherited guards are not all satisfied. No threshold or calibration/model changes after final testing."
+}
