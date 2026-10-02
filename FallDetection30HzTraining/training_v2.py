@@ -513,6 +513,65 @@ def selection_score(metrics, threshold, minimum_private_recall, public_recall_fl
                 'valid_under_recall_gates': valid}
 
 
+def tune_validation_threshold(metrics, minimum_private_recall, public_recall_floor):
+    """Balance Private V2/M5 negative FPR while preserving validation recall."""
+    for value in (minimum_private_recall, public_recall_floor):
+        if not math.isfinite(value) or not 0 <= value <= 1:
+            raise ValueError('Validation recall floors must be finite and between zero and one')
+
+    def probabilities(values):
+        p = np.asarray(values, np.float64)
+        if np.any(~np.isfinite(p)) or np.any((p < 0) | (p > 1)):
+            raise ValueError('Validation probabilities must be finite and between zero and one')
+        return np.sort(p)
+
+    details = metrics['details']
+    own_rows, _, own_y, own_p = details['own']
+    own_positive = probabilities(np.asarray(own_p)[np.asarray(own_y) == 1])
+    own_negative = probabilities([r['prob'] for r in own_rows if r['label'] == 0])
+    m5_negative = probabilities([r['prob'] for r in details[M5][0] if r['label'] == 0])
+    if not len(own_positive) or not len(own_negative) or not len(m5_negative):
+        raise ValueError('Threshold tuning needs Private V2 falls and Private V2/M5 negative windows')
+
+    public_positive = []
+    for domain in PUBLIC:
+        if domain != 'PAMAP2':
+            _, _, y, p = details[domain]
+            public_positive.append(probabilities(np.asarray(p)[np.asarray(y) == 1]))
+
+    # Exact decision boundaries avoid a coarse probability grid. Searchsorted
+    # computes all rates without repeatedly scanning thousands of windows.
+    candidates = np.unique(np.clip(np.concatenate([
+        np.array([0., 1.]), own_positive, own_negative, m5_negative,
+        np.nextafter(own_negative, np.inf), np.nextafter(m5_negative, np.inf),
+        *public_positive]), 0., 1.))
+
+    def positive_rate(p):
+        return (len(p)-np.searchsorted(p, candidates, side='left'))/len(p)
+
+    own_recall = positive_rate(own_positive)
+    public_recall = np.stack([positive_rate(p) if len(p) else np.ones(len(candidates))
+                              for p in public_positive])
+    own_fpr, m5_fpr = positive_rate(own_negative), positive_rate(m5_negative)
+    eligible = np.flatnonzero((own_recall+1e-12 >= minimum_private_recall) &
+                             (public_recall.min(axis=0)+1e-12 >= public_recall_floor))
+    if not len(eligible):
+        raise ValueError('No threshold satisfies the validation recall constraints')
+    mean_fpr = .5*own_fpr+.5*m5_fpr
+    # On equal negative rejection, preserve more falls before preferring the
+    # higher threshold. Test predictions never enter this calculation.
+    order = np.lexsort((candidates[eligible], public_recall.mean(axis=0)[eligible],
+                        own_recall[eligible], -mean_fpr[eligible]))
+    threshold = float(candidates[eligible[order[-1]]])
+    score, gates = selection_score(metrics, threshold, minimum_private_recall, public_recall_floor)
+    gates.update(threshold_policy='joint_private_m5_validation_v1',
+                 private_negative_weight=.5, m5_negative_weight=.5,
+                 minimum_private_recall=minimum_private_recall,
+                 public_recall_floor=public_recall_floor,
+                 threshold_candidates=len(candidates))
+    return threshold, score, gates
+
+
 def amp_context(dev):
     return torch.autocast('cuda', dtype=torch.bfloat16) if dev.type == 'cuda' and torch.cuda.is_bf16_supported() else nullcontext()
 
@@ -588,8 +647,8 @@ def supervised_train(model, ds, valds, cfg, dev, base, work, history, started, t
         if positive.any():
             public_recalls.append(float(np.mean(np.asarray(p)[positive] >= initial_threshold)))
     public_recall_floor = max(0., min(public_recalls)-.02) if public_recalls else 0.
-    baseline_score, baseline_gates = selection_score(
-        {'domains': baseline_domains, 'details': baseline_details}, initial_threshold,
+    initial_threshold, baseline_score, baseline_gates = tune_validation_threshold(
+        {'domains': baseline_domains, 'details': baseline_details},
         minimum_private_recall, public_recall_floor)
     best, best_score, best_threshold = baseline['model'], baseline_score, initial_threshold
     best_metrics = {'domains': baseline_domains, 'selection': baseline_gates,
@@ -688,11 +747,13 @@ def validation_candidate(model, valds, cfg, dev, base, threshold=None,
     domains, details = validation(model, valds, cfg, dev, base)
     if 'own' not in details or M5 not in details:
         raise ValueError('Validation requires Private V2 and M5 records')
+    metrics = {'domains': domains, 'details': details}
     if threshold is None:
-        _, _, y, p = details['own']
-        threshold, _ = base.tune(y, p, minimum_private_recall)
-    score, gates = selection_score({'domains': domains, 'details': details}, threshold,
-                                   minimum_private_recall, public_recall_floor)
+        threshold, score, gates = tune_validation_threshold(
+            metrics, minimum_private_recall, public_recall_floor)
+    else:
+        score, gates = selection_score(metrics, threshold,
+                                       minimum_private_recall, public_recall_floor)
     return float(threshold), domains, details, score, gates
 
 

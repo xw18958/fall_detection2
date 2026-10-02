@@ -27,9 +27,14 @@ public sources.
   minus two percentage points. This is not a per-source relative bound. Among
   candidates passing those gates, minimize the equally weighted Private V2/M5
   negative-window false-positive rates, then use private and public AP as tie-breaks.
-  Thresholds are selected using Private V2 validation; M5 affects checkpoint
-  ranking but does not directly optimize the threshold. Public specificity is
-  not protected by the current selection code.
+  Current code jointly chooses the threshold to minimize
+  `0.5 * Private V2 negative-window FPR + 0.5 * M5 negative-window FPR`
+  subject to the same recall gates. Equal FPR ties preserve more validation falls,
+  then prefer the higher threshold. The baseline receives the same validation-only
+  calibration before comparison. Test predictions never enter threshold selection.
+  The historical October 2 run used Private V2 alone to tune its threshold;
+  its locked checkpoint and reported metrics have not been changed.
+  Public specificity is not protected by the current selection code.
 - New validation and test runs evaluate every three-second start on the cumulative
   0.25-second grid, including the final complete window in each valid segment.
   Training continues to use random crops. Smoke tests alone cap evaluation at four
@@ -39,7 +44,9 @@ The completed October 2 candidate is experimental and is not recommended for
 deployment. Read [the detailed results and ancestry audit](runs/v2_m5_hardneg_seed42_20261002/REPORT.md)
 before interpreting public scores or starting another adaptation. Inserting M5
 changed domain-index-based public split seeds while reusing prior SSL weights
-and normalization. The commands below reproduce the completed protocol; a clean
+and normalization. The commands below document the archived run's arguments;
+current code now uses joint threshold selection instead of that run's private-only
+policy. A clean
 follow-up must preserve the original six-source partitions and append the M5 split
 before restarting from the original SSL checkpoint.
 
@@ -116,8 +123,17 @@ Private V2 validation recall must be preserved, and each public fall dataset mus
 meet the common floor based on the worst baseline source minus two percentage
 points. Among models that pass,
 selection minimizes the mean Private V2 and M5 negative-window false-positive
-rates; Private V2 AP and public macro-AP break ties. The threshold is locked from
-validation. The M5 test boot is used only after model and threshold selection.
+rates; Private V2 AP and public macro-AP break ties. Current threshold selection
+also minimizes this equally weighted device-negative FPR on validation, subject
+to recall gates. The threshold policy and weights are saved with selection metadata.
+The M5 test boot is used only after model and threshold selection.
+
+The importer preserves the historical firmware input convention: 16,384
+acceleration counts/g followed by signed-16-bit clipping, effectively about ±2 g
+per axis. This is a compatibility rule, not a requirement of the neural network or
+INT8 quantization. For example, 3 g converts to 49,152 counts and is clamped to
+32,767. Changing the convention requires matching data processing, model export
+and eventual firmware input conversion; original raw readings remain preserved.
 
 New validation and test runs evaluate all 3-second starts on a cumulative 0.25 s
 grid, including the final complete window in each valid segment. Training continues

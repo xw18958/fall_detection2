@@ -10,7 +10,8 @@ import torch
 import train
 from training_v2 import (Clips, DOMAINS, M5, NORMALIZATION_DOMAINS, FEATURES, class_loss_weights,
                          evaluation_starts, fit_normalization, own_records, read_array,
-                         partition, record_weights, selection_score, split_all)
+                         partition, record_weights, selection_score, split_all,
+                         tune_validation_threshold, validation_candidate)
 
 
 class TrainingV2Tests(unittest.TestCase):
@@ -160,6 +161,85 @@ class TrainingV2Tests(unittest.TestCase):
         self.assertAlmostEqual(gates['private_val_recall'], 2/3)
         self.assertAlmostEqual(gates['private_negative_window_fpr'], 0.)
         self.assertAlmostEqual(gates['m5_negative_window_fpr'], .5)
+
+    def threshold_fixture(self, own_negative=(.05, .1), m5_negative=(.4, .55),
+                          public_positive=.9):
+        own_y = [0]*len(own_negative)+[1, 1]
+        own_p = [*own_negative, .6, .9]
+        details = {
+            'own': ([{'label': y, 'prob': p} for y, p in zip(own_y, own_p)],
+                    [str(i) for i in range(len(own_y))], own_y, own_p),
+            M5: ([{'label': 0, 'prob': p} for p in m5_negative],
+                 [str(i) for i in range(len(m5_negative))],
+                 [0]*len(m5_negative), list(m5_negative)),
+        }
+        domains = {'own': {'ap': 1.}, M5: {'ap': None}}
+        for d in ('CGU_BES', 'Cogent', 'SFU_IMU', 'UCI_SimulatedFalls'):
+            details[d] = ([{'label': 1, 'prob': public_positive}], [d], [1], [public_positive])
+            domains[d] = {'ap': 1.}
+        details['PAMAP2'] = ([{'label': 0, 'prob': .1}], ['pamap'], [0], [.1])
+        domains['PAMAP2'] = {'ap': None}
+        return {'domains': domains, 'details': details}
+
+    def test_joint_threshold_rejects_m5_motion_missed_by_private_only_tuning(self):
+        metrics = self.threshold_fixture()
+        _, _, y, p = metrics['details']['own']
+        old_threshold, _ = train.tune(y, p, 1.)
+        _, old_gates = selection_score(metrics, old_threshold, 1., 1.)
+        threshold, score, gates = tune_validation_threshold(metrics, 1., 1.)
+        self.assertEqual(old_gates['m5_negative_window_fpr'], 1.)
+        self.assertAlmostEqual(threshold, .6)
+        self.assertEqual(score[0], 1)
+        self.assertEqual(gates['private_val_recall'], 1.)
+        self.assertEqual(gates['private_negative_window_fpr'], 0.)
+        self.assertEqual(gates['m5_negative_window_fpr'], 0.)
+        self.assertEqual(gates['threshold_policy'], 'joint_private_m5_validation_v1')
+
+    def test_joint_threshold_preserves_private_and_public_recall(self):
+        metrics = self.threshold_fixture(m5_negative=(.8, .9), public_positive=.5)
+        threshold, score, gates = tune_validation_threshold(metrics, 1., 1.)
+        self.assertAlmostEqual(threshold, .5)
+        self.assertEqual(score[0], 1)
+        self.assertEqual(gates['private_val_recall'], 1.)
+        self.assertEqual(gates['public_val_macro_recall'], 1.)
+        self.assertEqual(gates['m5_negative_window_fpr'], 1.)
+
+    def test_joint_threshold_equal_source_weight_is_independent_of_window_count(self):
+        results = []
+        for count in (2, 2000):
+            metrics = self.threshold_fixture(own_negative=(.1, .6), m5_negative=(.4,)*count)
+            threshold, score, gates = tune_validation_threshold(metrics, 1., 1.)
+            results.append((threshold, score))
+            self.assertAlmostEqual(score[1], -.25)
+            self.assertEqual(gates['private_negative_window_fpr'], .5)
+            self.assertEqual(gates['m5_negative_window_fpr'], 0.)
+        self.assertEqual(results[0], results[1])
+
+    def test_joint_threshold_avoids_unnecessary_missed_falls_on_equal_fpr(self):
+        threshold, _, gates = tune_validation_threshold(self.threshold_fixture(), .5, .5)
+        self.assertAlmostEqual(threshold, .6)
+        self.assertEqual(gates['private_val_recall'], 1.)
+
+    def test_joint_threshold_rejects_invalid_scores_and_recall_floors(self):
+        for invalid in (float('nan'), float('inf'), -.1, 1.1):
+            with self.assertRaises(ValueError):
+                tune_validation_threshold(self.threshold_fixture(m5_negative=(invalid,)), 1., 1.)
+            with self.assertRaises(ValueError):
+                tune_validation_threshold(self.threshold_fixture(), invalid, 1.)
+        with self.assertRaises(ValueError):
+            tune_validation_threshold(self.threshold_fixture(m5_negative=()), 1., 1.)
+
+    def test_validation_candidate_uses_joint_policy_and_preserves_explicit_thresholds(self):
+        metrics = self.threshold_fixture()
+        with patch('training_v2.validation', return_value=(metrics['domains'], metrics['details'])), \
+             patch.object(train, 'tune', side_effect=AssertionError('Do not tune on Private V2 alone')):
+            threshold, _, _, _, gates = validation_candidate(
+                None, None, None, None, train, minimum_private_recall=1., public_recall_floor=1.)
+            self.assertAlmostEqual(threshold, .6)
+            self.assertEqual(gates['m5_negative_window_fpr'], 0.)
+            fixed, _, _, _, fixed_gates = validation_candidate(None, None, None, None, train, threshold=.25)
+            self.assertEqual(fixed, .25)
+            self.assertEqual(fixed_gates['m5_negative_window_fpr'], 1.)
 
     def test_private_audit_links_negatives_duplicates_and_padding(self):
         with tempfile.TemporaryDirectory() as directory:
