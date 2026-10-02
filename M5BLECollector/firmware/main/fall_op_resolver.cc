@@ -1,6 +1,7 @@
 #include "fall_op_resolver.h"
 
 #include "gelu_kernel.h"
+#include "layer_norm_v4.h"
 #include "fast_conv1d.h"
 #include "tensorflow/lite/core/api/flatbuffer_conversions.h"
 #include "tensorflow/lite/micro/micro_log.h"
@@ -24,7 +25,8 @@ void Check(TfLiteStatus status, const char* name) {
 
 }  // namespace
 
-FallOpResolver::FallOpResolver() : gelu_registration_(RegisterGelu()) {
+FallOpResolver::FallOpResolver() : gelu_registration_(RegisterGelu()), layer_norm_registration_(RegisterLayerNormV4()) {
+  Check(base_.AddCustom("LayerNormV4", &layer_norm_registration_), "LayerNormV4");
   Check(base_.AddTranspose(), "TRANSPOSE");
   Check(base_.AddConv2D(RegisterFastConv1D()), "CONV_2D");
   Check(base_.AddReshape(), "RESHAPE");

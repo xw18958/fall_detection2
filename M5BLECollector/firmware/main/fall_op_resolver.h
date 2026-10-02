@@ -19,6 +19,7 @@ class FallOpResolver final : public tflite::MicroOpResolver {
   // Slightly over-provisioned so conversion variants with Q/DQ at the I/O work.
   tflite::MicroMutableOpResolver<24> base_;
   TFLMRegistration gelu_registration_;
+  TFLMRegistration layer_norm_registration_;
 };
 
 }  // namespace fall_tflm

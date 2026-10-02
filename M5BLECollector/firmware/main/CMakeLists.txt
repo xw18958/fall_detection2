@@ -7,7 +7,7 @@ if(NOT CMAKE_BUILD_EARLY_EXPANSION)
         OBJECT_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/model.tflite")
 endif()
 idf_component_register(
-    SRCS "main.cc" "gelu_kernel.cc" "fast_conv1d.cc" "fall_op_resolver.cc"
+    SRCS "main.cc" "gelu_kernel.cc" "layer_norm_v4.cc" "fast_conv1d.cc" "fall_op_resolver.cc"
          "wifi_ota.cc" "ble_collector.cc" "battery_monitor.cc"
          "${CMAKE_CURRENT_BINARY_DIR}/model_data.S"
     INCLUDE_DIRS "."

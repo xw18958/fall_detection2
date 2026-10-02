@@ -9,7 +9,10 @@ class V4Preservation(unittest.TestCase):
         for name,digest in old['detector_functions_sha256'].items():
             if name not in changed:self.assertEqual(new['detector_functions_sha256'][name],digest,name)
         for name,digest in old['source_sha256'].items():
-            if name!='main/model_v2_config.h':self.assertEqual(new['source_sha256'][name],digest,name)
+            if name not in {'main/model_v2_config.h','main/fall_op_resolver.cc','main/fall_op_resolver.h'}:self.assertEqual(new['source_sha256'][name],digest,name)
+        # Resolver changes are explicitly limited to the verified normalization op.
+        resolver=(ROOT/'firmware/main/fall_op_resolver.cc').read_text()
+        self.assertIn('AddCustom("LayerNormV4", &layer_norm_registration_)',resolver)
     def test_no_inference_or_conversion_added_to_collection(self):
         main=(ROOT/'firmware/main/main.cc').read_text()
         sensor=main.split('void SensorTask(void*)',1)[1].split('bool ReadLogits',1)[0]

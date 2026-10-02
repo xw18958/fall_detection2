@@ -17,7 +17,7 @@ foreach(NAME if neg add concatenation conv dequantize div elementwise fully_conn
  list(APPEND KERNELS "${T}/tensorflow/lite/micro/kernels/${NAME}.cc")
 endforeach()
 add_executable(replay replay.cc ${CORE} ${ALLOC} ${COMMON} ${KERNELS}
- "${ROOT}/main/gelu_kernel.cc" "${ROOT}/main/fast_conv1d.cc" "${ROOT}/main/fall_op_resolver.cc"
+ "${ROOT}/main/gelu_kernel.cc" "${ROOT}/main/layer_norm_v4.cc" "${ROOT}/main/fast_conv1d.cc" "${ROOT}/main/fall_op_resolver.cc"
  "${T}/tensorflow/lite/micro/tflite_bridge/flatbuffer_conversions_bridge.cc"
  "${T}/tensorflow/lite/micro/tflite_bridge/micro_error_reporter.cc"
  "${T}/tensorflow/lite/core/api/flatbuffer_conversions.cc"
@@ -34,7 +34,8 @@ add_executable(replay replay.cc ${CORE} ${ALLOC} ${COMMON} ${KERNELS}
  "${T}/tensorflow/compiler/mlir/lite/schema/schema_utils.cc")
 target_include_directories(replay PRIVATE "${ROOT}/main" "${T}" "${T}/third_party/gemmlowp" "${T}/third_party/flatbuffers/include" "${T}/third_party/ruy")
 target_compile_definitions(replay PRIVATE TF_LITE_STATIC_MEMORY TF_LITE_DISABLE_X86_NEON)
-target_compile_options(replay PRIVATE -O2 -ffunction-sections -fdata-sections)
+target_compile_options(replay PRIVATE -O2 -ffunction-sections -fdata-sections
+ "$<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions;-fno-rtti>")
 if(FALL_ESP_NN_PORTABLE)
  set(NN "${ROOT}/managed_components/espressif__esp-nn")
  target_sources(replay PRIVATE

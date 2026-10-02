@@ -213,10 +213,18 @@ def selection_curves(details, records, candidates):
     return result
 
 
-def select_threshold(details, records, masses, constraints=None, fixed=None):
+def select_threshold(details, records, masses, constraints=None, fixed=None,
+                     window_recall_floors=None, deployment_thresholds=False):
     if fixed is None:
         values = np.asarray([r['prob'] for value in details.values() for r in value[0]])
-        candidates = np.unique(np.clip(np.r_[0., 1., values, np.nextafter(values, np.inf)], 0., 1.))
+        if deployment_thresholds:
+            # Put thresholds between probability levels, representable as the
+            # firmware's float32. Float64 nextafter can round back onto a level
+            # when emitted to the device, changing >= decisions at a tie.
+            levels=np.unique(np.r_[0.,values,1.])
+            candidates=np.unique(np.asarray(np.r_[0.,1.,(levels[:-1]+levels[1:])/2],np.float32).astype(float))
+        else:
+            candidates = np.unique(np.clip(np.r_[0., 1., values, np.nextafter(values, np.inf)], 0., 1.))
     else:
         candidates = np.asarray([fixed], float)
     curves = selection_curves(details, records, candidates)
@@ -229,6 +237,12 @@ def select_threshold(details, records, masses, constraints=None, fixed=None):
                 valid &= values <= floor+1e-12
             else:
                 valid &= values+1e-12 >= floor
+    window_recalls={}
+    for d,floor in (window_recall_floors or {}).items():
+        positives=[r['prob'] for r in details[d][0] if r['file_label']==1]
+        recall=rate_curve(positives,np.ones(len(positives)),candidates)
+        window_recalls[d]=recall
+        valid &= recall+1e-12 >= floor
     eligible = np.flatnonzero(valid)
     accepted = bool(len(eligible))
     if not accepted:
@@ -242,6 +256,11 @@ def select_threshold(details, records, masses, constraints=None, fixed=None):
               'threshold_policy': 'seven_source_group_macro_v4', 'source_weights': masses,
               'domains': {d: {k: None if value is None else float(value[index])
                          for k, value in curves[d].items()} for d in masses}}
+    if window_recall_floors:
+        result['window_recall_floors']=window_recall_floors
+        result['window_recalls']={d:float(value[index]) for d,value in window_recalls.items()}
+    if deployment_thresholds:
+        result['threshold_representation']='float32 midpoint between validation probability levels'
     return result
 
 

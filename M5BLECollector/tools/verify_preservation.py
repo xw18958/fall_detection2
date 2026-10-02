@@ -28,7 +28,7 @@ def verify(original=None, firmware_binary=None, firmware_elf=None, nm="xtensa-es
     text = (target / "main/main.cc").read_text()
     for name, expected in baseline["detector_functions_sha256"].items():
         assert digest(function(text, name)) == expected, f"Detector function changed: {name}"
-    for name in ["main/model_v2_config.h", "main/input_pipeline.h", "main/CMakeLists.txt", "main/model_data.S.in", "partitions.csv", "main/fast_conv1d.cc", "main/gelu_kernel.cc", "main/fall_op_resolver.cc"]:
+    for name in ["main/model_v2_config.h", "main/input_pipeline.h", "main/CMakeLists.txt", "main/model_data.S.in", "partitions.csv", "main/fast_conv1d.cc", "main/gelu_kernel.cc", "main/fall_op_resolver.cc", "main/fall_op_resolver.h", "main/layer_norm_v4.cc", "main/layer_norm_v4.h", "main/layer_norm_math.h"]:
         assert digest((target/name).read_bytes()) == baseline["source_sha256"][name], f"Locked detector input changed: {name}"
     if original:
         for name, expected in baseline["source_sha256"].items():

@@ -1,0 +1,189 @@
+{
+  "model_sha256": "7a649721e02ab88e85594dd67efe415a0d5a777d9215df03d903dd0de748cf57",
+  "checkpoint_sha256": "d12ba0f0915859ae6ae4056b21d8ab2730142dfc5b3299cbaaabe71c98529866",
+  "original_checkpoint_sha256": "3c92a68f6e1440a83880665d6634b01e7cb5724374a7e3f7a3eb76892e210b2e",
+  "threshold": 0.27264320850372314,
+  "original_threshold": 0.2602156102657318,
+  "inventory": {
+    "operators": {
+      "STRIDED_SLICE": 11,
+      "RESHAPE": 154,
+      "CONV_2D": 72,
+      "GELU": 69,
+      "ADD": 29,
+      "SOFTMAX": 9,
+      "MUL": 14,
+      "SUM": 9,
+      "CONCATENATION": 4,
+      "LayerNormV4": 5,
+      "FULLY_CONNECTED": 7,
+      "PACK": 1
+    },
+    "tensor_types": {
+      "int8": 413,
+      "int32": 104
+    },
+    "float_tensors": [],
+    "per_channel_conv_scale_counts": [
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      12,
+      1,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      12,
+      1,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      12,
+      1,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      12,
+      1,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      12,
+      1,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      12,
+      1,
+      24,
+      12,
+      1,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      24,
+      12,
+      1
+    ],
+    "input_scale_zero": [
+      0.09824229776859283,
+      -1
+    ],
+    "output_scale_zero": [
+      0.07270766794681549,
+      -5
+    ],
+    "custom_kernel_arithmetic": "LayerNormV4: exact int64 statistics, float32 sqrt; INT8 tensor inputs/outputs"
+  },
+  "selected_epoch": 5,
+  "split_fingerprint": "b800373b861e340976fd77c441acb12061a641c8e4d6af969f16e46e66177673",
+  "selection": {
+    "threshold": 0.27264320850372314,
+    "weighted_error": 0.0014317353521103677,
+    "valid_under_constraints": true,
+    "threshold_candidates": 475,
+    "threshold_policy": "seven_source_group_macro_v4",
+    "source_weights": {
+      "own": 0.25,
+      "m5_hard_negatives": 0.25,
+      "CGU_BES": 0.1,
+      "Cogent": 0.1,
+      "SFU_IMU": 0.1,
+      "UCI_SimulatedFalls": 0.1,
+      "PAMAP2": 0.1
+    },
+    "domains": {
+      "own": {
+        "recall": 1.0,
+        "specificity": 0.95,
+        "negative_window_fpr": 0.0020000000000000686,
+        "error": 0.0010000000000000343
+      },
+      "m5_hard_negatives": {
+        "recall": null,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.0
+      },
+      "CGU_BES": {
+        "recall": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.0
+      },
+      "Cogent": {
+        "recall": 1.0,
+        "specificity": 0.9959349593495935,
+        "negative_window_fpr": 0.0009033423667569233,
+        "error": 0.0004516711833784617
+      },
+      "SFU_IMU": {
+        "recall": 1.0,
+        "specificity": 0.871794871794872,
+        "negative_window_fpr": 0.011025641025639831,
+        "error": 0.005512820512819916
+      },
+      "UCI_SimulatedFalls": {
+        "recall": 1.0,
+        "specificity": 0.9873417721518988,
+        "negative_window_fpr": 0.0004897000254465543,
+        "error": 0.00024485001272327715
+      },
+      "PAMAP2": {
+        "recall": null,
+        "specificity": 0.9124386252045826,
+        "negative_window_fpr": 0.005608011812181938,
+        "error": 0.005608011812181938
+      }
+    },
+    "window_recall_floors": {
+      "own": 0.927536231884058,
+      "CGU_BES": 1.0,
+      "Cogent": 0.9984126984126984,
+      "SFU_IMU": 0.981029810298103,
+      "UCI_SimulatedFalls": 0.9996017522899243
+    },
+    "window_recalls": {
+      "own": 0.927536231884058,
+      "CGU_BES": 1.0,
+      "Cogent": 0.9984126984126984,
+      "SFU_IMU": 0.981029810298103,
+      "UCI_SimulatedFalls": 1.0
+    },
+    "threshold_representation": "float32 midpoint between validation probability levels"
+  },
+  "test_used_for_selection": false
+}
