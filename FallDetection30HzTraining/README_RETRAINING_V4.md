@@ -50,9 +50,10 @@ pipeline and a jointly validation-calibrated threshold. The comparison is betwee
 complete pipelines, not an isolated change to model weights.
 
 Run fast unit tests and a complete `--smoke` train/test sequence first. Supply the
-successful preflight hash report to `run_weighted_experiments.py`. It serially trains
-seeds 42/43/44 on one GPU, selects the primary seed using validation, locks the
-selection, then tests all three and the baseline. Shared caches avoid repeat CSV
+successful preflight hash report to `run_weighted_experiments.py`. By default it trains
+only seed 42 on one GPU, locks the checkpoint and threshold using validation,
+then tests this model and the baseline. `--resume-completed-training --seeds 42`
+finishes evaluation of an already locked run without repeating training. Shared caches avoid repeat CSV
 processing. Checkpoints, provenance, coverage, learning curves, timing, retrieval,
 per-source classification and M5 offline alarm episodes are saved. Raw datasets and
 signal caches are excluded from Git. Firmware and the physical device are untouched.

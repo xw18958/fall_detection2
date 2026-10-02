@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "original_manifest_sha256": "b658b885fe1a8131a422811dca599c28505d4b5b89a792d130a92649ed498eee",
+  "initialization_sha256": "67fdeef799f91cf828bf2cff51d4dc3da31b7935bdcfd294296f9a9ed015b6ff",
+  "baseline_sha256": "477aefa99826dfaa1bc23117a78c812247ad4135886caff7ffcab92c57c23138",
+  "original_partitions_preserved": true,
+  "m5_is_new": true
+}

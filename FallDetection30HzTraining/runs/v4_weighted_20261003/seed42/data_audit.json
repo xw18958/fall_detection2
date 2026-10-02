@@ -1,0 +1,194 @@
+{
+  "status": "passed",
+  "source_weights": {
+    "own": 0.25,
+    "m5_hard_negatives": 0.25,
+    "CGU_BES": 0.1,
+    "Cogent": 0.1,
+    "SFU_IMU": 0.1,
+    "UCI_SimulatedFalls": 0.1,
+    "PAMAP2": 0.1
+  },
+  "public_export_units": {
+    "CGU_BES": {
+      "acceleration": "g",
+      "gyroscope": "rad/s",
+      "status": "Wang et al. 2018 Figure 1; original decimal exports corroborated",
+      "source": "https://doi.org/10.1088/1361-6579/aae0eb"
+    },
+    "Cogent": {
+      "acceleration": "g",
+      "gyroscope": "deg/s",
+      "status": "Ojetola 2013 Appendix A.1; original CSV excerpt corroborated",
+      "source": "https://pure.coventry.ac.uk/ws/portalfiles/portal/40391885/Ojetola_2013.pdf"
+    },
+    "SFU_IMU": {
+      "acceleration": "m/s^2",
+      "gyroscope": "rad/s",
+      "status": "README"
+    },
+    "UCI_SimulatedFalls": {
+      "acceleration": "m/s^2",
+      "gyroscope": "rad/s",
+      "status": "Xsens MTw calibrated export"
+    },
+    "PAMAP2": {
+      "acceleration": "m/s^2",
+      "gyroscope": "rad/s",
+      "status": "README"
+    }
+  },
+  "classification_loss": "sum source weight * mean source CE; no global class reweighting",
+  "split": {
+    "own": {
+      "train": {
+        "recordings": 245,
+        "groups": 158,
+        "falls": 122
+      },
+      "val": {
+        "recordings": 53,
+        "groups": 32,
+        "falls": 26
+      },
+      "test": {
+        "recordings": 51,
+        "groups": 32,
+        "falls": 26
+      }
+    },
+    "m5_hard_negatives": {
+      "train": {
+        "recordings": 5,
+        "groups": 3,
+        "falls": 0
+      },
+      "val": {
+        "recordings": 1,
+        "groups": 1,
+        "falls": 0
+      },
+      "test": {
+        "recordings": 1,
+        "groups": 1,
+        "falls": 0
+      }
+    },
+    "CGU_BES": {
+      "train": {
+        "recordings": 132,
+        "groups": 9,
+        "falls": 44
+      },
+      "val": {
+        "recordings": 26,
+        "groups": 2,
+        "falls": 8
+      },
+      "test": {
+        "recordings": 25,
+        "groups": 2,
+        "falls": 8
+      }
+    },
+    "Cogent": {
+      "train": {
+        "recordings": 1225,
+        "groups": 30,
+        "falls": 308
+      },
+      "val": {
+        "recordings": 267,
+        "groups": 6,
+        "falls": 70
+      },
+      "test": {
+        "recordings": 266,
+        "groups": 6,
+        "falls": 70
+      }
+    },
+    "SFU_IMU": {
+      "train": {
+        "recordings": 367,
+        "groups": 6,
+        "falls": 126
+      },
+      "val": {
+        "recordings": 119,
+        "groups": 2,
+        "falls": 41
+      },
+      "test": {
+        "recordings": 119,
+        "groups": 2,
+        "falls": 41
+      }
+    },
+    "UCI_SimulatedFalls": {
+      "train": {
+        "recordings": 2388,
+        "groups": 10,
+        "falls": 1271
+      },
+      "val": {
+        "recordings": 523,
+        "groups": 2,
+        "falls": 279
+      },
+      "test": {
+        "recordings": 445,
+        "groups": 2,
+        "falls": 243
+      }
+    },
+    "PAMAP2": {
+      "train": {
+        "recordings": 266,
+        "groups": 5,
+        "falls": 0
+      },
+      "val": {
+        "recordings": 60,
+        "groups": 2,
+        "falls": 0
+      },
+      "test": {
+        "recordings": 56,
+        "groups": 2,
+        "falls": 0
+      }
+    }
+  },
+  "expected_fall_draw_share": 0.325,
+  "m5_preprocessing": {
+    "status": "passed",
+    "protocol": "full-length M5 hard negatives; no event crop or peak relabeling",
+    "source_root": "/raid1/xwan0900/fall_detection2/fd_datasets/M5_hard_negatives_20261002/raw",
+    "raw_sessions": 7,
+    "raw_samples": 36351,
+    "processed_samples": 36345,
+    "duration_seconds": 1211.466664,
+    "split_sessions": {
+      "train": 5,
+      "val": 1,
+      "test": 1
+    },
+    "split_groups": 5,
+    "quality_totals": {
+      "read_errors": 0,
+      "timing_gap_flags": 0,
+      "saturated_samples": 159,
+      "acceleration_rows_clipped": 0
+    },
+    "label_source": "user explicitly designated all seven sessions non-fall",
+    "conversion_convention": "si",
+    "software_clipping": false,
+    "units": {
+      "acceleration": "m/s^2",
+      "gyroscope": "rad/s"
+    }
+  },
+  "test_used_for_fit_or_selection": false,
+  "label_policy": "whole 5 s fall container positive; random 3 s view inherits label"
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run predeclared seeds, lock validation selection, then evaluate every seed."""
+"""Run a predeclared seed, lock validation selection, then evaluate it."""
 import argparse
 import json
 import os
@@ -33,6 +33,9 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--m5-root', type=Path, required=True)
     parser.add_argument('--preflight', type=Path, required=True)
+    parser.add_argument('--seeds', nargs='+', type=int, default=[42])
+    parser.add_argument('--resume-completed-training', action='store_true',
+                        help='Evaluate already locked, completed training runs without retraining')
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
     preflight = json.loads(args.preflight.read_text())
@@ -43,8 +46,24 @@ def main():
             raise ValueError('Code changed after the smoke test: '+name)
     root, out = args.repository.resolve(), args.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
-    if (out/'experiment_status.json').exists():
+    if (out/'experiment_status.json').exists() and not args.resume_completed_training:
         raise FileExistsError('This experiment was already launched; choose a new output directory')
+    seeds = args.seeds
+    if len(set(seeds)) != len(seeds):
+        raise ValueError('Seeds must be unique')
+    previous = None
+    if args.resume_completed_training:
+        previous = json.loads((out/'experiment_status.json').read_text())
+        for seed in seeds:
+            directory = out/f'seed{seed}'
+            progress = json.loads((directory/'progress.json').read_text())
+            if (seed not in previous['completed_training_seeds'] or
+                    progress.get('status') != 'trained' or progress.get('test_evaluated') or
+                    not (directory/'checkpoints/locked_model.pt').is_file()):
+                raise ValueError(f'Seed {seed} requires completed, locked training and unopened tests')
+            command = json.loads((directory/'train_command.json').read_text())
+            if int(command[command.index('--seed')+1]) != seed:
+                raise ValueError('Recorded training seed does not match requested seed')
     original = root/'FallDetection30HzTraining/runs/v2_multisource_seed42_20261001'
     common = [sys.executable, '-u', str(here/'train.py'), '--experiment-v4',
               '--zip', str(root/'fd_datasets/30Hz_processed_clean_v2'),
@@ -59,10 +78,15 @@ def main():
               '--head-epochs', '3', '--all-epochs', '50', '--batch', '128',
               '--ssl-min-epochs', '10', '--ssl-patience', '8', '--min-full-epochs', '10',
               '--patience', '10', '--stride-sec', '.25', '--device', 'cuda:0']
-    seeds = [42, 43, 44]; started = time.monotonic()
+    started = time.monotonic()
     status = {'status': 'training', 'pid': os.getpid(), 'seeds': seeds,
               'completed_training_seeds': [], 'completed_test_seeds': [],
               'preflight': str(args.preflight), 'test_selection_policy': 'primary seed chosen on validation before opening any production test'}
+    if previous is not None:
+        status['completed_training_seeds'] = list(seeds)
+        status['cancelled_seeds'] = previous.get('cancelled_seeds', [])
+        status['resumed_completed_training'] = True
+        status['test_selection_policy'] = 'predeclared single seed; checkpoint and threshold chosen on validation before testing'
     write_json(out/'experiment_status.json', status)
     def execute(seed, mode):
         directory = out/f'seed{seed}'; directory.mkdir(exist_ok=True)
@@ -72,6 +96,8 @@ def main():
             subprocess.run(command, cwd=here, stdout=log, stderr=subprocess.STDOUT, check=True)
     try:
         for seed in seeds:
+            if seed in status['completed_training_seeds']:
+                continue
             status.update(active_seed=seed, active_stage='train')
             write_json(out/'experiment_status.json', status)
             print('START TRAIN', seed, flush=True); execute(seed, 'train')
@@ -82,6 +108,9 @@ def main():
             chosen = selection['selected']
             return (selection['acceptable_improvement'], chosen['valid_under_constraints'], -chosen['weighted_error'])
         primary = max(seeds, key=rank)
+        for seed in seeds:
+            directory = out/f'seed{seed}'
+            write_json(directory/'training_completion.json', json.loads((directory/'progress.json').read_text()))
         write_json(out/'locked_primary_seed.json', {'seed': primary, 'policy': 'validation only',
                    'ranks': {str(seed): list(rank(seed)) for seed in seeds}, 'test_opened': False})
         status.update(status='testing', primary_seed=primary)
@@ -96,8 +125,9 @@ def main():
             table.insert(0, 'seed', seed); table.insert(1, 'primary', seed == primary); tables.append(table)
         pd.concat(tables, ignore_index=True).to_csv(out/'all_seed_test_summary.csv', index=False)
         columns = ['accuracy','precision','recall','specificity','f1','f2','mcc','ap','negative_window_fpr']
-        summary = pd.concat(tables).groupby('dataset')[columns].agg(['mean','std'])
-        summary.to_csv(out/'three_seed_mean_std.csv')
+        if len(seeds) > 1:
+            summary = pd.concat(tables).groupby('dataset')[columns].agg(['mean','std'])
+            summary.to_csv(out/'seed_mean_std.csv')
         # Fair historical baseline: same restored partitions and dense grid,
         # its own legacy M5 conversion and validation-calibrated threshold.
         import torch
@@ -121,15 +151,23 @@ def main():
         baseline_table = pd.read_csv(baseline_out/'test_summary.csv')
         comparison = baseline_table.merge(primary_table, on='dataset', suffixes=('_baseline','_new'))
         comparison.to_csv(out/'baseline_vs_primary.csv', index=False)
-        report = ['# Seven-source V2 retraining results', '', f'Primary seed: {primary}; selected using validation before production tests.',
-                  '', '## Baseline and primary model', '', markdown_table(comparison), '',
-                  '## All seeds', '', markdown_table(pd.concat(tables)), '',
+        report_columns = ['dataset','n','tp','fn','fp','tn','accuracy','precision','recall','specificity','f1','negative_window_fpr']
+        comparison_columns = ['dataset','accuracy_baseline','accuracy_new','recall_baseline','recall_new',
+                              'fp_baseline','fp_new','negative_window_fpr_baseline','negative_window_fpr_new']
+        report = ['# Seven-source V2 retraining results', '', f'Primary seed: {primary}; checkpoint and threshold selected using validation before production tests.',
+                  '', '## Baseline and primary model', '', markdown_table(comparison[comparison_columns]), '',
+                  '## Test results', '', markdown_table(primary_table[report_columns]), '',
                   '## Interpretation', '',
                   'Private V2 retains its original exported representation; M5 uses full-range documented SI conversion and its own training-only normalization.',
                   'Public participants retain the original six-source checkpoint partitions. All eligible training recordings are visited every epoch.',
                   'M5 contains negatives only. Its results measure false alarms, not device-specific fall recall. The test contains one M5 boot.',
                   'All seven sources were trained; zero-shot results are unavailable. These are repeated benchmarks rather than newly collected blind deployment trials.',
-                  '', '## Checkpoints', '']
+                  'The acceptable-improvement flag refers to validation constraints. Test false alarms and missed falls must still be examined separately.']
+        test_metrics = json.loads((out/f'seed{primary}/results/final_test_metrics.json').read_text())
+        retrieval = test_metrics['own_class_retrieval']
+        report.extend(['', '## Retrieval', '', f'Private binary-class retrieval: P@1 {retrieval["precision_at_1"]:.4f}; hit@5 {retrieval["hit_rate_at_5"]:.4f}; mAP {retrieval["mAP"]:.6f}.',
+                       '', '## M5 offline alarms', '', markdown_table(pd.DataFrame(test_metrics['m5_boots'])),
+                       '', '## Checkpoints', ''])
         report.extend(f'- `{out}/seed{seed}/checkpoints/locked_model.pt`' for seed in seeds)
         for seed in seeds:
             selection = json.loads((out/f'seed{seed}/results/validation_metrics.json').read_text())

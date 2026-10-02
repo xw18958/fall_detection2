@@ -1,0 +1,5 @@
+{
+  "training_seconds": 405.80937540199375,
+  "evaluation_and_baseline_seconds": 23.43947732099332,
+  "training_time_evidence": "Seed 42 progress.json observed after training and before evaluation; excludes preprocessing and tests"
+}

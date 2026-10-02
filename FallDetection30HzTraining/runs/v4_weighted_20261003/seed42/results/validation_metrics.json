@@ -1,0 +1,152 @@
+{
+  "selected": {
+    "stage": "all",
+    "epoch": 8,
+    "threshold": 0.2602156102657318,
+    "weighted_error": 0.0013422465811370773,
+    "valid_under_constraints": true,
+    "threshold_candidates": 117938,
+    "threshold_policy": "seven_source_group_macro_v4",
+    "source_weights": {
+      "own": 0.25,
+      "m5_hard_negatives": 0.25,
+      "CGU_BES": 0.1,
+      "Cogent": 0.1,
+      "SFU_IMU": 0.1,
+      "UCI_SimulatedFalls": 0.1,
+      "PAMAP2": 0.1
+    },
+    "domains": {
+      "own": {
+        "recall": 1.0,
+        "specificity": 0.95,
+        "negative_window_fpr": 0.002000000000000065,
+        "error": 0.0010000000000000325
+      },
+      "m5_hard_negatives": {
+        "recall": null,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.0
+      },
+      "CGU_BES": {
+        "recall": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.0
+      },
+      "Cogent": {
+        "recall": 1.0,
+        "specificity": 0.996031746031746,
+        "negative_window_fpr": 0.000440917107583762,
+        "error": 0.000220458553791881
+      },
+      "SFU_IMU": {
+        "recall": 1.0,
+        "specificity": 0.8846153846153848,
+        "negative_window_fpr": 0.010256410256409138,
+        "error": 0.005128205128204569
+      },
+      "UCI_SimulatedFalls": {
+        "recall": 1.0,
+        "specificity": 0.9873417721518988,
+        "negative_window_fpr": 0.000377261348908911,
+        "error": 0.0001886306744544555
+      },
+      "PAMAP2": {
+        "recall": null,
+        "specificity": 0.8633387888707038,
+        "negative_window_fpr": 0.005385171454919787,
+        "error": 0.005385171454919787
+      }
+    }
+  },
+  "acceptable_improvement": true,
+  "baseline": {
+    "threshold": 0.7323270440101624,
+    "weighted_error": 0.050655571725981015,
+    "valid_under_constraints": true,
+    "threshold_candidates": 121824,
+    "threshold_policy": "seven_source_group_macro_v4",
+    "source_weights": {
+      "own": 0.25,
+      "m5_hard_negatives": 0.25,
+      "CGU_BES": 0.1,
+      "Cogent": 0.1,
+      "SFU_IMU": 0.1,
+      "UCI_SimulatedFalls": 0.1,
+      "PAMAP2": 0.1
+    },
+    "domains": {
+      "own": {
+        "recall": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.0
+      },
+      "m5_hard_negatives": {
+        "recall": null,
+        "specificity": 0.0,
+        "negative_window_fpr": 0.19408502772643288,
+        "error": 0.19408502772643288
+      },
+      "CGU_BES": {
+        "recall": 1.0,
+        "specificity": 0.9444444444444445,
+        "negative_window_fpr": 0.002976190476190472,
+        "error": 0.001488095238095236
+      },
+      "Cogent": {
+        "recall": 1.0,
+        "specificity": 0.9959349593495935,
+        "negative_window_fpr": 0.0004516711833785117,
+        "error": 0.00022583559168925585
+      },
+      "SFU_IMU": {
+        "recall": 1.0,
+        "specificity": 0.8846153846153848,
+        "negative_window_fpr": 0.011538461538460285,
+        "error": 0.0057692307692301424
+      },
+      "UCI_SimulatedFalls": {
+        "recall": 0.9916666666666667,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "error": 0.004166666666666652
+      },
+      "PAMAP2": {
+        "recall": null,
+        "specificity": 0.8633387888707038,
+        "negative_window_fpr": 0.009693319678046639,
+        "error": 0.009693319678046639
+      }
+    }
+  },
+  "constraints": {
+    "own": {
+      "recall": 1.0
+    },
+    "CGU_BES": {
+      "recall": 0.98,
+      "specificity": 0.9244444444444445
+    },
+    "Cogent": {
+      "recall": 0.98,
+      "specificity": 0.9759349593495935
+    },
+    "SFU_IMU": {
+      "recall": 0.98,
+      "specificity": 0.8646153846153848
+    },
+    "UCI_SimulatedFalls": {
+      "recall": 0.9716666666666667,
+      "specificity": 0.98
+    },
+    "PAMAP2": {
+      "negative_window_fpr": 0.009693319678046639
+    },
+    "m5_hard_negatives": {
+      "negative_window_fpr": 0.19408502772643288
+    }
+  }
+}

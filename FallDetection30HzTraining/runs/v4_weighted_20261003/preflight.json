@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "unit_tests": 40,
+  "unit_test_seconds": 1.518,
+  "gpu_smoke": "train, SSL, head, full-model, checkpoint reload, test and retrieval passed",
+  "code_sha256": {
+    "train.py": "ebd05d53b70d08dd98fdf3247e51b4540d406368a7ccec4e358fdb962f0a1fc9",
+    "training_v4.py": "f76cb04d88b82caf4331e8c638a00f0ca9caeaa46506b1f6890d20560b29f0ce",
+    "training_v2.py": "e539972a16e1967722d9a43aa511afc27f17071f6b9af2da0a3868595a4c2325",
+    "preprocess_m5_hard_negatives.py": "c611b2d724c5542a2d35849849012da136f02d7a0d45bdb4e7164c8058d7c8b1",
+    "preprocess_public_v2.py": "c93e39272718528ef0eb4b5acd9340fe773f90b26c025b1a3204326c226d5d7c",
+    "run_weighted_experiments.py": "c82d5cf6326c67d8d9cb18995aba8e3a0c02a772ed40869f029a6ed84c003a8b"
+  },
+  "controller_changes": {
+    "reason": "User requested only seed 42; resume locked training for testing",
+    "training_source_hashes_unchanged": true,
+    "tests_passed": 40
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "seed": 42,
+  "policy": "validation only",
+  "ranks": {
+    "42": [
+      true,
+      true,
+      -0.0013422465811370773
+    ]
+  },
+  "test_opened": false
+}

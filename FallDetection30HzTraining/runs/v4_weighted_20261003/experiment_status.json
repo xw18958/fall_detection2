@@ -1,0 +1,25 @@
+{
+  "status": "complete",
+  "pid": 251970,
+  "seeds": [
+    42
+  ],
+  "completed_training_seeds": [
+    42
+  ],
+  "completed_test_seeds": [
+    42
+  ],
+  "preflight": "/raid1/xwan0900/fall_detection2/FallDetection30HzTraining/runs/v4_weighted_20261003/preflight.json",
+  "test_selection_policy": "predeclared single seed; checkpoint and threshold chosen on validation before testing",
+  "cancelled_seeds": [
+    43,
+    44
+  ],
+  "resumed_completed_training": true,
+  "primary_seed": 42,
+  "active_seed": 42,
+  "active_stage": "test",
+  "elapsed_seconds": 23.43947732099332,
+  "results": "/raid1/xwan0900/fall_detection2/FallDetection30HzTraining/runs/v4_weighted_20261003/REPORT.md"
+}

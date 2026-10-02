@@ -1,0 +1,2513 @@
+[
+  {
+    "stage": "ssl",
+    "epoch": 1,
+    "loss": 4.523678162301233,
+    "val_ntxent": 1.701367974173877,
+    "validation_sources": {
+      "own": 1.457824179891906,
+      "m5_hard_negatives": 0.10893958061933517,
+      "CGU_BES": 1.5198235511779785,
+      "Cogent": 3.321285752373386,
+      "SFU_IMU": 2.9943965483112494,
+      "UCI_SimulatedFalls": 3.505931744023807,
+      "PAMAP2": 1.755332744574245
+    },
+    "sampling": {
+      "epoch": 1,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 2,
+    "loss": 4.4232380273114185,
+    "val_ntxent": 1.6697324116603427,
+    "validation_sources": {
+      "own": 1.4396121467469056,
+      "m5_hard_negatives": 0.06517483294010162,
+      "CGU_BES": 1.4274483919143677,
+      "Cogent": 3.342747313891298,
+      "SFU_IMU": 2.9725118064078964,
+      "UCI_SimulatedFalls": 3.5342820907405974,
+      "PAMAP2": 1.6583670644317499
+    },
+    "sampling": {
+      "epoch": 2,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 3,
+    "loss": 4.375626433419319,
+    "val_ntxent": 1.6799190539358138,
+    "validation_sources": {
+      "own": 1.4384617908841613,
+      "m5_hard_negatives": 0.15893399715423584,
+      "CGU_BES": 1.3974008560180664,
+      "Cogent": 3.3279942383685657,
+      "SFU_IMU": 2.96633682531469,
+      "UCI_SimulatedFalls": 3.4879880872873863,
+      "PAMAP2": 1.6259810622734359
+    },
+    "sampling": {
+      "epoch": 3,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 4,
+    "loss": 4.338653714773883,
+    "val_ntxent": 1.6441602562830175,
+    "validation_sources": {
+      "own": 1.3940491290450785,
+      "m5_hard_negatives": 0.11513578146696091,
+      "CGU_BES": 1.3103079795837402,
+      "Cogent": 3.3336452180851692,
+      "SFU_IMU": 2.9878004759299657,
+      "UCI_SimulatedFalls": 3.4578809827437382,
+      "PAMAP2": 1.5790056302074642
+    },
+    "sampling": {
+      "epoch": 4,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 5,
+    "loss": 4.306250752096644,
+    "val_ntxent": 1.6454563537331701,
+    "validation_sources": {
+      "own": 1.417453971901381,
+      "m5_hard_negatives": 0.11230768263339996,
+      "CGU_BES": 1.3556334972381592,
+      "Cogent": 3.3357431329437315,
+      "SFU_IMU": 2.9359758401117406,
+      "UCI_SimulatedFalls": 3.451378809850604,
+      "PAMAP2": 1.5514281208505107
+    },
+    "sampling": {
+      "epoch": 5,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 6,
+    "loss": 4.284257414421062,
+    "val_ntxent": 1.6163723321236423,
+    "validation_sources": {
+      "own": 1.376775315042176,
+      "m5_hard_negatives": 0.10222546011209488,
+      "CGU_BES": 1.2620625495910645,
+      "Cogent": 3.3498941353517,
+      "SFU_IMU": 2.9483922689902684,
+      "UCI_SimulatedFalls": 3.4210310268447883,
+      "PAMAP2": 1.4848414025729215
+    },
+    "sampling": {
+      "epoch": 6,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 7,
+    "loss": 4.2647997710747925,
+    "val_ntxent": 1.626265923573151,
+    "validation_sources": {
+      "own": 1.396426415167792,
+      "m5_hard_negatives": 0.11502231657505035,
+      "CGU_BES": 1.2940373420715332,
+      "Cogent": 3.348633971044315,
+      "SFU_IMU": 2.9112022944859097,
+      "UCI_SimulatedFalls": 3.4436687319769748,
+      "PAMAP2": 1.4864950667956711
+    },
+    "sampling": {
+      "epoch": 7,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 8,
+    "loss": 4.2423587757179595,
+    "val_ntxent": 1.6357116945543502,
+    "validation_sources": {
+      "own": 1.4078859621389752,
+      "m5_hard_negatives": 0.09986920654773712,
+      "CGU_BES": 1.3352261781692505,
+      "Cogent": 3.380424882860166,
+      "SFU_IMU": 2.95478014384999,
+      "UCI_SimulatedFalls": 3.4222996787731885,
+      "PAMAP2": 1.4949981401741252
+    },
+    "sampling": {
+      "epoch": 8,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 9,
+    "loss": 4.232112157560442,
+    "val_ntxent": 1.5932540409392955,
+    "validation_sources": {
+      "own": 1.3596271545211704,
+      "m5_hard_negatives": 0.08249138295650482,
+      "CGU_BES": 1.216794490814209,
+      "Cogent": 3.3628221045739206,
+      "SFU_IMU": 2.898126874651228,
+      "UCI_SimulatedFalls": 3.417102377516572,
+      "PAMAP2": 1.4323982181428354
+    },
+    "sampling": {
+      "epoch": 9,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 10,
+    "loss": 4.210601692051851,
+    "val_ntxent": 1.583919289869654,
+    "validation_sources": {
+      "own": 1.3542299360209118,
+      "m5_hard_negatives": 0.10612988471984863,
+      "CGU_BES": 1.2248032093048096,
+      "Cogent": 3.320680743534167,
+      "SFU_IMU": 2.848156668558842,
+      "UCI_SimulatedFalls": 3.379788388555804,
+      "PAMAP2": 1.4148643368910134
+    },
+    "sampling": {
+      "epoch": 10,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 11,
+    "loss": 4.2053818197521435,
+    "val_ntxent": 1.5805929098378702,
+    "validation_sources": {
+      "own": 1.3577688022845054,
+      "m5_hard_negatives": 0.07856878638267517,
+      "CGU_BES": 1.2050904035568237,
+      "Cogent": 3.318297943523185,
+      "SFU_IMU": 2.8417786510050798,
+      "UCI_SimulatedFalls": 3.390764465368658,
+      "PAMAP2": 1.4591536632570032
+    },
+    "sampling": {
+      "epoch": 11,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 12,
+    "loss": 4.193800685941711,
+    "val_ntxent": 1.6174830768305077,
+    "validation_sources": {
+      "own": 1.4105209608298506,
+      "m5_hard_negatives": 0.09685574471950531,
+      "CGU_BES": 1.2986184358596802,
+      "Cogent": 3.3242786995241835,
+      "SFU_IMU": 2.9167706645837352,
+      "UCI_SimulatedFalls": 3.4275118498863995,
+      "PAMAP2": 1.4392093545776883
+    },
+    "sampling": {
+      "epoch": 12,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 13,
+    "loss": 4.18236439480646,
+    "val_ntxent": 1.6091607449182042,
+    "validation_sources": {
+      "own": 1.4076411117708063,
+      "m5_hard_negatives": 0.11102329194545746,
+      "CGU_BES": 1.2767562866210938,
+      "Cogent": 3.3026687794733673,
+      "SFU_IMU": 2.9102935590663876,
+      "UCI_SimulatedFalls": 3.378086399814571,
+      "PAMAP2": 1.427141414915962
+    },
+    "sampling": {
+      "epoch": 13,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 14,
+    "loss": 4.17766270896261,
+    "val_ntxent": 1.5913628496513899,
+    "validation_sources": {
+      "own": 1.406026732714879,
+      "m5_hard_negatives": 0.0848238468170166,
+      "CGU_BES": 1.242355227470398,
+      "Cogent": 3.286651938762271,
+      "SFU_IMU": 2.852170970259594,
+      "UCI_SimulatedFalls": 3.3832062086232626,
+      "PAMAP2": 1.4221177025686336
+    },
+    "sampling": {
+      "epoch": 14,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 15,
+    "loss": 4.164516732366202,
+    "val_ntxent": 1.5875299197088013,
+    "validation_sources": {
+      "own": 1.4042547072978377,
+      "m5_hard_negatives": 0.08441069722175598,
+      "CGU_BES": 1.2312507629394531,
+      "Cogent": 3.311757275579571,
+      "SFU_IMU": 2.8454376228717195,
+      "UCI_SimulatedFalls": 3.378518346977875,
+      "PAMAP2": 1.3866716774204109
+    },
+    "sampling": {
+      "epoch": 15,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 16,
+    "loss": 4.159799848108021,
+    "val_ntxent": 1.560799778817063,
+    "validation_sources": {
+      "own": 1.3913580351482238,
+      "m5_hard_negatives": 0.04891475662589073,
+      "CGU_BES": 1.1911988258361816,
+      "Cogent": 3.2402727800730693,
+      "SFU_IMU": 2.802080505034503,
+      "UCI_SimulatedFalls": 3.373393937938212,
+      "PAMAP2": 1.400369759853379
+    },
+    "sampling": {
+      "epoch": 16,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 17,
+    "loss": 4.154500034736416,
+    "val_ntxent": 1.5863339814383157,
+    "validation_sources": {
+      "own": 1.3702558747605782,
+      "m5_hard_negatives": 0.09147900342941284,
+      "CGU_BES": 1.2538166046142578,
+      "Cogent": 3.3263405147681318,
+      "SFU_IMU": 2.8937619173226237,
+      "UCI_SimulatedFalls": 3.3651812556152785,
+      "PAMAP2": 1.3699023265878862
+    },
+    "sampling": {
+      "epoch": 17,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 18,
+    "loss": 4.144544920564006,
+    "val_ntxent": 1.575305672440851,
+    "validation_sources": {
+      "own": 1.3575797101665783,
+      "m5_hard_negatives": 0.13069361448287964,
+      "CGU_BES": 1.2151269912719727,
+      "Cogent": 3.321259544669575,
+      "SFU_IMU": 2.7731912997590396,
+      "UCI_SimulatedFalls": 3.3326886098543955,
+      "PAMAP2": 1.3901069672298834
+    },
+    "sampling": {
+      "epoch": 18,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 19,
+    "loss": 4.138179461161296,
+    "val_ntxent": 1.5869586915487042,
+    "validation_sources": {
+      "own": 1.3523843488252232,
+      "m5_hard_negatives": 0.09737034887075424,
+      "CGU_BES": 1.2825798988342285,
+      "Cogent": 3.3366083960148454,
+      "SFU_IMU": 2.8421480856021915,
+      "UCI_SimulatedFalls": 3.3908124723173483,
+      "PAMAP2": 1.3930513184784836
+    },
+    "sampling": {
+      "epoch": 19,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 20,
+    "loss": 4.124159752552515,
+    "val_ntxent": 1.5962833078005203,
+    "validation_sources": {
+      "own": 1.419500579723733,
+      "m5_hard_negatives": 0.09662732481956482,
+      "CGU_BES": 1.2680891752243042,
+      "Cogent": 3.3033439920722434,
+      "SFU_IMU": 2.815012561172998,
+      "UCI_SimulatedFalls": 3.391302317767205,
+      "PAMAP2": 1.3947652704102078
+    },
+    "sampling": {
+      "epoch": 20,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 21,
+    "loss": 4.126764710251367,
+    "val_ntxent": 1.581618975157283,
+    "validation_sources": {
+      "own": 1.4028419049489016,
+      "m5_hard_negatives": 0.10535812377929688,
+      "CGU_BES": 1.2374898195266724,
+      "Cogent": 3.288774087326164,
+      "SFU_IMU": 2.801836029822085,
+      "UCI_SimulatedFalls": 3.346635272281993,
+      "PAMAP2": 1.3709544707954182
+    },
+    "sampling": {
+      "epoch": 21,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 22,
+    "loss": 4.120075639828231,
+    "val_ntxent": 1.5781513253504185,
+    "validation_sources": {
+      "own": 1.3937917217353866,
+      "m5_hard_negatives": 0.0791887640953064,
+      "CGU_BES": 1.2462470531463623,
+      "Cogent": 3.3131351108622598,
+      "SFU_IMU": 2.790079589651412,
+      "UCI_SimulatedFalls": 3.3920717833423293,
+      "PAMAP2": 1.3575285019250862
+    },
+    "sampling": {
+      "epoch": 22,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 23,
+    "loss": 4.111798738632399,
+    "val_ntxent": 1.5748044906013146,
+    "validation_sources": {
+      "own": 1.3949935939270637,
+      "m5_hard_negatives": 0.0673072412610054,
+      "CGU_BES": 1.2650798559188843,
+      "Cogent": 3.270237605522542,
+      "SFU_IMU": 2.8324374070688454,
+      "UCI_SimulatedFalls": 3.377747929559782,
+      "PAMAP2": 1.346790019972918
+    },
+    "sampling": {
+      "epoch": 23,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "ssl",
+    "epoch": 24,
+    "loss": 4.110131182411845,
+    "val_ntxent": 1.5812071282539992,
+    "validation_sources": {
+      "own": 1.3667384799505244,
+      "m5_hard_negatives": 0.14874619245529175,
+      "CGU_BES": 1.2498328685760498,
+      "Cogent": 3.3042335112144086,
+      "SFU_IMU": 2.775719594554741,
+      "UCI_SimulatedFalls": 3.3400717545059284,
+      "PAMAP2": 1.3535018726743224
+    },
+    "sampling": {
+      "epoch": 24,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "head",
+    "epoch": 1,
+    "loss": 1.1496566982232324,
+    "learning_rate": 0.0003,
+    "selection": {
+      "threshold": 0.7621049284934998,
+      "weighted_error": 0.0033553870804639836,
+      "valid_under_constraints": false,
+      "threshold_candidates": 122374,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.996031746031746,
+          "negative_window_fpr": 0.001322751322751353,
+          "error": 0.0006613756613756765
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8333333333333337,
+          "negative_window_fpr": 0.012564102564101077,
+          "error": 0.006282051282050539
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 0.9810606060606061,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.009469696969696961
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8527004909983633,
+          "negative_window_fpr": 0.017140746891516657,
+          "error": 0.017140746891516657
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 1,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "head",
+    "epoch": 2,
+    "loss": 0.8970211060472237,
+    "learning_rate": 0.0003,
+    "selection": {
+      "threshold": 0.774491012096405,
+      "weighted_error": 0.0024512409779203093,
+      "valid_under_constraints": false,
+      "threshold_candidates": 122240,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.975,
+          "negative_window_fpr": 0.004166666666666578,
+          "error": 0.002083333333333289
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 0.9444444444444445,
+          "negative_window_fpr": 0.0009920634920634903,
+          "error": 0.0004960317460317451
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.996031746031746,
+          "negative_window_fpr": 0.0013227513227512479,
+          "error": 0.0006613756613756239
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8333333333333337,
+          "negative_window_fpr": 0.012307692307690854,
+          "error": 0.006153846153845427
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 0.9972222222222222,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.001388888888888884
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8633387888707037,
+          "negative_window_fpr": 0.010603933995728187,
+          "error": 0.010603933995728187
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 2,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "head",
+    "epoch": 3,
+    "loss": 0.8720279599345008,
+    "learning_rate": 0.0003,
+    "selection": {
+      "threshold": 0.508867084980011,
+      "weighted_error": 0.0035608398980132797,
+      "valid_under_constraints": false,
+      "threshold_candidates": 122010,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.975,
+          "negative_window_fpr": 0.004166666666666683,
+          "error": 0.0020833333333333415
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 0.888888888888889,
+          "negative_window_fpr": 0.010912698412698391,
+          "error": 0.005456349206349196
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.9879016647309331,
+          "negative_window_fpr": 0.0026777648728869103,
+          "error": 0.0013388824364434552
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.7948717948717953,
+          "negative_window_fpr": 0.019743589743587447,
+          "error": 0.009871794871793724
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 0.9972222222222222,
+          "specificity": 0.9746835443037974,
+          "negative_window_fpr": 0.0005132653866830432,
+          "error": 0.0016455215822304054
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8248772504091653,
+          "negative_window_fpr": 0.012087517549982664,
+          "error": 0.012087517549982664
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 3,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 1,
+    "loss": 0.8747881426059615,
+    "learning_rate": 8e-05,
+    "selection": {
+      "threshold": 0.4082805812358856,
+      "weighted_error": 0.0026979288739137,
+      "valid_under_constraints": false,
+      "threshold_candidates": 121612,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.975,
+          "negative_window_fpr": 0.004166666666666705,
+          "error": 0.0020833333333333524
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 0.9444444444444445,
+          "negative_window_fpr": 0.0029761904761904717,
+          "error": 0.0014880952380952358
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.9839334107626792,
+          "negative_window_fpr": 0.005366283821568268,
+          "error": 0.002683141910784134
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.7820512820512825,
+          "negative_window_fpr": 0.02051282051281815,
+          "error": 0.010256410256409075
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9936708860759493,
+          "negative_window_fpr": 0.00010208248264586856,
+          "error": 5.104124132293428e-05
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8633387888707038,
+          "negative_window_fpr": 0.00729226675919224,
+          "error": 0.00729226675919224
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 4,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 2,
+    "loss": 0.8624603241605044,
+    "learning_rate": 8e-05,
+    "selection": {
+      "threshold": 0.44568485021591187,
+      "weighted_error": 0.0008510371980696447,
+      "valid_under_constraints": false,
+      "threshold_candidates": 120808,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 0.9444444444444445,
+          "negative_window_fpr": 0.0009920634920634905,
+          "error": 0.0004960317460317452
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.9919667053813396,
+          "negative_window_fpr": 0.001333505398546011,
+          "error": 0.0006667526992730056
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8589743589743593,
+          "negative_window_fpr": 0.008717948717947727,
+          "error": 0.0043589743589738635
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.9018003273322422,
+          "negative_window_fpr": 0.0029886131764178324,
+          "error": 0.0029886131764178324
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 5,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 3,
+    "loss": 0.8565236279206683,
+    "learning_rate": 8e-05,
+    "selection": {
+      "threshold": 0.3130117654800415,
+      "weighted_error": 0.0023578837263628274,
+      "valid_under_constraints": false,
+      "threshold_candidates": 119890,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.9750000000000001,
+          "negative_window_fpr": 0.0041666666666665695,
+          "error": 0.0020833333333332847
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 0.9444444444444445,
+          "negative_window_fpr": 0.001984126984126981,
+          "error": 0.0009920634920634905
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.996031746031746,
+          "negative_window_fpr": 0.0008818342151676262,
+          "error": 0.0004409171075838131
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.7948717948717953,
+          "negative_window_fpr": 0.021025641025638583,
+          "error": 0.010512820512819291
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9936708860759494,
+          "negative_window_fpr": 0.00030624744793782816,
+          "error": 0.00015312372396891408
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8633387888707038,
+          "negative_window_fpr": 0.006271579093859549,
+          "error": 0.006271579093859549
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 6,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 4,
+    "loss": 0.8551947811777277,
+    "learning_rate": 8e-05,
+    "selection": {
+      "threshold": 0.07696368545293808,
+      "weighted_error": 0.0046037315982759616,
+      "valid_under_constraints": false,
+      "threshold_candidates": 119184,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.9249999999999999,
+          "negative_window_fpr": 0.0068333333333333145,
+          "error": 0.0034166666666666573
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 0.0,
+          "negative_window_fpr": 0.0009242144177449184,
+          "error": 0.0009242144177449184
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 0.8333333333333334,
+          "negative_window_fpr": 0.004960317460317452,
+          "error": 0.002480158730158726
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.8132984901277585,
+          "negative_window_fpr": 0.00913221875097494,
+          "error": 0.00456610937548747
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.7564102564102568,
+          "negative_window_fpr": 0.0343589743589703,
+          "error": 0.01717948717948515
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9380514000767164,
+          "negative_window_fpr": 0.0021311845028184027,
+          "error": 0.0010655922514092014
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8314238952536827,
+          "negative_window_fpr": 0.009893765735190123,
+          "error": 0.009893765735190123
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 7,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 5,
+    "loss": 0.8529736807796074,
+    "learning_rate": 8e-05,
+    "selection": {
+      "threshold": 0.2829657793045044,
+      "weighted_error": 0.002169047094295264,
+      "valid_under_constraints": false,
+      "threshold_candidates": 118834,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.95,
+          "negative_window_fpr": 0.0019999999999999497,
+          "error": 0.0009999999999999749
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 0.9444444444444445,
+          "negative_window_fpr": 0.001984126984126981,
+          "error": 0.0009920634920634905
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.9879984514130856,
+          "negative_window_fpr": 0.0017744225061297949,
+          "error": 0.0008872112530648974
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.7820512820512825,
+          "negative_window_fpr": 0.021538461538459126,
+          "error": 0.010769230769229563
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9936708860759493,
+          "negative_window_fpr": 0.00010208248264586913,
+          "error": 5.1041241322934564e-05
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8633387888707038,
+          "negative_window_fpr": 0.0064909241872718165,
+          "error": 0.0064909241872718165
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 8,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 6,
+    "loss": 0.8520611812594017,
+    "learning_rate": 8e-05,
+    "selection": {
+      "threshold": 0.20766887068748474,
+      "weighted_error": 0.0017834183395895587,
+      "valid_under_constraints": false,
+      "threshold_candidates": 118270,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.95,
+          "negative_window_fpr": 0.0019999999999999515,
+          "error": 0.0009999999999999757
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 0.9444444444444445,
+          "negative_window_fpr": 0.0009920634920634905,
+          "error": 0.0004960317460317452
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.9879984514130856,
+          "negative_window_fpr": 0.002226093689508306,
+          "error": 0.001113046844754153
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8461538461538465,
+          "negative_window_fpr": 0.015384615384613609,
+          "error": 0.0076923076923068046
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9936708860759493,
+          "negative_window_fpr": 0.0002041649652919603,
+          "error": 0.00010208248264598015
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8633387888707038,
+          "negative_window_fpr": 0.005930714630156964,
+          "error": 0.005930714630156964
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 9,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 7,
+    "loss": 0.851009494574495,
+    "learning_rate": 4e-05,
+    "selection": {
+      "threshold": 0.39192995429039,
+      "weighted_error": 0.0011276847732979603,
+      "valid_under_constraints": false,
+      "threshold_candidates": 118268,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.95,
+          "negative_window_fpr": 0.002000000000000065,
+          "error": 0.0010000000000000325
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8589743589743593,
+          "negative_window_fpr": 0.011538461538460245,
+          "error": 0.0057692307692301225
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9936708860759493,
+          "negative_window_fpr": 9.17262887543103e-05,
+          "error": 4.586314437715515e-05
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.9018003273322422,
+          "negative_window_fpr": 0.0029617538193722425,
+          "error": 0.0029617538193722425
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 10,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 8,
+    "loss": 0.8487670557135452,
+    "learning_rate": 4e-05,
+    "selection": {
+      "threshold": 0.2602156102657318,
+      "weighted_error": 0.0013422465811370773,
+      "valid_under_constraints": true,
+      "threshold_candidates": 117938,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.95,
+          "negative_window_fpr": 0.002000000000000065,
+          "error": 0.0010000000000000325
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.996031746031746,
+          "negative_window_fpr": 0.000440917107583762,
+          "error": 0.000220458553791881
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8846153846153848,
+          "negative_window_fpr": 0.010256410256409138,
+          "error": 0.005128205128204569
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9873417721518988,
+          "negative_window_fpr": 0.000377261348908911,
+          "error": 0.0001886306744544555
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8633387888707038,
+          "negative_window_fpr": 0.005385171454919787,
+          "error": 0.005385171454919787
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 11,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 9,
+    "loss": 0.8486483881023811,
+    "learning_rate": 4e-05,
+    "selection": {
+      "threshold": 0.02681853249669075,
+      "weighted_error": 0.00422161393842871,
+      "valid_under_constraints": false,
+      "threshold_candidates": 117806,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.9249999999999999,
+          "negative_window_fpr": 0.006166666666666607,
+          "error": 0.0030833333333333034
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 0.0,
+          "negative_window_fpr": 0.002772643253234755,
+          "error": 0.002772643253234755
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.7974254742547424,
+          "negative_window_fpr": 0.014980186812057072,
+          "error": 0.007490093406028536
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.7820512820512825,
+          "negative_window_fpr": 0.019743589743587562,
+          "error": 0.009871794871793781
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9532029152282315,
+          "negative_window_fpr": 0.0014034967585671745,
+          "error": 0.0007017483792835873
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.842062193126023,
+          "negative_window_fpr": 0.009512561260761044,
+          "error": 0.009512561260761044
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 12,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 10,
+    "loss": 0.8485204277112502,
+    "learning_rate": 4e-05,
+    "selection": {
+      "threshold": 0.09289059787988663,
+      "weighted_error": 0.002572383472074591,
+      "valid_under_constraints": false,
+      "threshold_candidates": 117844,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.9249999999999999,
+          "negative_window_fpr": 0.0061666666666666346,
+          "error": 0.0030833333333333173
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.9879016647309331,
+          "negative_window_fpr": 0.0022476018410978365,
+          "error": 0.0011238009205489182
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8461538461538465,
+          "negative_window_fpr": 0.017692307692305665,
+          "error": 0.008846153846152833
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9843114691215957,
+          "negative_window_fpr": 0.0003266484468367128,
+          "error": 0.0001633242234183564
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8527004909983634,
+          "negative_window_fpr": 0.007882222397292507,
+          "error": 0.007882222397292507
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 13,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 11,
+    "loss": 0.848464955347145,
+    "learning_rate": 4e-05,
+    "selection": {
+      "threshold": 0.05015045404434204,
+      "weighted_error": 0.0025315242945148997,
+      "valid_under_constraints": false,
+      "threshold_candidates": 117592,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.95,
+          "negative_window_fpr": 0.0033333333333333275,
+          "error": 0.0016666666666666637
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.8172667440960122,
+          "negative_window_fpr": 0.004615178269712052,
+          "error": 0.002307589134856026
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8461538461538465,
+          "negative_window_fpr": 0.017179487179485264,
+          "error": 0.008589743589742632
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9655926352128884,
+          "negative_window_fpr": 0.0012038742952293557,
+          "error": 0.0006019371476146778
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8527004909983634,
+          "negative_window_fpr": 0.009649306406269,
+          "error": 0.009649306406269
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 14,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 12,
+    "loss": 0.8468255876570709,
+    "learning_rate": 2e-05,
+    "selection": {
+      "threshold": 0.1485280841588974,
+      "weighted_error": 0.0019194848768605555,
+      "valid_under_constraints": true,
+      "threshold_candidates": 117290,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.9249999999999999,
+          "negative_window_fpr": 0.006166666666666606,
+          "error": 0.003083333333333303
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.9879016647309331,
+          "negative_window_fpr": 0.0013442594743408118,
+          "error": 0.0006721297371704059
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8974358974358977,
+          "negative_window_fpr": 0.010512820512819336,
+          "error": 0.005256410256409668
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9936708860759493,
+          "negative_window_fpr": 0.00020416496529184727,
+          "error": 0.00010208248264592364
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8527004909983634,
+          "negative_window_fpr": 0.005455892959046299,
+          "error": 0.005455892959046299
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 15,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 13,
+    "loss": 0.847941202402731,
+    "learning_rate": 2e-05,
+    "selection": {
+      "threshold": 0.06398127973079681,
+      "weighted_error": 0.0020760053315857824,
+      "valid_under_constraints": false,
+      "threshold_candidates": 117576,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.9249999999999999,
+          "negative_window_fpr": 0.00616666666666647,
+          "error": 0.003083333333333235
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.9919667053813396,
+          "negative_window_fpr": 0.0008925882909622871,
+          "error": 0.00044629414548114354
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8589743589743593,
+          "negative_window_fpr": 0.013333333333331879,
+          "error": 0.006666666666665939
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9906405830456463,
+          "negative_window_fpr": 0.00036036000205040965,
+          "error": 0.00018018000102520482
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8527004909983634,
+          "negative_window_fpr": 0.005758579169352448,
+          "error": 0.005758579169352448
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 16,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 14,
+    "loss": 0.8471983378555732,
+    "learning_rate": 2e-05,
+    "selection": {
+      "threshold": 0.11542278528213501,
+      "weighted_error": 0.0015627603426950202,
+      "valid_under_constraints": false,
+      "threshold_candidates": 117404,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.95,
+          "negative_window_fpr": 0.0019999999999999398,
+          "error": 0.0009999999999999699
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.9919667053813396,
+          "negative_window_fpr": 0.0008925882909622871,
+          "error": 0.00044629414548114354
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8589743589743593,
+          "negative_window_fpr": 0.013076923076921598,
+          "error": 0.006538461538460799
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9873417721518987,
+          "negative_window_fpr": 0.0003917760144790282,
+          "error": 0.0001958880072395141
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8633387888707038,
+          "negative_window_fpr": 0.00594695973576882,
+          "error": 0.00594695973576882
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 17,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 15,
+    "loss": 0.8461816001308057,
+    "learning_rate": 2e-05,
+    "selection": {
+      "threshold": 0.15696921944618225,
+      "weighted_error": 0.0015418056167160494,
+      "valid_under_constraints": false,
+      "threshold_candidates": 117238,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.95,
+          "negative_window_fpr": 0.0020000000000000525,
+          "error": 0.0010000000000000263
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.996031746031746,
+          "negative_window_fpr": 0.00044091710758376317,
+          "error": 0.00022045855379188158
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8589743589743593,
+          "negative_window_fpr": 0.014358974358972754,
+          "error": 0.007179487179486377
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9936708860759494,
+          "negative_window_fpr": 0.00010208248264586845,
+          "error": 5.1041241322934226e-05
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8633387888707038,
+          "negative_window_fpr": 0.0054670691925592365,
+          "error": 0.0054670691925592365
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 18,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 16,
+    "loss": 0.8466072461401769,
+    "learning_rate": 2e-05,
+    "selection": {
+      "threshold": 0.05306071415543556,
+      "weighted_error": 0.0018696237215459015,
+      "valid_under_constraints": false,
+      "threshold_candidates": 117270,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.95,
+          "negative_window_fpr": 0.001999999999999946,
+          "error": 0.000999999999999973
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.9839334107626792,
+          "negative_window_fpr": 0.0031401901320601507,
+          "error": 0.0015700950660300754
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8589743589743593,
+          "negative_window_fpr": 0.01410256410256253,
+          "error": 0.007051282051281265
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9843114691215957,
+          "negative_window_fpr": 0.00044588856859161186,
+          "error": 0.00022294428429580593
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8527004909983634,
+          "negative_window_fpr": 0.007351915813851936,
+          "error": 0.007351915813851936
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 19,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 17,
+    "loss": 0.847120907879615,
+    "learning_rate": 1e-05,
+    "selection": {
+      "threshold": 0.15902410447597504,
+      "weighted_error": 0.0013835564958137206,
+      "valid_under_constraints": false,
+      "threshold_candidates": 117238,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.95,
+          "negative_window_fpr": 0.001999999999999945,
+          "error": 0.0009999999999999725
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.996031746031746,
+          "negative_window_fpr": 0.0004409171075837619,
+          "error": 0.00022045855379188096
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.8589743589743593,
+          "negative_window_fpr": 0.011538461538460257,
+          "error": 0.005769230769230129
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9936708860759494,
+          "negative_window_fpr": 0.00020416496529184874,
+          "error": 0.00010208248264592437
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.8633387888707038,
+          "negative_window_fpr": 0.005243793152469341,
+          "error": 0.005243793152469341
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 20,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  },
+  {
+    "stage": "all",
+    "epoch": 18,
+    "loss": 0.8467371183464385,
+    "learning_rate": 1e-05,
+    "selection": {
+      "threshold": 0.008621732704341412,
+      "weighted_error": 0.011887500691094895,
+      "valid_under_constraints": false,
+      "threshold_candidates": 118134,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 0.8999999999999999,
+          "negative_window_fpr": 0.028791666666666035,
+          "error": 0.014395833333333018
+        },
+        "m5_hard_negatives": {
+          "recall": null,
+          "specificity": 0.0,
+          "negative_window_fpr": 0.01109057301293902,
+          "error": 0.01109057301293902
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 0.9444444444444445,
+          "negative_window_fpr": 0.000992063492063491,
+          "error": 0.0004960317460317455
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 0.9440572977158345,
+          "negative_window_fpr": 0.028181046667919055,
+          "error": 0.014090523333959527
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.7564102564102568,
+          "negative_window_fpr": 0.028974358974355807,
+          "error": 0.014487179487177903
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 1.0,
+          "specificity": 0.9284234752589182,
+          "negative_window_fpr": 0.0053587313302341025,
+          "error": 0.0026793656651170512
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.7929623567921442,
+          "negative_window_fpr": 0.023405890812982617,
+          "error": 0.023405890812982617
+        }
+      }
+    },
+    "sampling": {
+      "epoch": 21,
+      "steps": 387,
+      "crops": 49536,
+      "unique_recordings": 4628,
+      "eligible_recordings": 4628,
+      "source_crops": {
+        "own": 12384,
+        "m5_hard_negatives": 12384,
+        "CGU_BES": 4954,
+        "Cogent": 4954,
+        "SFU_IMU": 4954,
+        "UCI_SimulatedFalls": 4953,
+        "PAMAP2": 4953
+      },
+      "complete_coverage": true
+    }
+  }
+]
