@@ -55,7 +55,30 @@ On the original development Mac, PlatformIO is installed at `~/.venvs/platformio
 
 The build guard verifies the locked model/configuration, kernels, inference functions and partition table. The verification command also confirms that the finished application embeds the exact model once and fits the existing 0x3D0000-byte OTA slot.
 
-## Run the Mac collector
+## V1 Mac app for data collectors (Apple Silicon)
+
+For people collecting data on their own laptops, use the native GUI app rather than the terminal workflow below. V1 deliberately targets **M-series Macs (arm64) on macOS 14+ only**. The collector does not need Xcode, Swift, Python, Git, PlatformIO or a repository checkout.
+
+Build the shareable app on an Apple Silicon development Mac:
+
+```bash
+cd M5BLECollector/macos
+./Scripts/build-gui-app.sh
+```
+
+This produces `dist/M5 Data Collector.app` and `dist/M5Collector-v1-arm64.zip`. By default the build is ad-hoc signed for development/testing. Set `DEVELOPER_ID_APPLICATION` when a Developer ID certificate is available; notarization can be added to the external release step without changing the collector code.
+
+Collector workflow:
+
+1. Unzip and open **M5 Data Collector**. Approve macOS Bluetooth access on first launch.
+2. Enter the participant ID and body placement. These fields are locked while a trial is active so metadata cannot change mid-trial.
+3. Put the M5 in COLLECT mode. The app scans, reconnects to the previously used M5 when possible, verifies its trusted detector model, and shows READY/RECORDING/REVIEW/SAVING/COMPLETE.
+4. Use the M5 buttons for start/stop and KEEP/DISCARD. Kept trials are received and saved automatically.
+5. Click **Open Data Folder** to view the recordings. V1 stores them in `~/M5CollectorData/`. Each trial keeps the same `samples.csv`, `metadata.json` and hidden recovery journal format used by the terminal collector.
+
+The GUI is laptop-side only. It does not modify detector firmware, sampling, the BLE wire protocol, ACK/recovery semantics, model verification or the on-device DETECT/COLLECT controls.
+
+## Run the Mac collector (developer/terminal workflow)
 
 Requirements: macOS 14+, Apple's Command Line Tools or Xcode, Bluetooth enabled, and a device running the reviewed BLE firmware in COLLECT mode.
 

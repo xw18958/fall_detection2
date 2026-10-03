@@ -2,6 +2,7 @@
 __pycache__/
 recordings/
 macos/.build/
+macos/dist/
 firmware/.pio/
 firmware/build/
 firmware/managed_components/
