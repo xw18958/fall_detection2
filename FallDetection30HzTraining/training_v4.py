@@ -28,7 +28,7 @@ def source_masses(cfg):
             **{d: (1-cfg.target_fraction-cfg.m5_fraction)/5 for d in v2.PUBLIC}}
 
 
-def inherited_splits(records, original, destination):
+def inherited_splits(records, original, destination, protocol=4):
     source = json.loads(Path(original).read_text())
     lookup = {r['key']: r for r in records}
     if len(lookup) != len(records):
@@ -53,7 +53,7 @@ def inherited_splits(records, original, destination):
                 raise ValueError('Padded descendants escaped training')
     if any(len(roles) != 1 for roles in memberships.values()):
         raise ValueError('Inherited participant, boot or duplicate-group leakage')
-    payload = {'protocol_version': 4, 'original_manifest_sha256': file_hash(original),
+    payload = {'protocol_version': protocol, 'original_manifest_sha256': file_hash(original),
                'original_seed': source['seed'], 'original_fingerprint': source['fingerprint'],
                'splits': {k: sorted(r['key'] for r in rr) for k, rr in result.items()},
                'record_groups': {r['key']: r['group'] for r in records},
@@ -288,7 +288,7 @@ def test_report(model, records, arr, stats, cfg, dev, base, threshold, output, t
         pd.DataFrame({'key': keys, 'label': y, 'probability': p}).to_csv(output/f'{d}_test_recordings.csv', index=False)
     boots = []
     for r in records:
-        if r['domain'] != v2.M5:
+        if r['domain'] != v2.M5 or r['label'] != 0:
             continue
         rows = sorted((row for row in details[v2.M5][0] if row['key'] == r['key']), key=lambda row: row['start'])
         episodes, previous, last = 0, False, None
@@ -316,7 +316,7 @@ def test_report(model, records, arr, stats, cfg, dev, base, threshold, output, t
     return result
 
 
-def run(args, cfg, base):
+def run(args, cfg, base, m5_loader=v2.m5_records, protocol=4):
     if cfg.fs != 30 or cfg.win_sec != 3 or cfg.stride_sec != .25 or cfg.label_mode != 'clip':
         raise ValueError('v4 requires 30 Hz, 3 s inputs, 0.25 s evaluation and clip labels')
     if not all((args.init_ssl, args.normalization_from, args.baseline_checkpoint)):
@@ -330,11 +330,11 @@ def run(args, cfg, base):
     verification = json.loads((m5root/'processed_v2/verification.json').read_text())
     if verification.get('conversion_convention') != 'si' or verification.get('software_clipping') is not False:
         raise ValueError('v4 requires verified full-range M5 SI preprocessing')
-    m5 = v2.m5_records(m5root)
+    m5 = m5_loader(m5root)
     for r in m5:
         r['normalization_domain'] = v2.M5
     records = v2.own_records(own)+m5+v2.public_records(public)
-    splits, splitmeta = inherited_splits(records, args.split_from, work/'splits/group_splits.json')
+    splits, splitmeta = inherited_splits(records, args.split_from, work/'splits/group_splits.json', protocol)
     masses = source_masses(cfg)
     dev = torch.device(('cuda' if torch.cuda.is_available() else 'cpu') if args.device == 'auto' else args.device)
     if dev.type == 'cuda':
@@ -370,14 +370,15 @@ def run(args, cfg, base):
                     'fit_keys': sorted(r['key'] for r in m5train), 'units': verification['units']}
     v2.write_json(work/'normalization.json', stats)
     v2.write_json(work/'warm_start_audit.json', ancestry)
-    v2.write_json(work/'run_config.json', {**asdict(cfg), 'protocol_version': 4})
+    v2.write_json(work/'run_config.json', {**asdict(cfg), 'protocol_version': protocol})
     audit = {'status': 'passed', 'source_weights': masses, 'public_export_units': UNITS,
              'classification_loss': 'sum source weight * mean source CE; no global class reweighting',
              'split': {d: {role: {'recordings': sum(r['domain'] == d for r in rr),
                                   'groups': len({r['group'] for r in rr if r['domain'] == d}),
                                   'falls': sum(r['domain'] == d and r['label'] == 1 for r in rr)}
                             for role, rr in splits.items()} for d in v2.DOMAINS},
-             'expected_fall_draw_share': .5*sum(masses[d] for d in masses if d not in (v2.M5, 'PAMAP2')),
+             'expected_fall_draw_share': .5*sum(masses[d] for d in masses if
+                 {r['label'] for r in splits['train'] if r['domain']==d} == {0,1}),
              'm5_preprocessing': verification, 'test_used_for_fit_or_selection': False,
              'label_policy': 'whole 5 s fall container positive; random 3 s view inherits label'}
     v2.write_json(work/'data_audit.json', audit)
@@ -386,11 +387,18 @@ def run(args, cfg, base):
         return
     valrs = v2.evaluation_records(splits['val'], args.smoke)
     valds = v2.Clips(valrs, arr, stats, cfg, smoke=args.smoke)
-    legacy_m5 = v2.m5_records(args.legacy_m5_root)
-    legacy_lookup = {r['key']: r for r in legacy_m5}
-    legacy_val = [legacy_lookup[r['key']] if r['domain'] == v2.M5 else r for r in valrs]
-    legacy_arr = dict(arr); legacy_arr.update(v2.arrays([r for r in legacy_val if r['domain'] == v2.M5], cache))
-    legacy_ds = v2.Clips(legacy_val, legacy_arr, baseline['normalization'], cfg, smoke=args.smoke)
+    if protocol == 5:
+        comparison = torch.load(args.comparison_checkpoint, map_location='cpu', weights_only=False)
+        if file_hash(args.comparison_checkpoint) != '3c92a68f6e1440a83880665d6634b01e7cb5724374a7e3f7a3eb76892e210b2e':
+            raise ValueError('V5 comparison requires the immutable V4 float checkpoint')
+        legacy_ds = v2.Clips(valrs, arr, comparison['normalization'], cfg, smoke=args.smoke)
+        baseline = comparison
+    else:
+        legacy_m5 = v2.m5_records(args.legacy_m5_root)
+        legacy_lookup = {r['key']: r for r in legacy_m5}
+        legacy_val = [legacy_lookup[r['key']] if r['domain'] == v2.M5 else r for r in valrs]
+        legacy_arr = dict(arr); legacy_arr.update(v2.arrays([r for r in legacy_val if r['domain'] == v2.M5], cache))
+        legacy_ds = v2.Clips(legacy_val, legacy_arr, baseline['normalization'], cfg, smoke=args.smoke)
     baseline_model = base.Net(cfg).to(dev); baseline_model.load_state_dict(baseline['model'])
     _, baseline_details = prediction(baseline_model, legacy_ds, cfg, dev, base)
     original_selection = select_threshold(baseline_details, valrs, masses, fixed=baseline['threshold'])
@@ -406,6 +414,17 @@ def run(args, cfg, base):
         gates[d] = ({'negative_window_fpr': b['negative_window_fpr']} if b['recall'] is None else
                     {'recall': max(0., b['recall']-.02), 'specificity': max(0., b['specificity']-.02)})
     gates[v2.M5] = {'negative_window_fpr': baseline_selection['domains'][v2.M5]['negative_window_fpr']}
+    window_floors = None
+    if protocol == 5:
+        # A declared exploratory device gate; never relax it after seeing test.
+        gates[v2.M5] = {'recall': .90, 'negative_window_fpr': .01}
+        window_floors = {v2.M5: .90}
+        ancestry['comparison_sha256'] = file_hash(args.comparison_checkpoint)
+        ancestry['positive_split_limitations'] = verification['split_limitations']
+        v2.write_json(work/'warm_start_audit.json', ancestry)
+        v2.write_json(work/'selection_protocol.json', {'constraints': gates,
+            'window_recall_floors':window_floors,'test_used':False,
+            'quantization_comparison':'PTQ and QAT use these same validation gates and float32 thresholds'})
     v2.write_json(work/'baseline_validation.json', {'original_threshold': original_selection,
                   'joint_threshold': baseline_selection, 'constraints': gates, 'comparison': 'complete old and new input pipelines'})
     if not args.smoke:
@@ -489,7 +508,8 @@ def run(args, cfg, base):
                 optimizer.zero_grad(set_to_none=True); loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.); optimizer.step(); losses.append(float(loss.detach()))
             _, details = prediction(model, valds, cfg, dev, base)
-            selection = select_threshold(details, valrs, masses, gates)
+            selection = select_threshold(details, valrs, masses, gates,
+                window_recall_floors=window_floors, deployment_thresholds=protocol==5)
             rank = (int(selection['valid_under_constraints']), -selection['weighted_error'], selection['domains']['own']['recall'])
             if best_rank is None or rank > best_rank:
                 best_rank, best = rank, v2.cpu_state(model)
@@ -515,7 +535,8 @@ def run(args, cfg, base):
                   'normalization': stats, 'split_fingerprint': splitmeta['fingerprint'],
                   'checkpoint_selection': chosen, 'acceptable_improvement': accepted,
                   'ancestry': ancestry, 'source_weights': masses, 'smoke': args.smoke,
-                  'preprocessing': verification, 'baseline_validation': baseline_selection}
+                  'preprocessing': verification, 'baseline_validation': baseline_selection,
+                  'protocol_version': protocol, 'validation_windows': len(valds)}
     torch.save(checkpoint, work/'checkpoints/locked_model.pt')
     torch.save(checkpoint, work/'checkpoints/best_model.pt')
     _, details = prediction(model, valds, cfg, dev, base)

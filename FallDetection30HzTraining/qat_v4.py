@@ -211,7 +211,7 @@ def tf_export(state, ranges, path, representative, fused_norm=False):
     return inv, graph
 
 
-def micro_validate(model_path, inv, datasets, records, c, gates, runner, directory, window_floors=None):
+def micro_validate(model_path, inv, datasets, records, c, gates, runner, directory, window_floors=None, fixed_threshold=None):
     directory.mkdir(parents=True, exist_ok=True)
     details, reports = {}, {}
     output_scale, output_zero = inv['output_scale_zero']
@@ -244,7 +244,7 @@ def micro_validate(model_path, inv, datasets, records, c, gates, runner, directo
         reports[domain] = e.metrics(labels, probabilities, c['threshold'])
         np.savez_compressed(directory/f'{domain}.predictions.npz', raw=raw, logits=logits, labels=labels, keys=keys, starts=starts)
     selection = v4.select_threshold(details, records, c['source_weights'], gates,
-                                    window_recall_floors=window_floors, deployment_thresholds=True)
+                                    window_recall_floors=window_floors, deployment_thresholds=True, fixed=fixed_threshold)
     fixed = v4.select_threshold(details, records, c['source_weights'], gates, fixed=c['threshold'])
     result = {'selection':selection, 'original_threshold_selection':fixed, 'original_threshold_window_metrics':reports,
               'windows':sum(len(z[0]) for z in datasets.values()), 'runtime':'native TFLite Micro / ESP-NN; not physical ESP32', 'test_used':False}
@@ -279,12 +279,17 @@ def main():
     p.add_argument('--input-percentile', type=float, default=99.9)
     p.add_argument('--distillation-weight',type=float,default=.25)
     p.add_argument('--fused-norm', action='store_true')
+    p.add_argument('--protocol-v5',action='store_true')
     args = p.parse_args()
     if not 0 < args.input_percentile <= 100 or args.epochs < 1:
         raise ValueError('Invalid bounded training protocol')
     args.output.mkdir(parents=True, exist_ok=True)
     torch.set_num_threads(4); torch.manual_seed(42); np.random.seed(42)
-    c, cfg, parts, model = e.load(args)
+    if args.protocol_v5:
+        from quantize_v5 import load
+        c,cfg,parts,model=load(args)
+    else:
+        c, cfg, parts, model = e.load(args)
     cfg.batch = args.batch
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if args.phase == 'train' and device.type != 'cuda':
@@ -308,7 +313,8 @@ def main():
     lo, hi = np.percentile(calibration, [tail, 100-tail])
     ranges['input'] = [float(lo), float(hi)]
     v2.write_json(args.output/'ranges.json', ranges)
-    v2.write_json(args.output/'protocol.json', {'seed':42,'checkpoint_sha256':e.EXPECTED_CHECKPOINT,
+    v2.write_json(args.output/'protocol.json', {'seed':42,'checkpoint_sha256':e.sha(args.checkpoint),
+        'selection_protocol_sha256':e.sha(args.work/'selection_protocol.json') if args.protocol_v5 else None,
         'split_fingerprint':c['split_fingerprint'],'normalization':c['normalization'],
         'training_only_observers':True,'calibration_sha256':e.sha(args.ptq_export/'calibration.npy'),
         'fused_layer_normalization':args.fused_norm,'input_percentile':args.input_percentile,'epochs_limit':args.epochs,'patience':args.patience,
@@ -349,12 +355,15 @@ def main():
         raise FileExistsError('Training already started; never overwrite a run')
     # Smoke's update belongs to a separate invocation and is never a warm start.
     datasets = make_datasets(parts['val'], c, cfg, args.output/'cache')
-    if sum(len(z[0]) for z in datasets.values()) != 61686:
+    expected_windows=c['validation_windows'] if args.protocol_v5 else 61686
+    if sum(len(z[0]) for z in datasets.values()) != expected_windows:
         raise ValueError('Exhaustive validation count changed')
     gates = json.loads((args.work/'baseline_validation.json').read_text())['constraints']
     reference=json.loads((args.ptq_export/'validation_report.json').read_text())
     window_floors={d:z['float']['recall'] for d,z in reference['domains'].items()
                    if d!='pooled' and z['float']['recall'] is not None}
+    if args.protocol_v5:
+        window_floors=json.loads((args.work/'selection_protocol.json').read_text())['window_recall_floors']
     train_arrays = v2.arrays(parts['train'], args.output/'cache')
     train_ds = v2.Clips(parts['train'], train_arrays, c['normalization'], cfg, random_crop=True)
     sampler = v4.CoverageSampler(parts['train'], args.batch, c['source_weights'], 42)
@@ -386,7 +395,7 @@ def main():
                'elapsed_seconds':time.monotonic()-started,'sampling':{k:v for k,v in sampler.report.items() if k!='group_crops'}}
         torch.save({'model':v2.cpu_state(model),'config':c['config'],'normalization':c['normalization'],
                     'split_fingerprint':c['split_fingerprint'],'source_weights':c['source_weights'],
-                    'threshold':selection['threshold'],'original_checkpoint_sha256':e.EXPECTED_CHECKPOINT,
+                    'threshold':selection['threshold'],'original_checkpoint_sha256':e.sha(args.checkpoint),
                     'qat_ranges':ranges,'fused_layer_normalization':args.fused_norm,'smoke':False},directory/'qat_checkpoint.pt')
         if best_rank is None or rank > best_rank:
             best_rank, bad = rank, 0
