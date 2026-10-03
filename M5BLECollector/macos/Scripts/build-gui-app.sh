@@ -4,11 +4,13 @@ set -euo pipefail
 SCRIPT_DIR=${0:A:h}
 COLLECTOR_DIR=${SCRIPT_DIR:h}
 DIST_DIR=${COLLECTOR_DIR}/dist
-APP_DIR=${DIST_DIR}/M5\ Data\ Collector.app
+PACKAGE_DIR=${DIST_DIR}/M5\ Collector\ v1
+APP_DIR=${PACKAGE_DIR}/M5\ Data\ Collector.app
 
 cd "$COLLECTOR_DIR"
 rm -rf "$DIST_DIR"
 mkdir -p "$APP_DIR/Contents/MacOS"
+cp READ_ME_FIRST.txt "$PACKAGE_DIR/READ_ME_FIRST.txt"
 
 swift build -c release --product M5CollectorApp --arch arm64
 BIN_DIR=$(swift build -c release --product M5CollectorApp --arch arm64 --show-bin-path)
@@ -26,7 +28,7 @@ codesign --verify --deep --strict "$APP_DIR"
 ARCHS=$(lipo -archs "$APP_DIR/Contents/MacOS/M5CollectorApp")
 [[ "$ARCHS" == "arm64" ]] || { echo "Unexpected architecture: $ARCHS" >&2; exit 1; }
 
-ditto -c -k --keepParent "$APP_DIR" "$DIST_DIR/M5Collector-v1-arm64.zip"
+ditto -c -k --keepParent "$PACKAGE_DIR" "$DIST_DIR/M5Collector-v1-arm64.zip"
 
 echo "Built: $APP_DIR"
 echo "Shareable ZIP: $DIST_DIR/M5Collector-v1-arm64.zip"

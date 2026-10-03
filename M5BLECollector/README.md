@@ -66,7 +66,9 @@ cd M5BLECollector/macos
 ./Scripts/build-gui-app.sh
 ```
 
-This produces `dist/M5 Data Collector.app` and `dist/M5Collector-v1-arm64.zip`. By default the build is ad-hoc signed for development/testing. Set `DEVELOPER_ID_APPLICATION` when a Developer ID certificate is available; notarization can be added to the external release step without changing the collector code.
+This produces `dist/M5 Collector v1/M5 Data Collector.app` and `dist/M5Collector-v1-arm64.zip`. The ZIP also contains `READ_ME_FIRST.txt` with collector-facing setup instructions. V1 is intentionally ad-hoc signed so it can be distributed without an Apple Developer account.
+
+On the first launch of a downloaded V1 build, macOS may block the app because it is not notarized. The collector should open **System Settings > Privacy & Security**, click **Open Anyway**, then confirm **Open**. This is normally a one-time step for that app on that Mac. Afterward, allow Bluetooth access when macOS asks.
 
 Collector workflow:
 
