@@ -13,11 +13,12 @@ First launch:
 5. Allow Bluetooth access when asked.
 
 Collecting data:
-1. Enter Participant ID and Placement.
-2. Put the M5 into COLLECT mode.
-3. Wait until the app shows READY.
-4. Use the M5 buttons to start/stop and KEEP/DISCARD.
-5. Kept trials save automatically.
-6. Click “Open Data Folder” to find the recordings in ~/M5CollectorData/.
+1. Click “Choose Folder” and select where you want recordings saved. The app remembers this folder.
+2. Put the M5 into COLLECT mode and wait for READY.
+3. Use the M5 buttons to start/stop and KEEP/DISCARD.
+4. The app shows the recording timer and saving progress.
+5. After KEEP, wait for “SAVED — READY FOR NEXT RECORDING”.
+6. Check the last-recording quality result if a warning appears.
+7. Use “Open Data Folder” to open the folder you selected.
 
-No Xcode, Python, Git, Terminal, Wi-Fi or Internet is required after download.
+No participant/placement entry is required. No Xcode, Python, Git, Terminal, Wi-Fi or Internet is required after download.

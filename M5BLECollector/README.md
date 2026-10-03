@@ -72,13 +72,14 @@ On the first launch of a downloaded V1 build, macOS may block the app because it
 
 Collector workflow:
 
-1. Unzip and open **M5 Data Collector**. Approve macOS Bluetooth access on first launch.
-2. Enter the participant ID and body placement. These fields are locked while a trial is active so metadata cannot change mid-trial.
-3. Put the M5 in COLLECT mode. The app scans, reconnects to the previously used M5 when possible, verifies its trusted detector model, and shows READY/RECORDING/REVIEW/SAVING/COMPLETE.
-4. Use the M5 buttons for start/stop and KEEP/DISCARD. Kept trials are received and saved automatically.
-5. Click **Open Data Folder** to view the recordings. V1 stores them in `~/M5CollectorData/`. Each trial keeps the same `samples.csv`, `metadata.json` and hidden recovery journal format used by the terminal collector.
+1. Open **M5 Data Collector** and click **Choose Folder**. The selected folder is remembered for the next launch and can be changed later whenever no recording is active.
+2. Put the M5 in COLLECT mode. The app scans and reconnects automatically, verifies the trusted detector model, and shows the current READY/RECORDING/REVIEW/SAVING/COMPLETE state.
+3. Use the M5 buttons for start/stop and KEEP/DISCARD. The app shows the recording timer and transfer progress.
+4. After KEEP, wait for **SAVED — READY FOR NEXT RECORDING** before starting the next movement.
+5. The last recording panel reports duration and basic data quality, including timing gaps, sensor read errors, saturation, sequence gaps and buffer overflow.
+6. Click **Open Data Folder** at any time when a folder is selected. Each kept recording uses the same `samples.csv`, `metadata.json` and hidden recovery journal format as the terminal collector.
 
-The GUI is laptop-side only. It does not modify detector firmware, sampling, the BLE wire protocol, ACK/recovery semantics, model verification or the on-device DETECT/COLLECT controls.
+The GUI intentionally has no participant, placement, sample-count or trial-count fields. Folder choice, connection state, recording state/timer, save completion and data quality are the collector-facing information. The GUI is laptop-side only; it does not modify detector firmware, sampling, the BLE wire protocol, ACK/recovery semantics, model verification or the on-device DETECT/COLLECT controls.
 
 ## Run the Mac collector (developer/terminal workflow)
 

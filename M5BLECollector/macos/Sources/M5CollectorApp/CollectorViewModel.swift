@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import SwiftUI
 import AppKit
 import CoreBluetooth
 import IOKit.pwr_mgt
@@ -7,24 +8,44 @@ import Darwin
 import M5BLECollectorCore
 
 final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
-    @Published var participant: String {
-        didSet { UserDefaults.standard.set(participant, forKey: "M5CollectorParticipant") }
-    }
-    @Published var placement: String {
-        didSet { UserDefaults.standard.set(placement, forKey: "M5CollectorPlacement") }
-    }
-    @Published private(set) var connectionText = "Starting…"
-    @Published private(set) var deviceName = "—"
-    @Published private(set) var stateText = "DISCONNECTED"
-    @Published private(set) var samplesSaved = 0
-    @Published private(set) var trialsSaved = 0
-    @Published private(set) var message = "Turn on the M5 and switch it to COLLECT mode."
+    @Published private(set) var connectionText = "Waiting for save folder"
+    @Published private(set) var stateText = "WAITING"
+    @Published private(set) var message = "Choose a save folder to begin."
     @Published private(set) var lastError: String?
-    @Published private(set) var profileLocked = false
+    @Published private(set) var recordingsURL: URL?
+    @Published private(set) var canChangeSaveFolder = true
+    @Published private(set) var recordingSeconds: Double = 0
+    @Published private(set) var saveProgress: Double?
+    @Published private(set) var lastSaveText = "No recording saved yet."
+    @Published private(set) var dataQualityText = "—"
+    @Published private(set) var dataQualityWarning = false
+    @Published private(set) var hasSavedRecording = false
 
-    let recordingsURL: URL
+    var hasSaveFolder: Bool { recordingsURL != nil }
     var displayDataPath: String {
-        recordingsURL.path.replacingOccurrences(of: FileManager.default.homeDirectoryForCurrentUser.path, with: "~")
+        guard let recordingsURL else { return "No folder selected" }
+        return recordingsURL.path.replacingOccurrences(
+            of: FileManager.default.homeDirectoryForCurrentUser.path,
+            with: "~"
+        )
+    }
+    var showRecordingTimer: Bool {
+        ["RECORDING", "REVIEW", "SAVING", "BUFFER FULL"].contains(stateText)
+    }
+    var recordingTimeText: String {
+        let totalTenths = max(0, Int((recordingSeconds * 10).rounded()))
+        let minutes = totalTenths / 600
+        let seconds = (totalTenths % 600) / 10
+        let tenths = totalTenths % 10
+        return String(format: "%02d:%02d.%d", minutes, seconds, tenths)
+    }
+    var connectionIndicatorColor: Color {
+        switch connectionText {
+        case "Connected": return .green
+        case "Searching…", "Connecting…", "Reconnecting…": return .orange
+        case "Waiting for save folder": return .gray
+        default: return .red
+        }
     }
 
     private var central: CBCentralManager?
@@ -52,12 +73,12 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
     private var assertion: IOPMAssertionID = 0
     private var selected: UUID?
     private var started = false
+    private var transportStarted = false
 
     override init() {
-        participant = UserDefaults.standard.string(forKey: "M5CollectorParticipant") ?? ""
-        placement = UserDefaults.standard.string(forKey: "M5CollectorPlacement") ?? ""
-        recordingsURL = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("M5CollectorData", isDirectory: true)
+        if let savedPath = UserDefaults.standard.string(forKey: "M5CollectorSaveFolder"), !savedPath.isEmpty {
+            recordingsURL = URL(fileURLWithPath: savedPath, isDirectory: true).standardizedFileURL
+        }
         if let cached = UserDefaults.standard.string(forKey: "M5BLEPeripheral") {
             selected = UUID(uuidString: cached)
         }
@@ -67,33 +88,120 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
     func start() {
         guard !started else { return }
         started = true
-        do {
-            try FileManager.default.createDirectory(at: recordingsURL, withIntermediateDirectories: true)
-            recordingLock = open(recordingsURL.appendingPathComponent(".collector.lock").path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
-            guard recordingLock >= 0, flock(recordingLock, LOCK_EX | LOCK_NB) == 0 else {
-                throw ProtocolError.invalid("Another M5 collector is already using the data folder.")
-            }
-            trialsSaved = countCompletedTrials()
-            activity = ProcessInfo.processInfo.beginActivity(options: [.userInitiated, .latencyCritical], reason: "Receive and durably save M5 motion samples")
-            let rc = IOPMAssertionCreateWithName(
-                kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
-                IOPMAssertionLevel(kIOPMAssertionLevelOn),
-                "M5 BLE motion recording" as CFString,
-                &assertion
-            )
-            guard rc == kIOReturnSuccess else {
-                throw ProtocolError.invalid("Could not keep the Mac awake during collection.")
-            }
-            connectionText = "Searching…"
-            central = CBCentralManager(delegate: self, queue: .main)
-            let timer = DispatchSource.makeTimerSource(queue: .main)
-            timer.schedule(deadline: .now() + 1, repeating: 1)
-            timer.setEventHandler { [weak self] in self?.poll() }
-            timer.resume()
-            self.timer = timer
-        } catch {
-            fail("Collector could not start: \(error)")
+        guard let saved = recordingsURL else {
+            connectionText = "Waiting for save folder"
+            stateText = "WAITING"
+            message = "Choose where recordings should be saved."
+            return
         }
+        do {
+            try switchStorage(to: saved)
+            try beginTransport()
+        } catch {
+            releaseStorageLock()
+            recordingsURL = nil
+            UserDefaults.standard.removeObject(forKey: "M5CollectorSaveFolder")
+            connectionText = "Waiting for save folder"
+            stateText = "WAITING"
+            message = "The previous save folder is unavailable. Choose another folder."
+            lastError = "Could not use the saved folder: \(error.localizedDescription)"
+        }
+    }
+
+    func chooseDataFolder() {
+        guard canChangeSaveFolder else { return }
+        let panel = NSOpenPanel()
+        panel.title = "Choose where M5 recordings will be saved"
+        panel.prompt = "Choose Folder"
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        if let recordingsURL { panel.directoryURL = recordingsURL }
+        panel.begin { [weak self] response in
+            guard response == .OK, let url = panel.url, let self else { return }
+            do {
+                try self.switchStorage(to: url)
+                UserDefaults.standard.set(self.recordingsURL?.path, forKey: "M5CollectorSaveFolder")
+                self.lastError = nil
+                if !self.transportStarted {
+                    try self.beginTransport()
+                } else if self.status?.idle == true {
+                    self.message = "Save folder changed. Ready for the next recording."
+                }
+            } catch {
+                self.lastError = "Could not use that folder: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    func openDataFolder() {
+        guard let recordingsURL else { return }
+        NSWorkspace.shared.open(recordingsURL)
+    }
+
+    private func switchStorage(to url: URL) throws {
+        if let recorder, finishedSession != recorder.session {
+            throw ProtocolError.invalid("Finish the current recording before changing the save folder")
+        }
+        let newURL = url.standardizedFileURL
+        if recordingsURL == newURL, recordingLock >= 0 { return }
+
+        try FileManager.default.createDirectory(at: newURL, withIntermediateDirectories: true)
+        let newLock = open(
+            newURL.appendingPathComponent(".collector.lock").path,
+            O_CREAT | O_RDWR,
+            S_IRUSR | S_IWUSR
+        )
+        guard newLock >= 0 else {
+            throw ProtocolError.invalid("The selected folder cannot be opened for writing")
+        }
+        guard flock(newLock, LOCK_EX | LOCK_NB) == 0 else {
+            Darwin.close(newLock)
+            throw ProtocolError.invalid("Another M5 collector is already using that folder")
+        }
+
+        releaseStorageLock()
+        recordingLock = newLock
+        recordingsURL = newURL
+        recorder = nil
+        finishedSession = status?.complete == true ? status!.session : 0
+        lastExport = .distantPast
+        UserDefaults.standard.set(newURL.path, forKey: "M5CollectorSaveFolder")
+    }
+
+    private func beginTransport() throws {
+        guard !transportStarted else { return }
+        guard recordingLock >= 0 else {
+            throw ProtocolError.invalid("Choose a writable save folder first")
+        }
+        activity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiated, .latencyCritical],
+            reason: "Receive and durably save M5 motion samples"
+        )
+        let rc = IOPMAssertionCreateWithName(
+            kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
+            IOPMAssertionLevel(kIOPMAssertionLevelOn),
+            "M5 BLE motion recording" as CFString,
+            &assertion
+        )
+        guard rc == kIOReturnSuccess else {
+            if let activity {
+                ProcessInfo.processInfo.endActivity(activity)
+                self.activity = nil
+            }
+            throw ProtocolError.invalid("Could not keep the Mac awake during collection")
+        }
+        transportStarted = true
+        connectionText = "Searching…"
+        stateText = "DISCONNECTED"
+        message = "Turn on the M5 and switch it to COLLECT mode."
+        central = CBCentralManager(delegate: self, queue: .main)
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(deadline: .now() + 1, repeating: 1)
+        timer.setEventHandler { [weak self] in self?.poll() }
+        timer.resume()
+        self.timer = timer
     }
 
     func shutdown() {
@@ -109,6 +217,10 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
             ProcessInfo.processInfo.endActivity(activity)
             self.activity = nil
         }
+        releaseStorageLock()
+    }
+
+    private func releaseStorageLock() {
         if recordingLock >= 0 {
             flock(recordingLock, LOCK_UN)
             Darwin.close(recordingLock)
@@ -116,25 +228,7 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
         }
     }
 
-    func openDataFolder() {
-        do {
-            try FileManager.default.createDirectory(at: recordingsURL, withIntermediateDirectories: true)
-            NSWorkspace.shared.open(recordingsURL)
-        } catch {
-            lastError = "Could not open data folder: \(error.localizedDescription)"
-        }
-    }
-
     deinit { shutdown() }
-
-    private var currentProfile: [String: String] {
-        let p = participant.trimmingCharacters(in: .whitespacesAndNewlines)
-        let place = placement.trimmingCharacters(in: .whitespacesAndNewlines)
-        return [
-            "participant": p.isEmpty ? "unspecified" : p,
-            "placement": place.isEmpty ? "unspecified" : place
-        ]
-    }
 
     private func scan() {
         guard let central, central.state == .poweredOn, !fatalStorage else { return }
@@ -174,7 +268,6 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
         if let selected, candidate.identifier != selected { return }
         peripheral = candidate
         candidate.delegate = self
-        deviceName = candidate.name ?? "M5"
         connectionText = "Connecting…"
         central.stopScan()
         central.connect(candidate)
@@ -182,7 +275,6 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         connectionText = "Connected"
-        deviceName = peripheral.name ?? "M5"
         characteristics.removeAll()
         info = nil
         status = nil
@@ -208,6 +300,7 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
     }
 
     private func reconnect(_ error: Error?) {
+        let wasBusy = status.map { !$0.idle } ?? false
         self.peripheral = nil
         info = nil
         status = nil
@@ -224,9 +317,11 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
         deviceReadyReported = false
         connectionText = fatalStorage ? "Stopped" : "Reconnecting…"
         stateText = "DISCONNECTED"
-        profileLocked = false
-        if let error, !fatalStorage { lastError = "Bluetooth disconnected: \(error.localizedDescription)" }
+        saveProgress = nil
+        canChangeSaveFolder = !wasBusy && (recorder == nil || finishedSession == recorder?.session)
         if !fatalStorage {
+            message = "M5 disconnected. Keep it on and nearby; reconnecting automatically."
+            if let error { lastError = "Bluetooth disconnected: \(error.localizedDescription)" }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in self?.scan() }
         }
     }
@@ -285,17 +380,17 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
     }
 
     private func attach(_ session: UInt64) throws {
-        guard session != 0, let info else {
-            throw ProtocolError.invalid("Session arrived before device information")
+        guard session != 0, let info, let recordingsURL else {
+            throw ProtocolError.invalid("Recording arrived before storage or device information was ready")
         }
         if let current = recorder, current.session == session { return }
         if let old = recorder, finishedSession != old.session { try old.exportCSV() }
-        recorder = try Recorder(root: recordingsURL, session: session, info: info, profile: currentProfile)
+        recorder = try Recorder(root: recordingsURL, session: session, info: info, profile: [:])
         finishedSession = 0
-        samplesSaved = Int(recorder?.exclusive ?? 0)
     }
 
     private func hasJournal(_ session: UInt64) -> Bool {
+        guard let recordingsURL else { return false }
         let hex = String(format: "%016llx", session)
         let entries = (try? FileManager.default.contentsOfDirectory(
             at: recordingsURL,
@@ -326,7 +421,6 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
                 info = incoming
                 selected = peripheral.identifier
                 UserDefaults.standard.set(peripheral.identifier.uuidString, forKey: "M5BLEPeripheral")
-                deviceName = "M5MOTION-" + incoming.device_id.suffix(4).uppercased()
                 if let state = self.characteristic(Wire.status) {
                     statusReading = true
                     peripheral.readValue(for: state)
@@ -338,7 +432,6 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
                 if let old = recorder, finishedSession == old.session, status!.session != old.session {
                     recorder = nil
                     finishedSession = 0
-                    samplesSaved = 0
                 }
                 if !subscriptionsRequested, info != nil,
                    let stream = self.characteristic(Wire.samples),
@@ -349,7 +442,7 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
                 }
                 if status!.flags & 2 != 0, !deviceReadyReported {
                     deviceReadyReported = true
-                    connectionText = "Connected & ready"
+                    connectionText = "Connected"
                     lastError = nil
                 }
                 if let state = status, state.session != 0, info != nil, state.saving || state.complete {
@@ -358,10 +451,10 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
                     } else {
                         try attach(state.session)
                         if state.complete, finishedSession != state.session, let recorder {
-                            try recorder.finish(produced: state.produced, overflowed: state.flags & 4 != 0)
+                            let overflowed = state.flags & 4 != 0
+                            try recorder.finish(produced: state.produced, overflowed: overflowed)
                             finishedSession = state.session
-                            samplesSaved = Int(recorder.exclusive)
-                            trialsSaved = countCompletedTrials()
+                            updateLastSave(recorder: recorder, overflowed: overflowed)
                         }
                     }
                 }
@@ -373,7 +466,6 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
                     try attach(batch.session)
                     guard let recorder else { return }
                     let exclusive = try recorder.append(batch.samples)
-                    samplesSaved = Int(exclusive)
                     send(Wire.command(3, session: batch.session, exclusive: exclusive), label: "ack")
                 }
 
@@ -383,6 +475,50 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
         } catch {
             fail("Recording stopped on this Mac to preserve data integrity: \(error)")
         }
+    }
+
+    private func updateLastSave(recorder: Recorder, overflowed: Bool) {
+        hasSavedRecording = true
+        lastSaveText = "Saved successfully • \(formatDuration(recorder.elapsedSeconds))"
+        do {
+            let url = recorder.directory.appendingPathComponent("metadata.json")
+            let data = try Data(contentsOf: url)
+            guard let metadata = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let quality = metadata["quality"] as? [String: Any] else {
+                throw ProtocolError.invalid("quality report missing")
+            }
+            func intValue(_ key: String) -> Int {
+                (quality[key] as? NSNumber)?.intValue ?? 0
+            }
+            let readErrors = intValue("read_errors")
+            let timingGaps = max(intValue("timing_gap_flags"), intValue("observed_timestamp_gaps"))
+            let saturated = intValue("saturated_samples")
+            let sequenceGaps = intValue("sequence_gaps")
+            let hz = (quality["measured_hz"] as? NSNumber)?.doubleValue ?? 0
+            var warnings: [String] = []
+            if readErrors > 0 { warnings.append("\(readErrors) sensor read error\(readErrors == 1 ? "" : "s")") }
+            if timingGaps > 0 { warnings.append("\(timingGaps) timing gap\(timingGaps == 1 ? "" : "s")") }
+            if saturated > 0 { warnings.append("\(saturated) saturated sample\(saturated == 1 ? "" : "s")") }
+            if sequenceGaps > 0 { warnings.append("\(sequenceGaps) sequence gap\(sequenceGaps == 1 ? "" : "s")") }
+            if overflowed { warnings.append("device buffer filled") }
+            dataQualityWarning = !warnings.isEmpty
+            if warnings.isEmpty {
+                dataQualityText = hz > 0 ? String(format: "OK • %.1f Hz", hz) : "OK"
+            } else {
+                let rate = hz > 0 ? String(format: " • %.1f Hz", hz) : ""
+                dataQualityText = "Warning: " + warnings.joined(separator: ", ") + rate
+            }
+        } catch {
+            dataQualityWarning = true
+            dataQualityText = "Warning: quality report unavailable"
+        }
+    }
+
+    private func formatDuration(_ seconds: Double) -> String {
+        if seconds < 60 { return String(format: "%.1f s", seconds) }
+        let minutes = Int(seconds) / 60
+        let remaining = seconds - Double(minutes * 60)
+        return String(format: "%d:%04.1f", minutes, remaining)
     }
 
     private func send(_ data: Data, label: String) {
@@ -443,44 +579,36 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
     private func publishStatus() {
         guard let s = status else {
             stateText = "DISCONNECTED"
-            profileLocked = false
+            saveProgress = nil
             return
         }
         let states = ["READY", "RECORDING", "REVIEW", "SAVING", "COMPLETE", "BUFFER FULL"]
         stateText = states[Int(s.state)]
-        profileLocked = !(s.state == 0 || s.state == 4)
-        if let recorder, recorder.session == s.session { samplesSaved = Int(recorder.exclusive) }
+        recordingSeconds = s.state == 0 ? 0 : Double(s.produced) / 30.0
+        canChangeSaveFolder = s.idle && (recorder == nil || finishedSession == recorder?.session)
+
+        if s.state == 3, s.produced > 0 {
+            let saved = max(0, Int(s.produced) - Int(s.pending))
+            saveProgress = min(1, max(0, Double(saved) / Double(s.produced)))
+        } else {
+            saveProgress = nil
+        }
 
         switch s.state {
         case 0:
-            message = "Ready. Use A on the M5 to start a trial."
+            message = "Ready for the next recording. Press A on the M5 to start."
         case 1:
-            message = "Recording on the M5. Press A on the M5 when the movement is finished."
+            message = "Recording. Press A on the M5 when the movement is finished."
         case 2:
             message = "Review on the M5: A = KEEP, B = DISCARD."
         case 3:
-            message = "Saving the kept trial to this Mac. Keep the M5 nearby."
+            message = "Saving to this Mac. Keep the M5 on and nearby until saving finishes."
         case 4:
-            message = "Trial saved. The M5 is ready for another trial."
+            message = hasSavedRecording ? "✓ SAVED — READY FOR NEXT RECORDING" : "M5 is ready for the next recording."
         case 5:
             message = "M5 buffer is full. Choose KEEP or DISCARD on the M5."
         default:
             message = "Connected to the M5."
-        }
-    }
-
-    private func countCompletedTrials() -> Int {
-        let entries = (try? FileManager.default.contentsOfDirectory(
-            at: recordingsURL,
-            includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles]
-        )) ?? []
-        return entries.reduce(0) { count, entry in
-            guard let data = try? Data(contentsOf: entry.appendingPathComponent("metadata.json")),
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let completion = json["completion"] as? [String: Any],
-                  completion["complete"] as? Bool == true else { return count }
-            return count + 1
         }
     }
 
@@ -489,6 +617,8 @@ final class CollectorViewModel: NSObject, ObservableObject, CBCentralManagerDele
         fatalStorage = true
         connectionText = "Stopped"
         stateText = "ERROR"
+        saveProgress = nil
+        canChangeSaveFolder = false
         self.message = "Collection stopped to protect the recording. Close and reopen the app after resolving the error."
         if let peripheral { central?.cancelPeripheralConnection(peripheral) }
     }
