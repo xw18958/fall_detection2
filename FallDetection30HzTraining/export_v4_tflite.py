@@ -142,8 +142,8 @@ def inventory(it):
             'output_scale_zero': list(it.get_output_details()[0]['quantization'])}
 
 
-def load(args):
-    if sha(args.checkpoint) != EXPECTED_CHECKPOINT:
+def load(args, expected_checkpoint=EXPECTED_CHECKPOINT, m5_loader=v2.m5_records):
+    if sha(args.checkpoint) != expected_checkpoint:
         raise ValueError('Expected the exact V4 locked checkpoint')
     c = torch.load(args.checkpoint, weights_only=False, map_location='cpu'); cfg = base.Cfg(**c['config'])
     if c.get('smoke', True) or (cfg.seed,cfg.fs,cfg.win_sec,cfg.stride_sec,cfg.channels,cfg.blocks) != (42,30,3,.25,24,3):
@@ -154,7 +154,7 @@ def load(args):
         raise ValueError('Split fingerprint mismatch')
     if json.loads((args.work/'normalization.json').read_text()) != c['normalization']:
         raise ValueError('Normalization file/checkpoint mismatch')
-    m5 = v2.m5_records(args.m5_root)
+    m5 = m5_loader(args.m5_root)
     for r in m5: r['normalization_domain'] = v2.M5
     records = v2.own_records(args.own_root)+m5+v2.public_records(args.public_root)
     if v2.fingerprint(records) != split['input_fingerprint']:
@@ -290,7 +290,7 @@ def export(args,c,cfg,rs,model,tf):
     it=interpreter(tf,data); inv=inventory(it)
     (args.output/'model_int8.tflite').write_bytes(data)
     q,raw=lite(it,verify)
-    report={'checkpoint_sha256':EXPECTED_CHECKPOINT,'model_sha256':sha(args.output/'model_int8.tflite'),
+    report={'checkpoint_sha256':sha(args.checkpoint),'model_sha256':sha(args.output/'model_int8.tflite'),
             'split_fingerprint':c['split_fingerprint'],'normalization_sha256':sha(args.work/'normalization.json'),
             'conversion_mode':'integer-only','tensorflow_version':tf.__version__,'torch_version':torch.__version__,
             'model_bytes':len(data),'float_bytes':len(float_data),'calibration':coverage,'inventory':inv,

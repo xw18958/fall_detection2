@@ -1,0 +1,889 @@
+{
+  "status": "completed_no_qualified_deployment_candidate",
+  "seed": 42,
+  "dataset": {
+    "status": "passed",
+    "protocol_version": 5,
+    "raw_sessions": 26,
+    "conversion_convention": "si",
+    "software_clipping": false,
+    "units": {
+      "acceleration": "m/s^2",
+      "gyroscope": "rad/s"
+    },
+    "prepared_samples": 39135,
+    "source_label_counts": {
+      "fall": 19,
+      "non-fall": 7
+    },
+    "split_label_counts": {
+      "train/fall": 13,
+      "test/fall": 3,
+      "val/fall": 3,
+      "train/non-fall": 5,
+      "val/non-fall": 1,
+      "test/non-fall": 1
+    },
+    "crop_counts": {
+      "5s_centered": 18,
+      "3s_boundary": 1,
+      "full_session": 7
+    },
+    "preprocessing": "existing paired acceleration/gyro event midpoint and 5s centered/3s boundary crop; no padding",
+    "crop_label_policy": "all 3s views from positive containers remain positive; no phase pseudo-labels",
+    "negative_policy": "seven original full-length prepared SI negatives copied byte-for-byte; original boot splits retained",
+    "split_limitations": "new positives share one boot, participant and placement unknown; 13/3/3 whole-recording split is exploratory, not independent participant/boot validation",
+    "seed": 42,
+    "test_used_for_preprocessing_tuning": false,
+    "positive_raw_samples": 4746,
+    "positive_quality_flags": {
+      "read_errors": 0,
+      "timing_gap_flags": 0,
+      "saturated_samples": 0
+    },
+    "manifest_sha256": "d24fbe72d2bd6e53e8ac9a74c19a074d745df9e44143cb67c33f9ae0c949be09"
+  },
+  "classification_validation": {
+    "Float": {
+      "own": {
+        "windows": 2862,
+        "tp": 130,
+        "fn": 8,
+        "fp": 0,
+        "tn": 2724,
+        "precision": 1.0,
+        "recall": 0.9420289855072463,
+        "f1": 0.9701492537313433,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9972047519217331
+      },
+      "m5_hard_negatives": {
+        "windows": 1109,
+        "tp": 19,
+        "fn": 8,
+        "fp": 0,
+        "tn": 1082,
+        "precision": 1.0,
+        "recall": 0.7037037037037037,
+        "f1": 0.8260869565217391,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9927862939585211
+      },
+      "CGU_BES": {
+        "windows": 955,
+        "tp": 72,
+        "fn": 0,
+        "fp": 0,
+        "tn": 883,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 1.0
+      },
+      "Cogent": {
+        "windows": 12171,
+        "tp": 627,
+        "fn": 3,
+        "fp": 0,
+        "tn": 11541,
+        "precision": 1.0,
+        "recall": 0.9952380952380953,
+        "f1": 0.9976133651551312,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9997535124476213
+      },
+      "SFU_IMU": {
+        "windows": 4509,
+        "tp": 349,
+        "fn": 20,
+        "fp": 16,
+        "tn": 4124,
+        "precision": 0.9561643835616438,
+        "recall": 0.94579945799458,
+        "f1": 0.9509536784741145,
+        "specificity": 0.996135265700483,
+        "negative_window_fpr": 0.003864734299516908,
+        "accuracy": 0.9920159680638723
+      },
+      "UCI_SimulatedFalls": {
+        "windows": 17714,
+        "tp": 2471,
+        "fn": 40,
+        "fp": 1,
+        "tn": 15202,
+        "precision": 0.9995954692556634,
+        "recall": 0.9840700915969733,
+        "f1": 0.9917720248846077,
+        "specificity": 0.999934223508518,
+        "negative_window_fpr": 6.577649148194435e-05,
+        "accuracy": 0.9976854465394603
+      },
+      "PAMAP2": {
+        "windows": 22393,
+        "tp": 0,
+        "fn": 0,
+        "fp": 40,
+        "tn": 22353,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.9982137275041307,
+        "negative_window_fpr": 0.001786272495869245,
+        "accuracy": 0.9982137275041307
+      },
+      "pooled": {
+        "windows": 61713,
+        "tp": 3668,
+        "fn": 79,
+        "fp": 57,
+        "tn": 57909,
+        "precision": 0.9846979865771812,
+        "recall": 0.9789164665065385,
+        "f1": 0.9817987152034261,
+        "specificity": 0.9990166649415174,
+        "negative_window_fpr": 0.0009833350584825588,
+        "accuracy": 0.997796250384846
+      }
+    },
+    "PTQ": {
+      "own": {
+        "windows": 2862,
+        "tp": 129,
+        "fn": 9,
+        "fp": 0,
+        "tn": 2724,
+        "precision": 1.0,
+        "recall": 0.9347826086956522,
+        "f1": 0.9662921348314607,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9968553459119497
+      },
+      "m5_hard_negatives": {
+        "windows": 1109,
+        "tp": 16,
+        "fn": 11,
+        "fp": 0,
+        "tn": 1082,
+        "precision": 1.0,
+        "recall": 0.5925925925925926,
+        "f1": 0.7441860465116279,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9900811541929666
+      },
+      "CGU_BES": {
+        "windows": 955,
+        "tp": 72,
+        "fn": 0,
+        "fp": 0,
+        "tn": 883,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 1.0
+      },
+      "Cogent": {
+        "windows": 12171,
+        "tp": 627,
+        "fn": 3,
+        "fp": 0,
+        "tn": 11541,
+        "precision": 1.0,
+        "recall": 0.9952380952380953,
+        "f1": 0.9976133651551312,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9997535124476213
+      },
+      "SFU_IMU": {
+        "windows": 4509,
+        "tp": 348,
+        "fn": 21,
+        "fp": 16,
+        "tn": 4124,
+        "precision": 0.9560439560439561,
+        "recall": 0.943089430894309,
+        "f1": 0.9495225102319236,
+        "specificity": 0.996135265700483,
+        "negative_window_fpr": 0.003864734299516908,
+        "accuracy": 0.9917941893989798
+      },
+      "UCI_SimulatedFalls": {
+        "windows": 17714,
+        "tp": 2482,
+        "fn": 29,
+        "fp": 1,
+        "tn": 15202,
+        "precision": 0.999597261377366,
+        "recall": 0.9884508164078056,
+        "f1": 0.9939927913496196,
+        "specificity": 0.999934223508518,
+        "negative_window_fpr": 6.577649148194435e-05,
+        "accuracy": 0.9983064242971661
+      },
+      "PAMAP2": {
+        "windows": 22393,
+        "tp": 0,
+        "fn": 0,
+        "fp": 27,
+        "tn": 22366,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.9987942660652882,
+        "negative_window_fpr": 0.0012057339347117404,
+        "accuracy": 0.9987942660652882
+      },
+      "pooled": {
+        "windows": 61713,
+        "tp": 3674,
+        "fn": 73,
+        "fp": 44,
+        "tn": 57922,
+        "precision": 0.9881656804733728,
+        "recall": 0.9805177475313585,
+        "f1": 0.9843268586738111,
+        "specificity": 0.9992409343408205,
+        "negative_window_fpr": 0.000759065659179519,
+        "accuracy": 0.9981041271693161
+      }
+    },
+    "QAT": {
+      "own": {
+        "windows": 2862,
+        "tp": 129,
+        "fn": 9,
+        "fp": 0,
+        "tn": 2724,
+        "precision": 1.0,
+        "recall": 0.9347826086956522,
+        "f1": 0.9662921348314607,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9968553459119497
+      },
+      "m5_hard_negatives": {
+        "windows": 1109,
+        "tp": 17,
+        "fn": 10,
+        "fp": 0,
+        "tn": 1082,
+        "precision": 1.0,
+        "recall": 0.6296296296296297,
+        "f1": 0.7727272727272727,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9909828674481514
+      },
+      "CGU_BES": {
+        "windows": 955,
+        "tp": 72,
+        "fn": 0,
+        "fp": 0,
+        "tn": 883,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 1.0
+      },
+      "Cogent": {
+        "windows": 12171,
+        "tp": 627,
+        "fn": 3,
+        "fp": 0,
+        "tn": 11541,
+        "precision": 1.0,
+        "recall": 0.9952380952380953,
+        "f1": 0.9976133651551312,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9997535124476213
+      },
+      "SFU_IMU": {
+        "windows": 4509,
+        "tp": 350,
+        "fn": 19,
+        "fp": 16,
+        "tn": 4124,
+        "precision": 0.9562841530054644,
+        "recall": 0.948509485094851,
+        "f1": 0.9523809523809523,
+        "specificity": 0.996135265700483,
+        "negative_window_fpr": 0.003864734299516908,
+        "accuracy": 0.9922377467287647
+      },
+      "UCI_SimulatedFalls": {
+        "windows": 17714,
+        "tp": 2477,
+        "fn": 34,
+        "fp": 1,
+        "tn": 15202,
+        "precision": 0.9995964487489911,
+        "recall": 0.9864595778574273,
+        "f1": 0.9929845660452996,
+        "specificity": 0.999934223508518,
+        "negative_window_fpr": 6.577649148194435e-05,
+        "accuracy": 0.998024161680027
+      },
+      "PAMAP2": {
+        "windows": 22393,
+        "tp": 0,
+        "fn": 0,
+        "fp": 39,
+        "tn": 22354,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "specificity": 0.9982583843165275,
+        "negative_window_fpr": 0.0017416156834725138,
+        "accuracy": 0.9982583843165275
+      },
+      "pooled": {
+        "windows": 61713,
+        "tp": 3672,
+        "fn": 75,
+        "fp": 56,
+        "tn": 57910,
+        "precision": 0.9849785407725322,
+        "recall": 0.9799839871897518,
+        "f1": 0.9824749163879599,
+        "specificity": 0.9990339164337715,
+        "negative_window_fpr": 0.0009660835662284788,
+        "accuracy": 0.9978772705912855
+      }
+    }
+  },
+  "selection": {
+    "Float": {
+      "stage": "all",
+      "epoch": 4,
+      "threshold": 0.8929293155670166,
+      "weighted_error": 0.0006191545048609502,
+      "valid_under_constraints": false,
+      "threshold_candidates": 59591,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "m5_hard_negatives": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.9487179487179488,
+          "negative_window_fpr": 0.004102564102563665,
+          "error": 0.0020512820512818327
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 0.9944444444444445,
+          "specificity": 0.9936708860759494,
+          "negative_window_fpr": 8.552856654120217e-05,
+          "error": 0.002820542061048369
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.9124386252045826,
+          "negative_window_fpr": 0.0013197209362792995,
+          "error": 0.0013197209362792995
+        }
+      },
+      "window_recall_floors": {
+        "m5_hard_negatives": 0.9
+      },
+      "window_recalls": {
+        "m5_hard_negatives": 0.7037037037037037
+      },
+      "threshold_representation": "float32 midpoint between validation probability levels"
+    },
+    "PTQ": {
+      "threshold": 0.9499231576919556,
+      "weighted_error": 0.00043850982095261547,
+      "valid_under_constraints": false,
+      "threshold_candidates": 576,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "m5_hard_negatives": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.9230769230769232,
+          "negative_window_fpr": 0.00410256410256367,
+          "error": 0.002051282051281835
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 0.9972222222222222,
+          "specificity": 0.9936708860759493,
+          "negative_window_fpr": 8.552856654131055e-05,
+          "error": 0.0014316531721595392
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.9124386252045826,
+          "negative_window_fpr": 0.0009021629860847803,
+          "error": 0.0009021629860847803
+        }
+      },
+      "window_recall_floors": {
+        "m5_hard_negatives": 0.9
+      },
+      "window_recalls": {
+        "m5_hard_negatives": 0.5925925925925926
+      },
+      "threshold_representation": "float32 midpoint between validation probability levels"
+    },
+    "QAT": {
+      "threshold": 0.9096898436546326,
+      "weighted_error": 0.0006161091759152988,
+      "valid_under_constraints": false,
+      "threshold_candidates": 565,
+      "threshold_policy": "seven_source_group_macro_v4",
+      "source_weights": {
+        "own": 0.25,
+        "m5_hard_negatives": 0.25,
+        "CGU_BES": 0.1,
+        "Cogent": 0.1,
+        "SFU_IMU": 0.1,
+        "UCI_SimulatedFalls": 0.1,
+        "PAMAP2": 0.1
+      },
+      "domains": {
+        "own": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "m5_hard_negatives": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "CGU_BES": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "Cogent": {
+          "recall": 1.0,
+          "specificity": 1.0,
+          "negative_window_fpr": 0.0,
+          "error": 0.0
+        },
+        "SFU_IMU": {
+          "recall": 1.0,
+          "specificity": 0.9487179487179488,
+          "negative_window_fpr": 0.004102564102563671,
+          "error": 0.0020512820512818353
+        },
+        "UCI_SimulatedFalls": {
+          "recall": 0.9944444444444445,
+          "specificity": 0.9936708860759494,
+          "negative_window_fpr": 8.55285665413135e-05,
+          "error": 0.0028205420610484247
+        },
+        "PAMAP2": {
+          "recall": null,
+          "specificity": 0.9509001636661212,
+          "negative_window_fpr": 0.0012892676468227284,
+          "error": 0.0012892676468227284
+        }
+      },
+      "window_recall_floors": {
+        "m5_hard_negatives": 0.9
+      },
+      "window_recalls": {
+        "m5_hard_negatives": 0.6296296296296297
+      },
+      "threshold_representation": "float32 midpoint between validation probability levels"
+    }
+  },
+  "validation_only_threshold_diagnostics": {
+    "Float": {
+      "validation_only": true,
+      "adopted": false,
+      "purpose": "show M5 sensitivity/specificity tradeoff; these alternatives cannot become a deployed candidate",
+      "m5_only_selection": {
+        "threshold": 0.3435235023498535,
+        "weighted_error": 0.0014694465333059269,
+        "valid_under_constraints": true,
+        "threshold_candidates": 59608,
+        "threshold_policy": "seven_source_group_macro_v4",
+        "source_weights": {
+          "own": 0.25,
+          "m5_hard_negatives": 0.25,
+          "CGU_BES": 0.1,
+          "Cogent": 0.1,
+          "SFU_IMU": 0.1,
+          "UCI_SimulatedFalls": 0.1,
+          "PAMAP2": 0.1
+        },
+        "domains": {
+          "own": {
+            "recall": 1.0,
+            "specificity": 1.0,
+            "negative_window_fpr": 0.0,
+            "error": 0.0
+          },
+          "m5_hard_negatives": {
+            "recall": 1.0,
+            "specificity": 1.0,
+            "negative_window_fpr": 0.0,
+            "error": 0.0
+          },
+          "CGU_BES": {
+            "recall": 1.0,
+            "specificity": 0.888888888888889,
+            "negative_window_fpr": 0.003968253968253961,
+            "error": 0.0019841269841269805
+          },
+          "Cogent": {
+            "recall": 1.0,
+            "specificity": 0.9959349593495935,
+            "negative_window_fpr": 0.000903342366757045,
+            "error": 0.0004516711833785225
+          },
+          "SFU_IMU": {
+            "recall": 1.0,
+            "specificity": 0.8589743589743593,
+            "negative_window_fpr": 0.008717948717947788,
+            "error": 0.004358974358973894
+          },
+          "UCI_SimulatedFalls": {
+            "recall": 0.9944444444444445,
+            "specificity": 0.9843114691215957,
+            "negative_window_fpr": 0.0007291140974373492,
+            "error": 0.0031423348264964426
+          },
+          "PAMAP2": {
+            "recall": null,
+            "specificity": 0.9018003273322422,
+            "negative_window_fpr": 0.004757357980083429,
+            "error": 0.004757357980083429
+          }
+        },
+        "window_recall_floors": {
+          "m5_hard_negatives": 0.9
+        },
+        "window_recalls": {
+          "m5_hard_negatives": 0.9259259259259259
+        },
+        "threshold_representation": "float32 midpoint between validation probability levels"
+      },
+      "m5_windows": {
+        "windows": 1109,
+        "tp": 25,
+        "fn": 2,
+        "fp": 0,
+        "tn": 1082,
+        "precision": 1.0,
+        "recall": 0.9259259259259259,
+        "f1": 0.9615384615384616,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9981965734896303
+      },
+      "violated_full_gates": [
+        {
+          "domain": "CGU_BES",
+          "metric": "specificity",
+          "value": 0.888888888888889,
+          "bound": 0.98
+        },
+        {
+          "domain": "SFU_IMU",
+          "metric": "specificity",
+          "value": 0.8589743589743593,
+          "bound": 0.8646153846153848
+        }
+      ]
+    },
+    "PTQ": {
+      "validation_only": true,
+      "adopted": false,
+      "purpose": "show M5 sensitivity/specificity tradeoff; these alternatives cannot become a deployed candidate",
+      "m5_only_selection": {
+        "threshold": 0.6313204765319824,
+        "weighted_error": 0.0011348018945386438,
+        "valid_under_constraints": true,
+        "threshold_candidates": 576,
+        "threshold_policy": "seven_source_group_macro_v4",
+        "source_weights": {
+          "own": 0.25,
+          "m5_hard_negatives": 0.25,
+          "CGU_BES": 0.1,
+          "Cogent": 0.1,
+          "SFU_IMU": 0.1,
+          "UCI_SimulatedFalls": 0.1,
+          "PAMAP2": 0.1
+        },
+        "domains": {
+          "own": {
+            "recall": 1.0,
+            "specificity": 0.95,
+            "negative_window_fpr": 0.001333333333333391,
+            "error": 0.0006666666666666955
+          },
+          "m5_hard_negatives": {
+            "recall": 1.0,
+            "specificity": 0.0,
+            "negative_window_fpr": 0.0009242144177449184,
+            "error": 0.0004621072088724592
+          },
+          "CGU_BES": {
+            "recall": 1.0,
+            "specificity": 0.888888888888889,
+            "negative_window_fpr": 0.0029761904761904695,
+            "error": 0.0014880952380952348
+          },
+          "Cogent": {
+            "recall": 1.0,
+            "specificity": 0.9959349593495935,
+            "negative_window_fpr": 0.0004516711833785174,
+            "error": 0.0002258355916892587
+          },
+          "SFU_IMU": {
+            "recall": 1.0,
+            "specificity": 0.871794871794872,
+            "negative_window_fpr": 0.0064102564102557335,
+            "error": 0.0032051282051278667
+          },
+          "UCI_SimulatedFalls": {
+            "recall": 1.0,
+            "specificity": 0.974952052167242,
+            "negative_window_fpr": 0.0008883700763908167,
+            "error": 0.00044418503819540836
+          },
+          "PAMAP2": {
+            "recall": null,
+            "specificity": 0.9124386252045826,
+            "negative_window_fpr": 0.003162840183430783,
+            "error": 0.003162840183430783
+          }
+        },
+        "window_recall_floors": {
+          "m5_hard_negatives": 0.9
+        },
+        "window_recalls": {
+          "m5_hard_negatives": 0.9259259259259259
+        },
+        "threshold_representation": "float32 midpoint between validation probability levels"
+      },
+      "m5_windows": {
+        "windows": 1109,
+        "tp": 25,
+        "fn": 2,
+        "fp": 1,
+        "tn": 1081,
+        "precision": 0.9615384615384616,
+        "recall": 0.9259259259259259,
+        "f1": 0.9433962264150944,
+        "specificity": 0.9990757855822551,
+        "negative_window_fpr": 0.0009242144177449168,
+        "accuracy": 0.9972948602344455
+      },
+      "violated_full_gates": [
+        {
+          "domain": "CGU_BES",
+          "metric": "specificity",
+          "value": 0.888888888888889,
+          "bound": 0.98
+        }
+      ]
+    },
+    "QAT": {
+      "validation_only": true,
+      "adopted": false,
+      "purpose": "show M5 sensitivity/specificity tradeoff; these alternatives cannot become a deployed candidate",
+      "m5_only_selection": {
+        "threshold": 0.9096898436546326,
+        "weighted_error": 0.0006161091759152988,
+        "valid_under_constraints": false,
+        "threshold_candidates": 565,
+        "threshold_policy": "seven_source_group_macro_v4",
+        "source_weights": {
+          "own": 0.25,
+          "m5_hard_negatives": 0.25,
+          "CGU_BES": 0.1,
+          "Cogent": 0.1,
+          "SFU_IMU": 0.1,
+          "UCI_SimulatedFalls": 0.1,
+          "PAMAP2": 0.1
+        },
+        "domains": {
+          "own": {
+            "recall": 1.0,
+            "specificity": 1.0,
+            "negative_window_fpr": 0.0,
+            "error": 0.0
+          },
+          "m5_hard_negatives": {
+            "recall": 1.0,
+            "specificity": 1.0,
+            "negative_window_fpr": 0.0,
+            "error": 0.0
+          },
+          "CGU_BES": {
+            "recall": 1.0,
+            "specificity": 1.0,
+            "negative_window_fpr": 0.0,
+            "error": 0.0
+          },
+          "Cogent": {
+            "recall": 1.0,
+            "specificity": 1.0,
+            "negative_window_fpr": 0.0,
+            "error": 0.0
+          },
+          "SFU_IMU": {
+            "recall": 1.0,
+            "specificity": 0.9487179487179488,
+            "negative_window_fpr": 0.00410256410256367,
+            "error": 0.002051282051281835
+          },
+          "UCI_SimulatedFalls": {
+            "recall": 0.9944444444444445,
+            "specificity": 0.9936708860759494,
+            "negative_window_fpr": 8.55285665413135e-05,
+            "error": 0.0028205420610484247
+          },
+          "PAMAP2": {
+            "recall": null,
+            "specificity": 0.9509001636661212,
+            "negative_window_fpr": 0.0012892676468227284,
+            "error": 0.0012892676468227284
+          }
+        },
+        "window_recall_floors": {
+          "m5_hard_negatives": 0.9
+        },
+        "window_recalls": {
+          "m5_hard_negatives": 0.6296296296296297
+        },
+        "threshold_representation": "float32 midpoint between validation probability levels"
+      },
+      "m5_windows": {
+        "windows": 1109,
+        "tp": 17,
+        "fn": 10,
+        "fp": 0,
+        "tn": 1082,
+        "precision": 1.0,
+        "recall": 0.6296296296296297,
+        "f1": 0.7727272727272727,
+        "specificity": 1.0,
+        "negative_window_fpr": 0.0,
+        "accuracy": 0.9909828674481514
+      },
+      "violated_full_gates": [
+        {
+          "domain": "m5_hard_negatives",
+          "metric": "positive_window_recall",
+          "value": 0.6296296296296297,
+          "bound": 0.9
+        }
+      ]
+    }
+  },
+  "validation_windows": 61713,
+  "stage_epochs": {
+    "ssl": 30,
+    "head": 3,
+    "all": 14
+  },
+  "selected_float_stage": "all",
+  "selected_float_epoch": 4,
+  "qat_epochs": 12,
+  "selected_qat_epoch": 10,
+  "float_checkpoint_sha256": "69df2aed93411a7ec78afb6b726c558196182870595e4fb98028d5de533dfe55",
+  "ptq_model_sha256": "4eb70382f3306a4c8580e5d08342032edae43d3bd4e07cb4a3a9090e85dfa367",
+  "qat_model_sha256": "636dca88ede1cd7e65bf0204225f833f88b329b5226310a67249af57c450e15c",
+  "validation_retrieval": {
+    "task": "binary-class retrieval, not event-instance retrieval",
+    "gallery_recordings": 245,
+    "query_recordings": 53,
+    "precision_at_1": 0.9811320754716981,
+    "hit_rate_at_5": 0.9811320754716981,
+    "mAP": 0.9869304857516897
+  },
+  "fine_tune_test": null,
+  "final_test_evaluated": false,
+  "zero_shot": null,
+  "zero_shot_reason": "All seven sources participate in training",
+  "tests_passed": 36,
+  "input_raw_files_preserved": true,
+  "physical_device_updated": false,
+  "commercial_readiness_established": false,
+  "threshold_policy": "gates first; validation source-group error uses recording FNR plus negative-window FPR, with additional M5 positive-window recall floor",
+  "selection_limitation": "fallback lowest weighted error may retain only a subset of positive views; invalid fallbacks are never deployment-qualified"
+}

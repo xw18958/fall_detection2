@@ -317,6 +317,8 @@ def main():
     ap.add_argument("--baseline-checkpoint",type=Path,help="Locked checkpoint used for validation recall gates and comparison")
     ap.add_argument("--steps-per-epoch",type=int,default=100)
     ap.add_argument("--experiment-v4",action="store_true",help="Fixed inherited splits, full-range M5, seven-source weighted selection")
+    ap.add_argument("--experiment-v5",action="store_true",help="Combined M5 positives/negatives; exploratory recording-held-out positives")
+    ap.add_argument("--comparison-checkpoint",type=Path,help="Immutable V4 float checkpoint for V5 validation comparison")
     ap.add_argument("--split-from",type=Path,help="Original six-source group_splits.json; required for v4")
     ap.add_argument("--legacy-m5-root",type=Path,help="Original M5 conversion used only to evaluate the historical baseline")
     ap.add_argument("--ssl-min-epochs",type=int,default=10)
@@ -352,7 +354,11 @@ def main():
             cfg.channels=min(cfg.channels,8)
         cfg.ssl_epochs=1; cfg.head_epochs=1; cfg.all_epochs=1; cfg.max_ssl_per_rec=4; cfg.max_neg_per_rec=4
         cfg.steps_per_epoch=2; cfg.batch=min(cfg.batch,16)
-    if a.experiment_v4:
+    if a.experiment_v5:
+        if a.split_from is None or a.comparison_checkpoint is None or a.experiment_v4:
+            ap.error("v5 requires --split-from, --comparison-checkpoint, and no --experiment-v4")
+        from training_v5 import run
+    elif a.experiment_v4:
         if a.split_from is None or a.legacy_m5_root is None:
             ap.error("v4 requires --split-from and --legacy-m5-root")
         from training_v4 import run
