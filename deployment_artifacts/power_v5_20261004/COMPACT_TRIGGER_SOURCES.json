@@ -1,0 +1,1185 @@
+{
+  "candidate": "cnn24_mean_max",
+  "full_model_sha256": "4eb70382f3306a4c8580e5d08342032edae43d3bd4e07cb4a3a9090e85dfa367",
+  "checkpoint_sha256": "69df2aed93411a7ec78afb6b726c558196182870595e4fb98028d5de533dfe55",
+  "split_sha256": "5e778afe808de661bb23871a6533587a3176c77ef8dfb3bbd010b79842ac24d9",
+  "previous_test_seen": true,
+  "test_used_for_selection": false,
+  "deployment_eligible": false,
+  "commercial_qualified": false,
+  "zero_shot": null,
+  "retrieval": null,
+  "caveat": "Recording labels and frozen V5 reference timing; no clinical onset annotations or independent participant qualification",
+  "val": {
+    "overall": {
+      "trigger_windows": {
+        "TP": 3707,
+        "FN": 40,
+        "FP": 2237,
+        "TN": 55171,
+        "recall": 0.9893247931678676,
+        "specificity": 0.9610333054626533,
+        "precision": 0.6236541049798116,
+        "F1": 0.7650397275822929
+      },
+      "baseline_windows": {
+        "TP": 3714,
+        "FN": 33,
+        "FP": 138,
+        "TN": 57270,
+        "recall": 0.9911929543634908,
+        "specificity": 0.9975961538461539,
+        "precision": 0.9641744548286605,
+        "F1": 0.97749703908409
+      },
+      "cascade_windows": {
+        "TP": 3713,
+        "FN": 34,
+        "FP": 70,
+        "TN": 57338,
+        "recall": 0.9909260741926875,
+        "specificity": 0.998780657748049,
+        "precision": 0.9814961670631773,
+        "F1": 0.9861885790172643
+      },
+      "recording_metrics": {
+        "trigger": {
+          "TP": 427,
+          "FN": 0,
+          "FP": 286,
+          "TN": 339,
+          "recall": 1.0,
+          "specificity": 0.5424,
+          "precision": 0.5988779803646563,
+          "F1": 0.7491228070175439
+        },
+        "baseline": {
+          "TP": 427,
+          "FN": 0,
+          "FP": 22,
+          "TN": 603,
+          "recall": 1.0,
+          "specificity": 0.9648,
+          "precision": 0.9510022271714922,
+          "F1": 0.9748858447488584
+        },
+        "cascade": {
+          "TP": 427,
+          "FN": 0,
+          "FP": 15,
+          "TN": 610,
+          "recall": 1.0,
+          "specificity": 0.976,
+          "precision": 0.9660633484162896,
+          "F1": 0.9827387802071347
+        }
+      },
+      "lost_or_late_reference_events": 0,
+      "baseline_reference_events": 434,
+      "negative_active_fraction": 0.04678922742511882,
+      "false_wakes_per_hour": 92.43755349395457,
+      "continuous_negative_hours": 1.8823518518518518,
+      "per_source_trigger_recording_recall": {
+        "CGU_BES": 1.0,
+        "Cogent": 1.0,
+        "PAMAP2": null,
+        "SFU_IMU": 1.0,
+        "UCI_SimulatedFalls": 1.0,
+        "m5_hard_negatives": 1.0,
+        "own": 1.0
+      }
+    },
+    "per_source": {
+      "CGU_BES": {
+        "trigger_windows": {
+          "TP": 72,
+          "FN": 0,
+          "FP": 81,
+          "TN": 785,
+          "recall": 1.0,
+          "specificity": 0.9064665127020786,
+          "precision": 0.47058823529411764,
+          "F1": 0.64
+        },
+        "baseline_windows": {
+          "TP": 72,
+          "FN": 0,
+          "FP": 3,
+          "TN": 863,
+          "recall": 1.0,
+          "specificity": 0.9965357967667436,
+          "precision": 0.96,
+          "F1": 0.9795918367346939
+        },
+        "cascade_windows": {
+          "TP": 72,
+          "FN": 0,
+          "FP": 3,
+          "TN": 863,
+          "recall": 1.0,
+          "specificity": 0.9965357967667436,
+          "precision": 0.96,
+          "F1": 0.9795918367346939
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 8,
+            "FN": 0,
+            "FP": 10,
+            "TN": 8,
+            "recall": 1.0,
+            "specificity": 0.4444444444444444,
+            "precision": 0.4444444444444444,
+            "F1": 0.6153846153846154
+          },
+          "baseline": {
+            "TP": 8,
+            "FN": 0,
+            "FP": 2,
+            "TN": 16,
+            "recall": 1.0,
+            "specificity": 0.8888888888888888,
+            "precision": 0.8,
+            "F1": 0.8888888888888888
+          },
+          "cascade": {
+            "TP": 8,
+            "FN": 0,
+            "FP": 2,
+            "TN": 16,
+            "recall": 1.0,
+            "specificity": 0.8888888888888888,
+            "precision": 0.8,
+            "F1": 0.8888888888888888
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 8,
+        "negative_active_fraction": null,
+        "false_wakes_per_hour": null,
+        "continuous_negative_hours": 0.0,
+        "per_source_trigger_recording_recall": {
+          "CGU_BES": 1.0
+        }
+      },
+      "Cogent": {
+        "trigger_windows": {
+          "TP": 627,
+          "FN": 3,
+          "FP": 127,
+          "TN": 11257,
+          "recall": 0.9952380952380953,
+          "specificity": 0.9888439915671118,
+          "precision": 0.8315649867374005,
+          "F1": 0.9060693641618497
+        },
+        "baseline_windows": {
+          "TP": 628,
+          "FN": 2,
+          "FP": 1,
+          "TN": 11383,
+          "recall": 0.9968253968253968,
+          "specificity": 0.9999121574139143,
+          "precision": 0.9984101748807631,
+          "F1": 0.9976171564733916
+        },
+        "cascade_windows": {
+          "TP": 628,
+          "FN": 2,
+          "FP": 1,
+          "TN": 11383,
+          "recall": 0.9968253968253968,
+          "specificity": 0.9999121574139143,
+          "precision": 0.9984101748807631,
+          "F1": 0.9976171564733916
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 70,
+            "FN": 0,
+            "FP": 18,
+            "TN": 179,
+            "recall": 1.0,
+            "specificity": 0.9086294416243654,
+            "precision": 0.7954545454545454,
+            "F1": 0.8860759493670886
+          },
+          "baseline": {
+            "TP": 70,
+            "FN": 0,
+            "FP": 1,
+            "TN": 196,
+            "recall": 1.0,
+            "specificity": 0.9949238578680203,
+            "precision": 0.9859154929577465,
+            "F1": 0.9929078014184397
+          },
+          "cascade": {
+            "TP": 70,
+            "FN": 0,
+            "FP": 1,
+            "TN": 196,
+            "recall": 1.0,
+            "specificity": 0.9949238578680203,
+            "precision": 0.9859154929577465,
+            "F1": 0.9929078014184397
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 70,
+        "negative_active_fraction": 0.020435967302452316,
+        "false_wakes_per_hour": 59.01281039402586,
+        "continuous_negative_hours": 0.15250925925925926,
+        "per_source_trigger_recording_recall": {
+          "Cogent": 1.0
+        }
+      },
+      "PAMAP2": {
+        "trigger_windows": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 603,
+          "TN": 21737,
+          "recall": null,
+          "specificity": 0.9730080572963294,
+          "precision": 0.0,
+          "F1": 0.0
+        },
+        "baseline_windows": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 96,
+          "TN": 22244,
+          "recall": null,
+          "specificity": 0.995702775290958,
+          "precision": 0.0,
+          "F1": 0.0
+        },
+        "cascade_windows": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 40,
+          "TN": 22300,
+          "recall": null,
+          "specificity": 0.9982094897045658,
+          "precision": 0.0,
+          "F1": 0.0
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 0,
+            "FN": 0,
+            "FP": 32,
+            "TN": 28,
+            "recall": null,
+            "specificity": 0.4666666666666667,
+            "precision": 0.0,
+            "F1": 0.0
+          },
+          "baseline": {
+            "TP": 0,
+            "FN": 0,
+            "FP": 3,
+            "TN": 57,
+            "recall": null,
+            "specificity": 0.95,
+            "precision": 0.0,
+            "F1": 0.0
+          },
+          "cascade": {
+            "TP": 0,
+            "FN": 0,
+            "FP": 3,
+            "TN": 57,
+            "recall": null,
+            "specificity": 0.95,
+            "precision": 0.0,
+            "F1": 0.0
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 0,
+        "negative_active_fraction": 0.05079914010655202,
+        "false_wakes_per_hour": 100.37863429665717,
+        "continuous_negative_hours": 1.4843796296296297,
+        "per_source_trigger_recording_recall": {
+          "PAMAP2": null
+        }
+      },
+      "SFU_IMU": {
+        "trigger_windows": {
+          "TP": 360,
+          "FN": 9,
+          "FP": 459,
+          "TN": 3603,
+          "recall": 0.975609756097561,
+          "specificity": 0.8870014771048744,
+          "precision": 0.43956043956043955,
+          "F1": 0.6060606060606061
+        },
+        "baseline_windows": {
+          "TP": 359,
+          "FN": 10,
+          "FP": 26,
+          "TN": 4036,
+          "recall": 0.9728997289972899,
+          "specificity": 0.9935992122107337,
+          "precision": 0.9324675324675324,
+          "F1": 0.9522546419098143
+        },
+        "cascade_windows": {
+          "TP": 358,
+          "FN": 11,
+          "FP": 24,
+          "TN": 4038,
+          "recall": 0.9701897018970189,
+          "specificity": 0.9940915805022157,
+          "precision": 0.93717277486911,
+          "F1": 0.9533954727030626
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 41,
+            "FN": 0,
+            "FP": 48,
+            "TN": 30,
+            "recall": 1.0,
+            "specificity": 0.38461538461538464,
+            "precision": 0.4606741573033708,
+            "F1": 0.6307692307692307
+          },
+          "baseline": {
+            "TP": 41,
+            "FN": 0,
+            "FP": 9,
+            "TN": 69,
+            "recall": 1.0,
+            "specificity": 0.8846153846153846,
+            "precision": 0.82,
+            "F1": 0.9010989010989011
+          },
+          "cascade": {
+            "TP": 41,
+            "FN": 0,
+            "FP": 7,
+            "TN": 71,
+            "recall": 1.0,
+            "specificity": 0.9102564102564102,
+            "precision": 0.8541666666666666,
+            "F1": 0.9213483146067416
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 45,
+        "negative_active_fraction": null,
+        "false_wakes_per_hour": null,
+        "continuous_negative_hours": 0.0,
+        "per_source_trigger_recording_recall": {
+          "SFU_IMU": 1.0
+        }
+      },
+      "UCI_SimulatedFalls": {
+        "trigger_windows": {
+          "TP": 2483,
+          "FN": 28,
+          "FP": 851,
+          "TN": 14125,
+          "recall": 0.9888490641178813,
+          "specificity": 0.9431757478632479,
+          "precision": 0.744751049790042,
+          "F1": 0.8496150556030796
+        },
+        "baseline_windows": {
+          "TP": 2500,
+          "FN": 11,
+          "FP": 9,
+          "TN": 14967,
+          "recall": 0.9956192751891677,
+          "specificity": 0.9993990384615384,
+          "precision": 0.9964129135113591,
+          "F1": 0.9960159362549801
+        },
+        "cascade_windows": {
+          "TP": 2500,
+          "FN": 11,
+          "FP": 1,
+          "TN": 14975,
+          "recall": 0.9956192751891677,
+          "specificity": 0.9999332264957265,
+          "precision": 0.9996001599360256,
+          "F1": 0.9976057462090981
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 279,
+            "FN": 0,
+            "FP": 166,
+            "TN": 78,
+            "recall": 1.0,
+            "specificity": 0.319672131147541,
+            "precision": 0.6269662921348315,
+            "F1": 0.7707182320441989
+          },
+          "baseline": {
+            "TP": 279,
+            "FN": 0,
+            "FP": 5,
+            "TN": 239,
+            "recall": 1.0,
+            "specificity": 0.9795081967213115,
+            "precision": 0.9823943661971831,
+            "F1": 0.9911190053285968
+          },
+          "cascade": {
+            "TP": 279,
+            "FN": 0,
+            "FP": 1,
+            "TN": 243,
+            "recall": 1.0,
+            "specificity": 0.9959016393442623,
+            "precision": 0.9964285714285714,
+            "F1": 0.998211091234347
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 280,
+        "negative_active_fraction": 0.0,
+        "false_wakes_per_hour": 0.0,
+        "continuous_negative_hours": 0.025,
+        "per_source_trigger_recording_recall": {
+          "UCI_SimulatedFalls": 1.0
+        }
+      },
+      "m5_hard_negatives": {
+        "trigger_windows": {
+          "TP": 27,
+          "FN": 0,
+          "FP": 76,
+          "TN": 1005,
+          "recall": 1.0,
+          "specificity": 0.9296947271045328,
+          "precision": 0.2621359223300971,
+          "F1": 0.4153846153846154
+        },
+        "baseline_windows": {
+          "TP": 24,
+          "FN": 3,
+          "FP": 1,
+          "TN": 1080,
+          "recall": 0.8888888888888888,
+          "specificity": 0.9990749306197965,
+          "precision": 0.96,
+          "F1": 0.9230769230769231
+        },
+        "cascade_windows": {
+          "TP": 24,
+          "FN": 3,
+          "FP": 1,
+          "TN": 1080,
+          "recall": 0.8888888888888888,
+          "specificity": 0.9990749306197965,
+          "precision": 0.96,
+          "F1": 0.9230769230769231
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 3,
+            "FN": 0,
+            "FP": 1,
+            "TN": 0,
+            "recall": 1.0,
+            "specificity": 0.0,
+            "precision": 0.75,
+            "F1": 0.8571428571428571
+          },
+          "baseline": {
+            "TP": 3,
+            "FN": 0,
+            "FP": 1,
+            "TN": 0,
+            "recall": 1.0,
+            "specificity": 0.0,
+            "precision": 0.75,
+            "F1": 0.8571428571428571
+          },
+          "cascade": {
+            "TP": 3,
+            "FN": 0,
+            "FP": 1,
+            "TN": 0,
+            "recall": 1.0,
+            "specificity": 0.0,
+            "precision": 0.75,
+            "F1": 0.8571428571428571
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 5,
+        "negative_active_fraction": 0.1147086031452359,
+        "false_wakes_per_hour": 173.31193679792617,
+        "continuous_negative_hours": 0.07500925925925926,
+        "per_source_trigger_recording_recall": {
+          "m5_hard_negatives": 1.0
+        }
+      },
+      "own": {
+        "trigger_windows": {
+          "TP": 138,
+          "FN": 0,
+          "FP": 40,
+          "TN": 2659,
+          "recall": 1.0,
+          "specificity": 0.9851796961837718,
+          "precision": 0.7752808988764045,
+          "F1": 0.8734177215189873
+        },
+        "baseline_windows": {
+          "TP": 131,
+          "FN": 7,
+          "FP": 2,
+          "TN": 2697,
+          "recall": 0.9492753623188406,
+          "specificity": 0.9992589848091886,
+          "precision": 0.9849624060150376,
+          "F1": 0.966789667896679
+        },
+        "cascade_windows": {
+          "TP": 131,
+          "FN": 7,
+          "FP": 0,
+          "TN": 2699,
+          "recall": 0.9492753623188406,
+          "specificity": 1.0,
+          "precision": 1.0,
+          "F1": 0.9739776951672863
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 26,
+            "FN": 0,
+            "FP": 11,
+            "TN": 16,
+            "recall": 1.0,
+            "specificity": 0.5925925925925926,
+            "precision": 0.7027027027027027,
+            "F1": 0.8253968253968254
+          },
+          "baseline": {
+            "TP": 26,
+            "FN": 0,
+            "FP": 1,
+            "TN": 26,
+            "recall": 1.0,
+            "specificity": 0.9629629629629629,
+            "precision": 0.9629629629629629,
+            "F1": 0.9811320754716981
+          },
+          "cascade": {
+            "TP": 26,
+            "FN": 0,
+            "FP": 0,
+            "TN": 27,
+            "recall": 1.0,
+            "specificity": 1.0,
+            "precision": 1.0,
+            "F1": 1.0
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 26,
+        "negative_active_fraction": 0.006666666666666667,
+        "false_wakes_per_hour": 20.62511935832962,
+        "continuous_negative_hours": 0.1454537037037037,
+        "per_source_trigger_recording_recall": {
+          "own": 1.0
+        }
+      }
+    }
+  },
+  "test": {
+    "overall": {
+      "trigger_windows": {
+        "TP": 3354,
+        "FN": 85,
+        "FP": 1747,
+        "TN": 60878,
+        "recall": 0.9752835126490259,
+        "specificity": 0.9721037924151696,
+        "precision": 0.6575181336992747,
+        "F1": 0.785480093676815
+      },
+      "baseline_windows": {
+        "TP": 3372,
+        "FN": 67,
+        "FP": 395,
+        "TN": 62230,
+        "recall": 0.9805175923233498,
+        "specificity": 0.9936926147704591,
+        "precision": 0.895142022829838,
+        "F1": 0.9358867610324729
+      },
+      "cascade_windows": {
+        "TP": 3357,
+        "FN": 82,
+        "FP": 119,
+        "TN": 62506,
+        "recall": 0.9761558592614132,
+        "specificity": 0.9980998003992015,
+        "precision": 0.965765247410817,
+        "F1": 0.9709327548806942
+      },
+      "recording_metrics": {
+        "trigger": {
+          "TP": 391,
+          "FN": 0,
+          "FP": 221,
+          "TN": 354,
+          "recall": 1.0,
+          "specificity": 0.6156521739130435,
+          "precision": 0.6388888888888888,
+          "F1": 0.7796610169491526
+        },
+        "baseline": {
+          "TP": 387,
+          "FN": 4,
+          "FP": 22,
+          "TN": 553,
+          "recall": 0.989769820971867,
+          "specificity": 0.9617391304347827,
+          "precision": 0.9462102689486552,
+          "F1": 0.9675
+        },
+        "cascade": {
+          "TP": 387,
+          "FN": 4,
+          "FP": 15,
+          "TN": 560,
+          "recall": 0.989769820971867,
+          "specificity": 0.9739130434782609,
+          "precision": 0.9626865671641791,
+          "F1": 0.9760403530895334
+        }
+      },
+      "lost_or_late_reference_events": 2,
+      "baseline_reference_events": 400,
+      "negative_active_fraction": 0.0392773426333543,
+      "false_wakes_per_hour": 76.66297752165782,
+      "continuous_negative_hours": 2.426203703703704,
+      "per_source_trigger_recording_recall": {
+        "CGU_BES": 1.0,
+        "Cogent": 1.0,
+        "PAMAP2": null,
+        "SFU_IMU": 1.0,
+        "UCI_SimulatedFalls": 1.0,
+        "m5_hard_negatives": 1.0,
+        "own": 1.0
+      }
+    },
+    "per_source": {
+      "CGU_BES": {
+        "trigger_windows": {
+          "TP": 72,
+          "FN": 0,
+          "FP": 64,
+          "TN": 814,
+          "recall": 1.0,
+          "specificity": 0.9271070615034168,
+          "precision": 0.5294117647058824,
+          "F1": 0.6923076923076923
+        },
+        "baseline_windows": {
+          "TP": 72,
+          "FN": 0,
+          "FP": 9,
+          "TN": 869,
+          "recall": 1.0,
+          "specificity": 0.989749430523918,
+          "precision": 0.8888888888888888,
+          "F1": 0.9411764705882353
+        },
+        "cascade_windows": {
+          "TP": 72,
+          "FN": 0,
+          "FP": 4,
+          "TN": 874,
+          "recall": 1.0,
+          "specificity": 0.9954441913439636,
+          "precision": 0.9473684210526315,
+          "F1": 0.972972972972973
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 8,
+            "FN": 0,
+            "FP": 8,
+            "TN": 9,
+            "recall": 1.0,
+            "specificity": 0.5294117647058824,
+            "precision": 0.5,
+            "F1": 0.6666666666666666
+          },
+          "baseline": {
+            "TP": 8,
+            "FN": 0,
+            "FP": 3,
+            "TN": 14,
+            "recall": 1.0,
+            "specificity": 0.8235294117647058,
+            "precision": 0.7272727272727273,
+            "F1": 0.8421052631578947
+          },
+          "cascade": {
+            "TP": 8,
+            "FN": 0,
+            "FP": 2,
+            "TN": 15,
+            "recall": 1.0,
+            "specificity": 0.8823529411764706,
+            "precision": 0.8,
+            "F1": 0.8888888888888888
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 8,
+        "negative_active_fraction": null,
+        "false_wakes_per_hour": null,
+        "continuous_negative_hours": 0.0,
+        "per_source_trigger_recording_recall": {
+          "CGU_BES": 1.0
+        }
+      },
+      "Cogent": {
+        "trigger_windows": {
+          "TP": 600,
+          "FN": 30,
+          "FP": 59,
+          "TN": 10121,
+          "recall": 0.9523809523809523,
+          "specificity": 0.9942043222003929,
+          "precision": 0.9104704097116844,
+          "F1": 0.9309542280837859
+        },
+        "baseline_windows": {
+          "TP": 618,
+          "FN": 12,
+          "FP": 9,
+          "TN": 10171,
+          "recall": 0.9809523809523809,
+          "specificity": 0.9991159135559922,
+          "precision": 0.9856459330143541,
+          "F1": 0.9832935560859188
+        },
+        "cascade_windows": {
+          "TP": 610,
+          "FN": 20,
+          "FP": 9,
+          "TN": 10171,
+          "recall": 0.9682539682539683,
+          "specificity": 0.9991159135559922,
+          "precision": 0.9854604200323102,
+          "F1": 0.9767814251401121
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 70,
+            "FN": 0,
+            "FP": 16,
+            "TN": 180,
+            "recall": 1.0,
+            "specificity": 0.9183673469387755,
+            "precision": 0.813953488372093,
+            "F1": 0.8974358974358975
+          },
+          "baseline": {
+            "TP": 70,
+            "FN": 0,
+            "FP": 3,
+            "TN": 193,
+            "recall": 1.0,
+            "specificity": 0.9846938775510204,
+            "precision": 0.958904109589041,
+            "F1": 0.9790209790209791
+          },
+          "cascade": {
+            "TP": 70,
+            "FN": 0,
+            "FP": 3,
+            "TN": 193,
+            "recall": 1.0,
+            "specificity": 0.9846938775510204,
+            "precision": 0.958904109589041,
+            "F1": 0.9790209790209791
+          }
+        },
+        "lost_or_late_reference_events": 1,
+        "baseline_reference_events": 71,
+        "negative_active_fraction": 0.009230769230769232,
+        "false_wakes_per_hour": 22.2161272627537,
+        "continuous_negative_hours": 0.13503703703703704,
+        "per_source_trigger_recording_recall": {
+          "Cogent": 1.0
+        }
+      },
+      "PAMAP2": {
+        "trigger_windows": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 300,
+          "TN": 16488,
+          "recall": null,
+          "specificity": 0.9821300929235168,
+          "precision": 0.0,
+          "F1": 0.0
+        },
+        "baseline_windows": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 242,
+          "TN": 16546,
+          "recall": null,
+          "specificity": 0.9855849416249702,
+          "precision": 0.0,
+          "F1": 0.0
+        },
+        "cascade_windows": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 8,
+          "TN": 16780,
+          "recall": null,
+          "specificity": 0.9995234691446271,
+          "precision": 0.0,
+          "F1": 0.0
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 0,
+            "FN": 0,
+            "FP": 27,
+            "TN": 29,
+            "recall": null,
+            "specificity": 0.5178571428571429,
+            "precision": 0.0,
+            "F1": 0.0
+          },
+          "baseline": {
+            "TP": 0,
+            "FN": 0,
+            "FP": 5,
+            "TN": 51,
+            "recall": null,
+            "specificity": 0.9107142857142857,
+            "precision": 0.0,
+            "F1": 0.0
+          },
+          "cascade": {
+            "TP": 0,
+            "FN": 0,
+            "FP": 2,
+            "TN": 54,
+            "recall": null,
+            "specificity": 0.9642857142857143,
+            "precision": 0.0,
+            "F1": 0.0
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 0,
+        "negative_active_fraction": 0.038058228472736245,
+        "false_wakes_per_hour": 80.95018450184502,
+        "continuous_negative_hours": 1.1241481481481481,
+        "per_source_trigger_recording_recall": {
+          "PAMAP2": null
+        }
+      },
+      "SFU_IMU": {
+        "trigger_windows": {
+          "TP": 361,
+          "FN": 8,
+          "FP": 392,
+          "TN": 3670,
+          "recall": 0.978319783197832,
+          "specificity": 0.9034958148695224,
+          "precision": 0.47941567065073043,
+          "F1": 0.64349376114082
+        },
+        "baseline_windows": {
+          "TP": 350,
+          "FN": 19,
+          "FP": 8,
+          "TN": 4054,
+          "recall": 0.948509485094851,
+          "specificity": 0.9980305268340719,
+          "precision": 0.9776536312849162,
+          "F1": 0.9628610729023384
+        },
+        "cascade_windows": {
+          "TP": 350,
+          "FN": 19,
+          "FP": 7,
+          "TN": 4055,
+          "recall": 0.948509485094851,
+          "specificity": 0.9982767109798129,
+          "precision": 0.9803921568627451,
+          "F1": 0.9641873278236914
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 41,
+            "FN": 0,
+            "FP": 49,
+            "TN": 29,
+            "recall": 1.0,
+            "specificity": 0.3717948717948718,
+            "precision": 0.45555555555555555,
+            "F1": 0.6259541984732825
+          },
+          "baseline": {
+            "TP": 40,
+            "FN": 1,
+            "FP": 5,
+            "TN": 73,
+            "recall": 0.975609756097561,
+            "specificity": 0.9358974358974359,
+            "precision": 0.8888888888888888,
+            "F1": 0.9302325581395349
+          },
+          "cascade": {
+            "TP": 40,
+            "FN": 1,
+            "FP": 4,
+            "TN": 74,
+            "recall": 0.975609756097561,
+            "specificity": 0.9487179487179487,
+            "precision": 0.9090909090909091,
+            "F1": 0.9411764705882353
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 44,
+        "negative_active_fraction": null,
+        "false_wakes_per_hour": null,
+        "continuous_negative_hours": 0.0,
+        "per_source_trigger_recording_recall": {
+          "SFU_IMU": 1.0
+        }
+      },
+      "UCI_SimulatedFalls": {
+        "trigger_windows": {
+          "TP": 2158,
+          "FN": 29,
+          "FP": 486,
+          "TN": 13729,
+          "recall": 0.9867398262459991,
+          "specificity": 0.9658107632782272,
+          "precision": 0.8161875945537065,
+          "F1": 0.8933968122541917
+        },
+        "baseline_windows": {
+          "TP": 2159,
+          "FN": 28,
+          "FP": 2,
+          "TN": 14213,
+          "recall": 0.9871970736168267,
+          "specificity": 0.9998593035525853,
+          "precision": 0.999074502545118,
+          "F1": 0.9931002759889604
+        },
+        "cascade_windows": {
+          "TP": 2159,
+          "FN": 28,
+          "FP": 0,
+          "TN": 14215,
+          "recall": 0.9871970736168267,
+          "specificity": 1.0,
+          "precision": 1.0,
+          "F1": 0.9935572940635067
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 243,
+            "FN": 0,
+            "FP": 108,
+            "TN": 94,
+            "recall": 1.0,
+            "specificity": 0.46534653465346537,
+            "precision": 0.6923076923076923,
+            "F1": 0.8181818181818182
+          },
+          "baseline": {
+            "TP": 241,
+            "FN": 2,
+            "FP": 2,
+            "TN": 200,
+            "recall": 0.9917695473251029,
+            "specificity": 0.9900990099009901,
+            "precision": 0.9917695473251029,
+            "F1": 0.9917695473251029
+          },
+          "cascade": {
+            "TP": 241,
+            "FN": 2,
+            "FP": 0,
+            "TN": 202,
+            "recall": 0.9917695473251029,
+            "specificity": 1.0,
+            "precision": 1.0,
+            "F1": 0.9958677685950413
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 245,
+        "negative_active_fraction": 0.006535947712418301,
+        "false_wakes_per_hour": 18.89102676228791,
+        "continuous_negative_hours": 0.05293518518518519,
+        "per_source_trigger_recording_recall": {
+          "UCI_SimulatedFalls": 1.0
+        }
+      },
+      "m5_hard_negatives": {
+        "trigger_windows": {
+          "TP": 14,
+          "FN": 5,
+          "FP": 220,
+          "TN": 861,
+          "recall": 0.7368421052631579,
+          "specificity": 0.7964847363552267,
+          "precision": 0.05982905982905983,
+          "F1": 0.11067193675889328
+        },
+        "baseline_windows": {
+          "TP": 17,
+          "FN": 2,
+          "FP": 96,
+          "TN": 985,
+          "recall": 0.8947368421052632,
+          "specificity": 0.9111933395004626,
+          "precision": 0.1504424778761062,
+          "F1": 0.25757575757575757
+        },
+        "cascade_windows": {
+          "TP": 17,
+          "FN": 2,
+          "FP": 64,
+          "TN": 1017,
+          "recall": 0.8947368421052632,
+          "specificity": 0.940795559666975,
+          "precision": 0.20987654320987653,
+          "F1": 0.34
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 3,
+            "FN": 0,
+            "FP": 1,
+            "TN": 0,
+            "recall": 1.0,
+            "specificity": 0.0,
+            "precision": 0.75,
+            "F1": 0.8571428571428571
+          },
+          "baseline": {
+            "TP": 2,
+            "FN": 1,
+            "FP": 1,
+            "TN": 0,
+            "recall": 0.6666666666666666,
+            "specificity": 0.0,
+            "precision": 0.6666666666666666,
+            "F1": 0.6666666666666666
+          },
+          "cascade": {
+            "TP": 2,
+            "FN": 1,
+            "FP": 1,
+            "TN": 0,
+            "recall": 0.6666666666666666,
+            "specificity": 0.0,
+            "precision": 0.6666666666666666,
+            "F1": 0.6666666666666666
+          }
+        },
+        "lost_or_late_reference_events": 0,
+        "baseline_reference_events": 3,
+        "negative_active_fraction": 0.3524514338575393,
+        "false_wakes_per_hour": 533.2674978397729,
+        "continuous_negative_hours": 0.07500925925925926,
+        "per_source_trigger_recording_recall": {
+          "m5_hard_negatives": 1.0
+        }
+      },
+      "own": {
+        "trigger_windows": {
+          "TP": 149,
+          "FN": 13,
+          "FP": 226,
+          "TN": 15195,
+          "recall": 0.9197530864197531,
+          "specificity": 0.9853446598793852,
+          "precision": 0.3973333333333333,
+          "F1": 0.5549348230912476
+        },
+        "baseline_windows": {
+          "TP": 156,
+          "FN": 6,
+          "FP": 29,
+          "TN": 15392,
+          "recall": 0.9629629629629629,
+          "specificity": 0.9981194475066468,
+          "precision": 0.8432432432432433,
+          "F1": 0.899135446685879
+        },
+        "cascade_windows": {
+          "TP": 149,
+          "FN": 13,
+          "FP": 27,
+          "TN": 15394,
+          "recall": 0.9197530864197531,
+          "specificity": 0.9982491407820504,
+          "precision": 0.8465909090909091,
+          "F1": 0.8816568047337278
+        },
+        "recording_metrics": {
+          "trigger": {
+            "TP": 26,
+            "FN": 0,
+            "FP": 12,
+            "TN": 13,
+            "recall": 1.0,
+            "specificity": 0.52,
+            "precision": 0.6842105263157895,
+            "F1": 0.8125
+          },
+          "baseline": {
+            "TP": 26,
+            "FN": 0,
+            "FP": 3,
+            "TN": 22,
+            "recall": 1.0,
+            "specificity": 0.88,
+            "precision": 0.896551724137931,
+            "F1": 0.9454545454545454
+          },
+          "cascade": {
+            "TP": 26,
+            "FN": 0,
+            "FP": 3,
+            "TN": 22,
+            "recall": 1.0,
+            "specificity": 0.88,
+            "precision": 0.896551724137931,
+            "F1": 0.9454545454545454
+          }
+        },
+        "lost_or_late_reference_events": 1,
+        "baseline_reference_events": 29,
+        "negative_active_fraction": 0.02357419527180446,
+        "false_wakes_per_hour": 49.08216004277314,
+        "continuous_negative_hours": 1.0390740740740738,
+        "per_source_trigger_recording_recall": {
+          "own": 1.0
+        }
+      }
+    }
+  }
+}
