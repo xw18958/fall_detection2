@@ -172,3 +172,12 @@ Threshold was selected using validation recordings only (`0.83`).
 Test recording confusion matrix: TN=9, FP=0, FN=3, TP=23.
 
 The exact split, normalization statistics, and full V1 metrics are committed under `splits/`, `normalization_seed42.json`, and `results/` for reproducibility. Model checkpoints are intentionally not committed; they remain available in the Kaggle run output.
+
+## V5 whole-system power implementation
+
+The currently deployed 30 Hz V5 detector/collector power implementation is in
+[`M5BLECollector/power_v5`](../M5BLECollector/power_v5/README.md).
+It preserves the full model and collector, adds on-demand display/Wi-Fi/CPU/buzzer
+behavior, and keeps unqualified trigger/parallel experiments disabled.
+See [the power results](../deployment_artifacts/power_v5_20261004/POWER_RESULTS.md)
+for complete per-source metrics, hardware measurements and unresolved limitations.

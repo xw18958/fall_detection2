@@ -1,0 +1,39 @@
+{
+  "model_sha256": "4eb70382f3306a4c8580e5d08342032edae43d3bd4e07cb4a3a9090e85dfa367",
+  "files": {
+    "model.tflite": "4eb70382f3306a4c8580e5d08342032edae43d3bd4e07cb4a3a9090e85dfa367",
+    "model_v2_config.h": "e18b47f36f68f6e8dc9fc0834d5c238654c2c5a8eec8d0e0c3448d673b92d1d7",
+    "model_v2_replay.h": "fbd871ae5a217a42f4e0efed9d61ca6de4466928c902b01d2b85761533656682",
+    "model_identity.h": "b926e5e4612aa1124f452f35dd93b92b834671721551eba21c1110e154014990",
+    "input_pipeline.h": "c79b986a0cb526f3a17a4ded1d8e924de7a0b1a911c5cc08a695f554fd8fc82b",
+    "fast_conv1d.cc": "4203afadb44dc5b222ada2371c71d971ae489f531ba49087a3218467f8c683dc",
+    "gelu_kernel.cc": "4c0d4eaba62faf47d49551749275a328ef68c73fcc8935dd500805bdcaef555a",
+    "fall_op_resolver.cc": "a59c109487a734b94af2f2de83898b49369303ebe9c218fdc6a2e8914144336e",
+    "fall_op_resolver.h": "20c5efeaf8d7dd11b89587460625620f4a6257c4ed8da0923a8f38c6c63c8c81",
+    "layer_norm_v4.cc": "b57debc904ec9bc3433c6d4843cc4dc96628abc0446a2bb76a356d5e02464b3f",
+    "layer_norm_v4.h": "007726baefcd8995857b19e01fddcf605d66e493476b98655bbc0ebc40c58684",
+    "layer_norm_math.h": "c2ba9e986bc5544efba5014c1405d106e913fe56b7e002a5d7d1ffa0c245ebf7",
+    "ble_collector.cc": "cde3172de3757a40f9d6d0e225ba2ab608e67ec0b0740ba0d4e1b1e3ed22341f",
+    "ble_collector.h": "d928efa70b7d018a3c6938276a42d93ab78a087b83ae9cf2cae96981781ee46d",
+    "recording_buffer.h": "191448405c2102bf06a53f88c8e7889b0f0380a437e5c71aa8dd53dd66663d77",
+    "ui_presentation.h": "2578c9e9d50a2abfec7ce794a06a541d3782652d58aa0122710fc627a2993bc8",
+    "battery_monitor.cc": "d3c4ee1efbbb0b4bc3b32d529d6920221edc4296470aaf23ffddad37f33b1a63",
+    "battery_monitor.h": "b703304e0d1006a9f2010e9068c5caaa7172ccb2b525ea3d9ba76c094134c11a",
+    "parallel_conv1d.cc": "9a988a23a3f963fa0fb29c33695d05797290462ddbc101bc17f8ef52ed6b7db1",
+    "parallel_conv1d.h": "6f159d5f490fe7f5248300ed36ae10c4ed4a11209faae096434f6c3454bd33e4"
+  },
+  "functions": {
+    "InitMpu6886": "c5a9a4a85979d0f8b16c16495c3316e40c5f756b9dcf905090c6481c321f567f",
+    "ReadImu": "285f747c19e12c2b1f411b05bfd75bb7eab54b73bca274cbd9f52a8259453deb",
+    "Normalize": "0cdd9ac44cd081882773014151d4ea7c62abcab592eee1cc7e330b066c2ef5a7",
+    "PushSample": "c9877e921990be3e6ce55d443e9087fa4abbeff0c1cf4ed16c79a8c284c16a2e",
+    "FillModelInput": "e4409fc3554f0944b6258dae9413eed6be3a79e212ee2e6c0400b1e46830197a",
+    "ReadLogits": "fa00eef5b2fffaa1a43df7c93d43e7bae6f4eb1b5587767c56bef16ef78f4e39",
+    "Softmax2": "30398ef23f454dd2f20980d60bb6dbef776a1cf5cfd43d5a48090bff81121d01",
+    "SwitchMode": "3c86c746327f83e1537a193a3c0f19548121cbf7c8b1ddc9239e6a27b4837cf6",
+    "ReadMode": "fba1bbbcbc4273c003b988b0402e97f1d2c47ea8525067e33951cafed369f50c"
+  },
+  "partitions_sha256": "17345ecb5c52bf32fcc5e9c6b40cdceaacc99121462eec5ac8962c799caa6bee",
+  "stage": "V5 exact weights/units/threshold; optional exact convolution row partition; split activation/metadata allocation; cascade remains qualification-gated",
+  "firmware_version": "1.4.4-v5-power-buzzer"
+}

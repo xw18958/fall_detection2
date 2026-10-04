@@ -1,0 +1,23 @@
+menu "V5 fall detector power controls"
+config FALL_PARALLEL_CONV
+    bool "Benchmark exact convolution output rows on both CPU cores"
+    default n
+config FALL_TRIGGER_MODEL
+    bool "Trained tiny trigger (90 x 6, 30 Hz); shadow mode by default"
+    default n
+config FALL_CASCADE
+    bool "Use cascade only when held-out and hardware gates pass"
+    depends on FALL_TRIGGER_MODEL
+    default n
+config FALL_DEBUG_LOGS
+    bool "Detailed inference and operator logs"
+    default n
+config FALL_LEGACY_POWER_BASELINE
+    bool "Comparison: display and OTA AP always on, fixed 240 MHz"
+    default n
+config FALL_INTERNAL_ARENA
+    bool "Benchmark full-model arena in internal RAM"
+    default n
+    help
+        Preserve the model; separately qualify available memory and OTA allocation.
+endmenu

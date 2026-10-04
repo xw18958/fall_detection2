@@ -19,7 +19,7 @@
     "M5BLECollector/firmware/main/wifi_ota.h": "faa44bc99e41d7de1441a1b0d0008fa2dd61df1c0ebcf6d2f39301265e7739ac",
     "M5BLECollector/firmware/main/ble_collector.h": "d928efa70b7d018a3c6938276a42d93ab78a087b83ae9cf2cae96981781ee46d",
     "M5BLECollector/firmware/main/ble_collector.cc": "cde3172de3757a40f9d6d0e225ba2ab608e67ec0b0740ba0d4e1b1e3ed22341f",
-    "M5BLECollector/macos/Sources/M5BLECollectorCore/TrustedModels.swift": "e022604999c43aeb23cf879314801a8c80464b88222838143721309856ca8d66"
+    "M5BLECollector/macos/Sources/M5BLECollectorCore/TrustedModels.swift": "c55f38717bb173451df51896fd4892480a6fb0580d7b724086167ebc20d324d0"
   },
   "regions": {
     "buttons": "cf10e1b7eb6a6ac4a644f5d80b9632021d2ee206f0cbe75f01e43179c7817be1",
@@ -35,9 +35,5 @@
   "qat_authorized_pin_update": {
     "file": "M5BLECollector/macos/Sources/M5BLECollectorCore/TrustedModels.swift",
     "reason": "Add one exact verified QAT identity; retain two earlier identities and strict journal/boot/session checks"
-  },
-  "v5_authorized_pin_update": {
-    "file": "M5BLECollector/macos/Sources/M5BLECollectorCore/TrustedModels.swift",
-    "reason": "Accept only the exact installed V5 detector hash; retain the three previous hashes and all UI/backend/session pins"
   }
 }

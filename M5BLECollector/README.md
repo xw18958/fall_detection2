@@ -211,3 +211,12 @@ Physical acceptance still requires model startup replay on the ESP32, sustained 
 
 See [UI and battery details](UI_BATTERY.md) for the shared DETECT/COLLECT interface,
 actual-driver screen previews, PLUS2 battery measurement and verification status.
+
+## V5 whole-system power implementation
+
+The currently deployed 30 Hz V5 detector/collector power implementation is in
+[`M5BLECollector/power_v5`](../M5BLECollector/power_v5/README.md).
+It preserves the full model and collector, adds on-demand display/Wi-Fi/CPU/buzzer
+behavior, and keeps unqualified trigger/parallel experiments disabled.
+See [the power results](../deployment_artifacts/power_v5_20261004/POWER_RESULTS.md)
+for complete per-source metrics, hardware measurements and unresolved limitations.

@@ -1,0 +1,7 @@
+*.bin
+*.elf
+*.log
+usb_*/
+source_snapshot/
+public_power_files.txt
+publication_*/

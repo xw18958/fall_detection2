@@ -1,0 +1,10 @@
+*.bin
+*.elf
+*.log
+baseline/
+usb_*/
+collector_smoke/
+source_snapshot/
+trigger_*/
+strict_calibration/
+tcn_v5_benchmark/

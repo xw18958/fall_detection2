@@ -1,0 +1,363 @@
+import Foundation
+import CoreBluetooth
+import IOKit.pwr_mgt
+import Darwin
+import M5BLECollectorCore
+
+struct Options {
+    var recordings = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("recordings")
+    var profile = ["participant": "unspecified", "placement": "unspecified"]
+    var device: String?
+    var migrateRecordings = false
+    init() throws {
+        let args = Array(CommandLine.arguments.dropFirst())
+        var index = 0
+        while index < args.count {
+            let key = args[index]
+            if key == "--migrate-recordings" { migrateRecordings = true; index += 1; continue }
+            if key == "--help" {
+                print("M5BLECollector [--recordings PATH] [--participant ID] [--placement NAME] [--device DEVICE_ID_OR_UUID] [--migrate-recordings]")
+                print("--migrate-recordings updates completed legacy folders without starting Bluetooth; stop the receiver first.")
+                print("Commands: status, start, stop, keep, discard, detect, quit, quit force")
+                exit(0)
+            }
+            guard index+1 < args.count else { throw ProtocolError.invalid("Missing value for \(key)") }
+            let value = args[index+1]
+            switch key {
+            case "--recordings": recordings = URL(fileURLWithPath: value).standardizedFileURL
+            case "--participant", "--placement": profile[String(key.dropFirst(2))] = value
+            case "--device":
+                guard UUID(uuidString: value) != nil || (value.count == 12 && value.allSatisfy({ $0.isHexDigit })) else {
+                    throw ProtocolError.invalid("--device must be a 12-digit device ID or peripheral UUID")
+                }
+                device = value.lowercased()
+            default: throw ProtocolError.invalid("Unknown argument \(key)")
+            }
+            index += 2
+        }
+    }
+}
+
+final class Collector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+    private let options: Options
+    private var profile: [String: String]
+    private var central: CBCentralManager!
+    private var peripheral: CBPeripheral?
+    private var characteristics: [String: CBCharacteristic] = [:]
+    private var info: DeviceInfo?, status: DeviceStatus?
+    private var recorder: Recorder?
+    private var assembler = FrameAssembler()
+    private var timer: DispatchSourceTimer?
+    private var signals: [DispatchSourceSignal] = []
+    private var subscribed = false, readySent = false, statusReading = false
+    private var infoReading = false, subscriptionsRequested = false, deviceReadyReported = false
+    private var recordingLock: Int32 = -1
+    private var activity: NSObjectProtocol?
+    private var writes: [(Data, String)] = []
+    private var inFlight: (Data, String)?
+    private var writing = false, quitting = false, detecting = false, fatalStorage = false
+    private var lastExport = Date.distantPast, lastStatusPrint = Date.distantPast
+    private var finishedSession: UInt64 = 0
+    private var assertion: IOPMAssertionID = 0
+    private var selected: UUID?
+
+    init(options: Options) {
+        self.options = options; profile = options.profile
+        if let cached = UserDefaults.standard.string(forKey: "M5BLEPeripheral") { selected = UUID(uuidString: cached) }
+        super.init()
+    }
+    func run() throws {
+        try FileManager.default.createDirectory(at: options.recordings, withIntermediateDirectories: true)
+        recordingLock = open(options.recordings.appendingPathComponent(".collector.lock").path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
+        guard recordingLock >= 0, flock(recordingLock, LOCK_EX | LOCK_NB) == 0 else {
+            throw ProtocolError.invalid("Another collector is using this recordings folder, or the folder cannot be locked")
+        }
+        if options.migrateRecordings {
+            print("Migrated \(try Recorder.migrateCompletedRecordings(root: options.recordings)) completed recordings; sample values preserved.")
+            close()
+        }
+        activity = ProcessInfo.processInfo.beginActivity(options: [.userInitiated, .latencyCritical], reason: "Receive and durably save M5 motion samples")
+        let rc = IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
+            IOPMAssertionLevel(kIOPMAssertionLevelOn), "M5 BLE motion recording" as CFString, &assertion)
+        guard rc == kIOReturnSuccess else { throw ProtocolError.invalid("Cannot create idle-sleep prevention assertion") }
+        print("Bluetooth collector; Wi-Fi and Internet are unnecessary. Recordings: \(options.recordings.path)")
+        print("Idle sleep prevented. Verify your separate closed-lid awake configuration before walking outside.")
+        print("Switch the M5 into COLLECT, then use A to start/stop and A/B on REVIEW to keep/discard. Samples are not transferred before KEEP.")
+        central = CBCentralManager(delegate: self, queue: .main)
+        timer = DispatchSource.makeTimerSource(queue: .main)
+        timer?.schedule(deadline: .now()+1, repeating: 1)
+        timer?.setEventHandler { [weak self] in self?.poll() }; timer?.resume()
+        for number in [SIGINT, SIGTERM] {
+            signal(number, SIG_IGN)
+            let source = DispatchSource.makeSignalSource(signal: number, queue: .main)
+            source.setEventHandler { [weak self] in
+                guard let self = self else { return }
+                if self.quitting { self.close() } else { self.command("quit") }
+            }
+            source.resume(); signals.append(source)
+        }
+        DispatchQueue.global().async { [weak self] in
+            while let line = readLine() { DispatchQueue.main.async { self?.command(line) } }
+        }
+    }
+    private func scan() {
+        guard central.state == .poweredOn, !detecting, !fatalStorage else { return }
+        if options.device == nil, let id = selected, let known = central.retrievePeripherals(withIdentifiers: [id]).first {
+            peripheral = known; known.delegate = self; central.connect(known)
+        } else { central.scanForPeripherals(withServices: [CBUUID(string: Wire.service)]) }
+    }
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        switch central.state {
+        case .poweredOn: scan()
+        case .unauthorized: print("Bluetooth permission denied. Enable M5 BLE Collector in System Settings > Privacy & Security > Bluetooth.")
+        case .poweredOff: print("Bluetooth is off; enable it on the Mac.")
+        default: print("Bluetooth state: \(central.state.rawValue)")
+        }
+    }
+    func centralManager(_ central: CBCentralManager, didDiscover candidate: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
+        guard peripheral == nil else { return }
+        // A --device UUID can be filtered before connecting; device MAC identity is checked after discovery.
+        if let wanted = options.device, let uuid = UUID(uuidString: wanted), candidate.identifier != uuid { return }
+        if let wanted = options.device, UUID(uuidString: wanted) == nil {
+            let advertised = (advertisementData[CBAdvertisementDataLocalNameKey] as? String) ?? candidate.name ?? ""
+            guard advertised.uppercased() == "M5MOTION-" + wanted.suffix(4).uppercased() else { return }
+        }
+        if options.device == nil, let selected = selected, candidate.identifier != selected { return }
+        print("Found \(candidate.name ?? "M5") RSSI=\(RSSI)")
+        peripheral = candidate; candidate.delegate = self; central.stopScan(); central.connect(candidate)
+    }
+    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        print("BLE connected; discovering collection service.")
+        characteristics.removeAll(); info = nil; status = nil; subscribed = false; readySent = false
+        statusReading = false; writing = false; inFlight = nil; writes.removeAll(); assembler.reset()
+        infoReading = false; subscriptionsRequested = false; deviceReadyReported = false
+        peripheral.discoverServices([CBUUID(string: Wire.service)])
+    }
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        reconnect(error)
+    }
+    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        reconnect(error)
+    }
+    private func reconnect(_ error: Error?) {
+        print("Disconnected\(error.map { ": \($0.localizedDescription)" } ?? ""); device retains unacknowledged data in RAM.")
+        peripheral = nil; info = nil; status = nil; characteristics.removeAll(); subscribed = false; readySent = false
+        assembler.reset(); writes.removeAll(); writing = false; inFlight = nil; statusReading = false
+        infoReading = false; subscriptionsRequested = false; deviceReadyReported = false
+        if detecting { close(); return }
+        if !fatalStorage { DispatchQueue.main.asyncAfter(deadline: .now()+2) { [weak self] in self?.scan() } }
+    }
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        guard error == nil, let service = peripheral.services?.first(where: { $0.uuid == CBUUID(string: Wire.service) }) else { fail("Service discovery failed: \(String(describing: error))"); return }
+        peripheral.discoverCharacteristics([Wire.info, Wire.control, Wire.samples, Wire.status].map(CBUUID.init(string:)), for: service)
+    }
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        guard error == nil else { fail("Characteristic discovery failed"); return }
+        for characteristic in service.characteristics ?? [] { characteristics[characteristic.uuid.uuidString.uppercased()] = characteristic }
+        guard let information = characteristic(Wire.info), characteristic(Wire.samples) != nil, characteristic(Wire.status) != nil, characteristic(Wire.control) != nil else { fail("Missing BLE characteristic"); return }
+        print("Reading device information; approve Bluetooth pairing if macOS asks.")
+        infoReading = true; peripheral.readValue(for: information)
+    }
+    private func characteristic(_ uuid: String) -> CBCharacteristic? { characteristics[uuid.uppercased()] }
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        guard error == nil else { fail("Notification subscription failed: \(error!.localizedDescription)"); return }
+        if characteristic.uuid == CBUUID(string: Wire.samples) { subscribed = characteristic.isNotifying; handshake() }
+    }
+    private func handshake() {
+        guard info != nil, status != nil, subscribed, !readySent else { return }
+        readySent = true; send(Wire.command(5), label: "ready")
+    }
+    private func attach(_ session: UInt64) throws {
+        guard session != 0, let info = info else { throw ProtocolError.invalid("Session arrived before device information") }
+        if let current = recorder, current.session == session { return }
+        // Finished files are already durable. They may have been moved by the
+        // user; exporting them again must not block the next device recording.
+        if let old = recorder, finishedSession != old.session { try old.exportCSV() }
+        recorder = try Recorder(root: options.recordings, session: session, info: info, profile: profile)
+        finishedSession = 0
+        print("Session: \(recorder!.directory.path)")
+    }
+    private func hasJournal(_ session: UInt64) -> Bool {
+        let hex = String(format: "%016llx", session)
+        let entries = (try? FileManager.default.contentsOfDirectory(at: options.recordings,
+            includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])) ?? []
+        return entries.contains { entry in
+            guard let data = try? Data(contentsOf: entry.appendingPathComponent("metadata.json")),
+                  let metadata = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  metadata["session_id"] as? String == hex else { return false }
+            return Recorder.hasJournal(in: entry)
+        }
+    }
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        if characteristic.uuid == CBUUID(string: Wire.info) { infoReading = false }
+        if characteristic.uuid == CBUUID(string: Wire.status) { statusReading = false }
+        guard error == nil, let data = characteristic.value else {
+            print("BLE read failed: \(error?.localizedDescription ?? "empty value"). Approve pairing if requested.")
+            return
+        }
+        do {
+            switch characteristic.uuid {
+            case CBUUID(string: Wire.info):
+                let incoming = try JSONDecoder().decode(DeviceInfo.self, from: data); try incoming.validate()
+                try TrustedModels.validate(incoming.model_sha256)
+                if let wanted = options.device, UUID(uuidString: wanted) == nil, wanted != incoming.device_id.lowercased() {
+                    throw ProtocolError.invalid("Connected device does not match --device")
+                }
+                info = incoming; selected = peripheral.identifier
+                UserDefaults.standard.set(peripheral.identifier.uuidString, forKey: "M5BLEPeripheral")
+                print("Verified detector model \(incoming.model_sha256.prefix(12))…; firmware \(incoming.firmware)")
+                if let state = self.characteristic(Wire.status) { statusReading = true; peripheral.readValue(for: state) }
+                handshake()
+            case CBUUID(string: Wire.status):
+                status = try DeviceStatus(data)
+                if let old = recorder, finishedSession == old.session,
+                   status!.session != old.session {
+                    recorder = nil; finishedSession = 0
+                }
+                if !subscriptionsRequested, info != nil,
+                   let stream = self.characteristic(Wire.samples), let state = self.characteristic(Wire.status) {
+                    subscriptionsRequested = true
+                    peripheral.setNotifyValue(true, for: stream); peripheral.setNotifyValue(true, for: state)
+                }
+                if status!.flags & 2 != 0, !deviceReadyReported {
+                    deviceReadyReported = true
+                    print("Connected and ready (confirmed by M5). Device recording remains local until KEEP.")
+                }
+                if let state = status, state.session != 0, info != nil, state.saving || state.complete {
+                    if state.complete, recorder?.session != state.session, !hasJournal(state.session) {
+                        // The device has already received durable ACKs for every
+                        // sample. Do not recreate a moved/deleted trial as an empty
+                        // unfinished recording and disable future collection.
+                        if finishedSession != state.session {
+                            print("M5's previous recording is complete; its local journal was moved, deleted, or saved elsewhere. Ready for a new trial.")
+                        }
+                        finishedSession = state.session
+                        if quitting { close(); return }
+                    } else {
+                        try attach(state.session)
+                        if state.complete, finishedSession != state.session, let recorder = recorder {
+                            try recorder.finish(produced: state.produced, overflowed: state.flags & 4 != 0)
+                            finishedSession = state.session; print("Saved \(state.produced) samples: \(recorder.directory.path)")
+                            if quitting { close(); return }
+                        }
+                    }
+                }
+                handshake()
+            case CBUUID(string: Wire.samples):
+                if let batch = try assembler.accept(data) {
+                    try attach(batch.session)
+                    guard let recorder = recorder else { return }
+                    let exclusive = try recorder.append(batch.samples)
+                    send(Wire.command(3, session: batch.session, exclusive: exclusive), label: "ack")
+                }
+            default: break
+            }
+        } catch {
+            fail("Recording stopped on Mac to preserve integrity: \(error)")
+        }
+    }
+    private func send(_ data: Data, label: String) {
+        guard peripheral?.state == .connected, characteristic(Wire.control) != nil else { print("Cannot send \(label): disconnected"); return }
+        if label == "ack" { writes.removeAll { $0.1 == "ack" } }
+        writes.append((data, label)); writeNext()
+    }
+    private func writeNext() {
+        guard !writing, let first = writes.first, let peripheral = peripheral, let control = characteristic(Wire.control) else { return }
+        writes.removeFirst(); inFlight = first; writing = true
+        peripheral.writeValue(first.0, for: control, type: .withResponse)
+    }
+    func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        guard characteristic.uuid == CBUUID(string: Wire.control) else { return }
+        writing = false
+        let sent = inFlight; inFlight = nil
+        if let error = error { print("Control write failed: \(error.localizedDescription)"); if sent?.1 == "ready" { readySent = false } }
+        if sent?.1 == "detect" {
+            if error == nil { detecting = true } else { detecting = false }
+        }
+        writeNext()
+    }
+    private func poll() {
+        guard !fatalStorage else { return }
+        if let peripheral = peripheral, peripheral.state == .connected {
+            if info == nil, !infoReading, let information = characteristic(Wire.info) {
+                infoReading = true; peripheral.readValue(for: information)
+            }
+            if info != nil, !statusReading, let state = characteristic(Wire.status) { statusReading = true; peripheral.readValue(for: state) }
+            handshake()
+        }
+        if Date().timeIntervalSince(lastExport) > 60, let recorder = recorder, finishedSession != recorder.session {
+            do { try recorder.exportCSV(); lastExport = Date() } catch { fail("CSV export failed: \(error)") }
+        }
+        if Date().timeIntervalSince(lastStatusPrint) >= 10 { showStatus(); lastStatusPrint = Date() }
+    }
+    private func showStatus() {
+        let states = ["READY", "RECORDING", "REVIEW", "SAVING", "COMPLETE", "BUFFER FULL"]
+        if let s = status {
+            let seconds = Double(s.produced) / 30.0
+            let current = recorder.flatMap { $0.session == s.session ? $0 : nil }
+            let timing = current.map { String(format: "%.1f Hz | %.1f s", $0.measuredHz, $0.elapsedSeconds) } ?? String(format: "%.1f s", seconds)
+            print("\(states[Int(s.state)]) | \(timing) | acquired=\(s.produced) saved=\(current?.exclusive ?? 0) pending=\(s.pending)\(s.flags & 8 != 0 ? " | command rejected" : "")")
+        } else { print("Disconnected or connecting | saved=\(recorder?.exclusive ?? 0)") }
+    }
+    func command(_ line: String) {
+        let tokens = line.split(maxSplits: 1, whereSeparator: { $0.isWhitespace }).map(String.init)
+        guard let name = tokens.first else { return }
+        let value = tokens.count > 1 ? tokens[1] : ""
+        switch name {
+        case "status": showStatus()
+        case "start":
+            guard readySent, let s = status, s.flags & 2 != 0, s.idle else { print("Start is allowed only from READY/COMPLETE with a ready BLE link."); return }
+            send(Wire.command(1), label: "start")
+        case "stop":
+            guard let s = status, s.recording else { print("No active recording."); return }
+            send(Wire.command(2, session: s.session), label: "stop")
+        case "keep":
+            guard let s = status, s.review else { print("KEEP is available only after STOP or BUFFER FULL."); return }
+            send(Wire.command(7, session: s.session), label: "keep")
+        case "discard":
+            guard let s = status, s.review else { print("DISCARD is available only after STOP or BUFFER FULL."); return }
+            send(Wire.command(8, session: s.session), label: "discard")
+        case "detect":
+            guard let s = status, s.idle else { print("Finish KEEP/DISCARD and any transfer before switching to detector mode."); return }
+            send(Wire.command(6), label: "detect")
+        case "quit":
+            if value == "force" { close(); return }
+            quitting = true
+            if let s = status, peripheral?.state == .connected {
+                if s.recording {
+                    send(Wire.command(2, session: s.session), label: "stop")
+                    print("Recording stopped; choose KEEP or DISCARD on the M5 before quitting.")
+                    quitting = false
+                } else if s.review {
+                    print("Choose KEEP or DISCARD on the M5 before quitting.")
+                    quitting = false
+                } else if s.pending == 0 { close() }
+                else { print("Waiting for pending samples. Use quit force only to detach without finishing transfer.") }
+            } else if recorder == nil { close() }
+            else { print("Disconnected: reconnect to finish saving. Use quit force or interrupt again to detach.") }
+        default: print("Commands: status, start, stop, keep, discard, detect, quit, quit force")
+        }
+    }
+    private func fail(_ message: String) {
+        print("ERROR: \(message). No further acknowledgements will be sent.")
+        fatalStorage = true
+        if let peripheral = peripheral { central.cancelPeripheralConnection(peripheral) }
+    }
+    private func close() {
+        do {
+            if let recorder = recorder, finishedSession != recorder.session { try recorder.exportCSV() }
+        } catch { print("Export failed; journal retained: \(error)") }
+        if assertion != 0 { IOPMAssertionRelease(assertion) }
+        if let activity = activity { ProcessInfo.processInfo.endActivity(activity) }
+        if recordingLock >= 0 { flock(recordingLock, LOCK_UN); Darwin.close(recordingLock) }
+        exit(fatalStorage ? 1 : 0)
+    }
+}
+
+do {
+    let collector = Collector(options: try Options())
+    try collector.run()
+    withExtendedLifetime(collector) { RunLoop.main.run() }
+} catch {
+    fputs("\(error)\n", stderr); exit(1)
+}
