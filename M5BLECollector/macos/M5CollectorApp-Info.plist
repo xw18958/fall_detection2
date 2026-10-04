@@ -2,15 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleExecutable</key><string>M5CollectorApp</string>
-    <key>CFBundleIdentifier</key><string>au.edu.usyd.fall-detection2.m5-collector</string>
-    <key>CFBundleName</key><string>M5 Data Collector</string>
-    <key>CFBundleDisplayName</key><string>M5 Data Collector</string>
-    <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>1.0.0</string>
-    <key>CFBundleVersion</key><string>1</string>
-    <key>LSMinimumSystemVersion</key><string>14.0</string>
-    <key>NSBluetoothAlwaysUsageDescription</key>
-    <string>Receive motion recordings from the body-worn M5 device and save them on this Mac.</string>
+	<key>CFBundleDisplayName</key>
+	<string>M5 Data Collector</string>
+	<key>CFBundleExecutable</key>
+	<string>M5CollectorApp</string>
+	<key>CFBundleIdentifier</key>
+	<string>au.edu.usyd.fall-detection2.m5-collector</string>
+	<key>CFBundleName</key>
+	<string>M5 Data Collector</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.2.1</string>
+	<key>CFBundleVersion</key>
+	<string>4</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Receive motion recordings from the body-worn M5 device and save them on this Mac.</string>
 </dict>
 </plist>
